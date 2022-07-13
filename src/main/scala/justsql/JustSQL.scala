@@ -12,7 +12,7 @@ object JustSQL {
     if (rows.length == 1)
       Success(rows(0))
     else
-      Failure(new Exception(s"Invalid row count for count query. Expected 1. Actual ${rows.length}"))
+      Failure(new Exception(s"Invalid row count. Expected 1. Actual ${rows.length}"))
 
 }
 

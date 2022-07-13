@@ -45,4 +45,3 @@ object ColParser {
   implicit val urlColParser: ColParser[java.net.URL] = _.getURL(_)
 
 }
-

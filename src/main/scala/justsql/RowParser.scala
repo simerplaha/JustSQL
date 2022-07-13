@@ -631,7 +631,7 @@ object RowParser {
           t22(resultSet, 22))
     }
 
-  def apply[T1, R](f: ((T1)) => R)(implicit t1: ColParser[T1]): RowParser[R] =
+  def apply[T1, R](f: T1 => R)(implicit t1: ColParser[T1]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
         f(t1(resultSet, 1))
