@@ -17,25 +17,25 @@ object JustSQL {
 
 }
 
-final case class JustSQL(db: HikariDataSource) extends AutoCloseable {
+final case class JustSQL(db: HikariDataSource = HikariDS()) extends AutoCloseable {
 
   def select[T: ClassTag](sql: String)(implicit rowParser: RowParser[T]): Try[Array[T]] =
-    selectMapResultSet(sql)(rowParser)
+    selectMapRS(sql)(rowParser)
 
   def selectHead[T: ClassTag](sql: String)(implicit rowParser: RowParser[T]): Try[T] =
     select(sql) flatMap JustSQL.assertHasOneRow
 
-  def selectHead[T: ClassTag](sql: String)(parser: ResultSet => T): Try[T] =
-    selectMapResultSet[T](sql)(parser) flatMap JustSQL.assertHasOneRow
+  def selectHeadRS[T: ClassTag](sql: String)(parser: ResultSet => T): Try[T] =
+    selectMapRS[T](sql)(parser) flatMap JustSQL.assertHasOneRow
 
   def selectMap[T, R: ClassTag](sql: String)(f: T => R)(implicit rowParser: RowParser[T]): Try[Array[R]] =
-    selectMapResultSet(sql)(resultSet => f(rowParser(resultSet)))
+    selectMapRS(sql)(resultSet => f(rowParser(resultSet)))
 
-  def selectMapResultSet[T: ClassTag](sql: String)(rowParser: ResultSet => T): Try[Array[T]] =
+  def selectMapRS[T: ClassTag](sql: String)(rowParser: ResultSet => T): Try[Array[T]] =
     Using.Manager {
       manager =>
         val session = manager(db.getConnection())
-        val statement = manager(session.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE))
+        val statement = manager(session.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
         val resultSet = manager(statement.executeQuery())
 
         if (resultSet.last()) {
