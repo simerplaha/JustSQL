@@ -33,8 +33,8 @@ final case class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
   def selectMapRS[T: ClassTag](sql: String)(rowParser: ResultSet => T): Try[Array[T]] =
     Using.Manager {
       manager =>
-        val session = manager(db.getConnection())
-        val statement = manager(session.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
+        val connection = manager(db.getConnection())
+        val statement = manager(connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
         val resultSet = manager(statement.executeQuery())
 
         if (resultSet.last()) {

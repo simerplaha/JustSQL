@@ -1,8 +1,6 @@
 # JustSQL
 
-A thin wrapper for parsing SQL query results.
-
-Just write SQL as `String`.
+Nothing fancy! Just write SQL as `String` and parse query results into types.
 
 ```scala
 implicit val db = JustSQL(HikariDS())
