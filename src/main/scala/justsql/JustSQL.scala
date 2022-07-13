@@ -1,9 +1,8 @@
 package justsql
 
-
-import com.zaxxer.hikari.HikariDataSource
-
+import java.io.Closeable
 import java.sql.ResultSet
+import javax.sql.DataSource
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try, Using}
 
@@ -17,7 +16,7 @@ object JustSQL {
 
 }
 
-final case class JustSQL(db: HikariDataSource = HikariDS()) extends AutoCloseable {
+final case class JustSQL(db: DataSource with Closeable) extends Closeable {
 
   def select[T: ClassTag](sql: String)(implicit rowParser: RowParser[T]): Try[Array[T]] =
     selectMapRS(sql)(rowParser)

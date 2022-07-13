@@ -7,7 +7,7 @@ lazy val root = (project in file("."))
     name := "JustSQL",
     libraryDependencies ++=
       Seq(
-        "com.zaxxer" % "HikariCP" % "5.0.1",
+        "com.zaxxer" % "HikariCP" % "5.0.1" % Test,
         "ch.qos.logback" % "logback-classic" % "1.2.11" % Test,
         "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" % Test,
         "org.postgresql" % "postgresql" % "42.3.6" % Test,

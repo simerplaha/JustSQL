@@ -9,14 +9,14 @@ import scala.util.Success
 class JustSQLSpec extends AnyWordSpec {
 
   "run update" in {
-    using(JustSQL()) { db =>
+    withDB { db =>
       db.update("CREATE TABLE TEST_TABLE (value varchar)") shouldBe Success(0)
       db.update("INSERT INTO TEST_TABLE values ('value')") shouldBe Success(1)
     }
   }
 
   "return empty select on empty table" in {
-    using(JustSQL()) { executor =>
+    withDB { executor =>
       executor.update("CREATE TABLE TEST_TABLE(key varchar)") shouldBe Success(0)
 
       /** SELECT */
@@ -36,7 +36,7 @@ class JustSQLSpec extends AnyWordSpec {
   }
 
   "return non-empty select on non-empty table" in {
-    using(JustSQL()) { executor =>
+    withDB { executor =>
       executor.update("CREATE TABLE TEST_TABLE(key varchar)") shouldBe Success(0)
       executor.update("INSERT INTO TEST_TABLE values ('1'), ('2'), ('3')") shouldBe Success(3)
 
@@ -57,7 +57,7 @@ class JustSQLSpec extends AnyWordSpec {
   }
 
   "return zero for count query when table shouldBe empty" in {
-    using(JustSQL()) { executor =>
+    withDB { executor =>
       executor.update("CREATE TABLE TEST_TABLE(key varchar)") shouldBe Success(0)
 
       /** COUNT */
@@ -71,7 +71,7 @@ class JustSQLSpec extends AnyWordSpec {
   }
 
   "return row count when table shouldBe non-empty" in {
-    using(JustSQL()) { executor =>
+    withDB { executor =>
       executor.update("CREATE TABLE TEST_TABLE(key varchar)") shouldBe Success(0)
       executor.update("INSERT INTO TEST_TABLE values ('one'), ('two'), ('three')") shouldBe Success(3)
 
@@ -86,7 +86,7 @@ class JustSQLSpec extends AnyWordSpec {
   }
 
   "select from table with multiple rows created using transactions" in {
-    using(JustSQL()) { executor =>
+    withDB { executor =>
 
       executor.update(
         """
