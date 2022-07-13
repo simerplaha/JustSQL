@@ -16,7 +16,7 @@ object JustSQL {
 
 }
 
-final case class JustSQL(db: DataSource with Closeable) extends Closeable {
+final case class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
 
   def select[T: ClassTag](sql: String)(implicit rowParser: RowParser[T]): Try[Array[T]] =
     selectMapRS(sql)(rowParser)
