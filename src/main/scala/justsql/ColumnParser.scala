@@ -39,5 +39,10 @@ object ColumnParser {
   implicit val rowIdColumnParser: ColumnParser[java.sql.RowId] = _.getRowId(_)
   implicit val sqlXMLColumnParser: ColumnParser[java.sql.SQLXML] = _.getSQLXML(_)
 
+  //other types
+  implicit val characterStreamColumnParser: ColumnParser[java.io.Reader] = _.getCharacterStream(_)
+  implicit val binaryStreamColumnParser: ColumnParser[java.io.InputStream] = _.getBinaryStream(_)
+  implicit val urlColumnParser: ColumnParser[java.net.URL] = _.getURL(_)
+
 }
 
