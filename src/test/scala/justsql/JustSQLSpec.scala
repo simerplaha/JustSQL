@@ -1,9 +1,10 @@
 package justsql
 
+import justsql.TestUtil._
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.wordspec.AnyWordSpec
-import TestUtil._
 import org.scalatest.TryValues._
+
 import scala.util.Success
 
 class JustSQLSpec extends AnyWordSpec {
