@@ -2,7 +2,7 @@
 
 A thin wrapper for parsing SQL query results.
 
-Just write SQL a `String`.
+Just write SQL as `String`.
 
 ```scala
 implicit val db = JustSQL(HikariDS())
