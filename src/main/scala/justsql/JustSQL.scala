@@ -11,7 +11,7 @@ object JustSQL {
   @inline def apply[D <: DataSource with AutoCloseable](ds: D) =
     new JustSQL(ds)
 
-  @inline private def assertHasOneRow[T](rows: Array[T]): Try[T] =
+  @inline def assertHasOneRow[T](rows: Array[T]): Try[T] =
     if (rows.length == 1)
       Success(rows(0))
     else
@@ -22,18 +22,26 @@ object JustSQL {
 class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
 
   def select[ROW: ClassTag](sql: String)(implicit rowParser: RowParser[ROW]): Try[Array[ROW]] =
-    selectParse(sql)(rowParser)
+    unsafeSelect(sql)(rowParser)
 
   def selectHead[ROW: ClassTag](sql: String)(implicit rowParser: RowParser[ROW]): Try[ROW] =
     select(sql) flatMap JustSQL.assertHasOneRow
 
-  def selectHeadParse[ROW: ClassTag](sql: String)(parser: ResultSet => ROW): Try[ROW] =
-    selectParse[ROW](sql)(parser) flatMap JustSQL.assertHasOneRow
-
   def selectMap[ROW, B: ClassTag](sql: String)(f: ROW => B)(implicit rowParser: RowParser[ROW]): Try[Array[B]] =
-    selectParse(sql)(resultSet => f(rowParser(resultSet)))
+    unsafeSelect(sql)(resultSet => f(rowParser(resultSet)))
 
-  def selectParse[ROW: ClassTag](sql: String)(rowParser: ResultSet => ROW): Try[Array[ROW]] =
+  def update(sql: String): Try[Int] =
+    Using.Manager {
+      manager =>
+        val session = manager(db.getConnection())
+        val statement = manager(session.prepareStatement(sql))
+        statement.executeUpdate()
+    }
+
+  def unsafeSelectHead[ROW: ClassTag](sql: String)(parser: ResultSet => ROW): Try[ROW] =
+    unsafeSelect[ROW](sql)(parser) flatMap JustSQL.assertHasOneRow
+
+  def unsafeSelect[ROW: ClassTag](sql: String)(rowParser: ResultSet => ROW): Try[Array[ROW]] =
     Using.Manager {
       manager =>
         val connection = manager(db.getConnection())
@@ -54,14 +62,6 @@ class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
         } else {
           Array.empty[ROW]
         }
-    }
-
-  def update(sql: String): Try[Int] =
-    Using.Manager {
-      manager =>
-        val session = manager(db.getConnection())
-        val statement = manager(session.prepareStatement(sql))
-        statement.executeUpdate()
     }
 
   override def close(): Unit =
