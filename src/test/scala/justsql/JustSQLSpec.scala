@@ -26,13 +26,13 @@ class JustSQLSpec extends AnyWordSpec {
       //Select and then map
       "SELECT * FROM TEST_TABLE".selectMap[String, Int](_.toInt).success.value shouldBe Array.empty[Int]
       //Select using Java ResultSet
-      "SELECT * FROM TEST_TABLE".selectMapRS[String](_.getString("key")).success.value shouldBe Array.empty[String]
+      "SELECT * FROM TEST_TABLE".selectParse[String](_.getString("key")).success.value shouldBe Array.empty[String]
 
       /** COUNT */
       //Count using typed API
       "SELECT count(*) FROM TEST_TABLE".selectHead[Int]() shouldBe Success(0)
       //Count using ResultSet
-      "SELECT count(*) as c FROM TEST_TABLE".selectHeadRS(_.getInt("c")) shouldBe Success(0)
+      "SELECT count(*) as c FROM TEST_TABLE".selectHeadParse(_.getInt("c")) shouldBe Success(0)
     }
   }
 
@@ -47,13 +47,13 @@ class JustSQLSpec extends AnyWordSpec {
       //Select and then map
       "SELECT * FROM TEST_TABLE".selectMap[String, Int](_.toInt).success.value shouldBe Array(1, 2, 3)
       //Select using Java ResultSet
-      "SELECT * FROM TEST_TABLE".selectMapRS[String](_.getString("key")).success.value shouldBe Array("1", "2", "3")
+      "SELECT * FROM TEST_TABLE".selectParse[String](_.getString("key")).success.value shouldBe Array("1", "2", "3")
 
       /** COUNT */
       //Count using typed API
       "SELECT count(*) FROM TEST_TABLE".selectHead[Int]() shouldBe Success(3)
       //Count using ResultSet
-      "SELECT count(*) as c FROM TEST_TABLE".selectHeadRS(_.getInt("c")) shouldBe Success(3)
+      "SELECT count(*) as c FROM TEST_TABLE".selectHeadParse(_.getInt("c")) shouldBe Success(3)
     }
   }
 
@@ -67,7 +67,7 @@ class JustSQLSpec extends AnyWordSpec {
       //Count using typed API with naming column
       "SELECT count(*) as count FROM TEST_TABLE".selectHead[Int]() shouldBe Success(0)
       //Count using ResultSet
-      "SELECT count(*) as count FROM TEST_TABLE".selectHeadRS[Int](_.getInt("count")) shouldBe Success(0)
+      "SELECT count(*) as count FROM TEST_TABLE".selectHeadParse[Int](_.getInt("count")) shouldBe Success(0)
     }
   }
 
@@ -82,7 +82,7 @@ class JustSQLSpec extends AnyWordSpec {
       //Count using typed API with naming column
       "SELECT count(*) as count FROM TEST_TABLE".selectHead[Int]() shouldBe Success(3)
       //Count using ResultSet
-      "SELECT count(*) as count FROM TEST_TABLE".selectHeadRS(_.getInt("count")) shouldBe Success(3)
+      "SELECT count(*) as count FROM TEST_TABLE".selectHeadParse(_.getInt("count")) shouldBe Success(3)
     }
   }
 
@@ -140,7 +140,7 @@ class JustSQLSpec extends AnyWordSpec {
       //Count using typed API with naming column
       "SELECT count(*) as count FROM TEST_TABLE".selectHead[Int]() shouldBe Success(3)
       //Count using ResultSet
-      "SELECT count(*) as count FROM TEST_TABLE".selectHeadRS[Int](_.getInt("count")) shouldBe Success(3)
+      "SELECT count(*) as count FROM TEST_TABLE".selectHeadParse[Int](_.getInt("count")) shouldBe Success(3)
     }
   }
 }

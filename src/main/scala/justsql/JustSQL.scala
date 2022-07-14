@@ -22,18 +22,18 @@ object JustSQL {
 class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
 
   def select[ROW: ClassTag](sql: String)(implicit rowParser: RowParser[ROW]): Try[Array[ROW]] =
-    selectMapRS(sql)(rowParser)
+    selectParse(sql)(rowParser)
 
   def selectHead[ROW: ClassTag](sql: String)(implicit rowParser: RowParser[ROW]): Try[ROW] =
     select(sql) flatMap JustSQL.assertHasOneRow
 
-  def selectHeadRS[ROW: ClassTag](sql: String)(parser: ResultSet => ROW): Try[ROW] =
-    selectMapRS[ROW](sql)(parser) flatMap JustSQL.assertHasOneRow
+  def selectHeadParse[ROW: ClassTag](sql: String)(parser: ResultSet => ROW): Try[ROW] =
+    selectParse[ROW](sql)(parser) flatMap JustSQL.assertHasOneRow
 
   def selectMap[ROW, B: ClassTag](sql: String)(f: ROW => B)(implicit rowParser: RowParser[ROW]): Try[Array[B]] =
-    selectMapRS(sql)(resultSet => f(rowParser(resultSet)))
+    selectParse(sql)(resultSet => f(rowParser(resultSet)))
 
-  def selectMapRS[ROW: ClassTag](sql: String)(rowParser: ResultSet => ROW): Try[Array[ROW]] =
+  def selectParse[ROW: ClassTag](sql: String)(rowParser: ResultSet => ROW): Try[Array[ROW]] =
     Using.Manager {
       manager =>
         val connection = manager(db.getConnection())

@@ -14,15 +14,15 @@ package object justsql {
                                     rowParser: RowParser[ROW]): Try[ROW] =
       db.selectHead(sql)
 
-    def selectHeadRS[ROW: ClassTag](parser: ResultSet => ROW)(implicit db: JustSQL): Try[ROW] =
-      db.selectHeadRS(sql)(parser)
+    def selectHeadParse[ROW: ClassTag](parser: ResultSet => ROW)(implicit db: JustSQL): Try[ROW] =
+      db.selectHeadParse(sql)(parser)
 
     def selectMap[ROW, B: ClassTag](f: ROW => B)(implicit db: JustSQL,
                                                  rowParser: RowParser[ROW]): Try[Array[B]] =
       db.selectMap(sql)(f)
 
-    def selectMapRS[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[Array[ROW]] =
-      db.selectMapRS(sql)(rowParser)
+    def selectParse[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[Array[ROW]] =
+      db.selectParse(sql)(rowParser)
 
     def update()(implicit db: JustSQL): Try[Int] =
       db.update(sql)
