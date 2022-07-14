@@ -4,8 +4,8 @@ import scala.util.{Failure, Success, Try}
 
 object TestUtil {
 
-  def withDB[O](code: JustSQL => O): O =
-    using(JustSQL(HikariDS()))(code)
+  def withDB[O](f: JustSQL => O): O =
+    using(JustSQL(HikariDS()))(f)
 
   def using[O](db: JustSQL)(code: JustSQL => O): O =
     dropTables()(db) match {

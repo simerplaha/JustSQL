@@ -8,6 +8,9 @@ import scala.util.{Failure, Success, Try, Using}
 
 object JustSQL {
 
+  @inline def apply[DS <: DataSource with AutoCloseable](ds: DS) =
+    new JustSQL(ds)
+
   @inline private def assertHasOneRow[T](rows: Array[T]): Try[T] =
     if (rows.length == 1)
       Success(rows(0))
@@ -16,7 +19,7 @@ object JustSQL {
 
 }
 
-final case class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
+class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
 
   def select[T: ClassTag](sql: String)(implicit rowParser: RowParser[T]): Try[Array[T]] =
     selectMapRS(sql)(rowParser)
