@@ -7,11 +7,11 @@ object TestUtil {
   def withDB[O](f: JustSQL => O): O =
     using(JustSQL(HikariDS()))(f)
 
-  def using[O](db: JustSQL)(code: JustSQL => O): O =
+  def using[O](db: JustSQL)(f: JustSQL => O): O =
     dropTables()(db) match {
       case Success(_) =>
         try
-          code(db)
+          f(db)
         finally
           db.close()
 
@@ -19,18 +19,15 @@ object TestUtil {
         throw exception
     }
 
-
   def dropTables()(implicit db: JustSQL): Try[Int] =
-    getAllTableNames() flatMap (dropTables(_))
+    getAllTableNames() flatMap dropTables
 
   def getAllTableNames()(implicit db: JustSQL): Try[Array[String]] =
-    db.select[String] {
-      """
-        |select table_name
-        |from information_schema.tables
-        |where table_schema = 'public';
-        |""".stripMargin
-    }
+    """
+      |select table_name
+      |from information_schema.tables
+      |where table_schema = 'public';
+      |""".stripMargin.select()
 
   def dropTables(tableNames: Array[String])(implicit db: JustSQL): Try[Int] = {
     val drops =
@@ -38,12 +35,10 @@ object TestUtil {
         .map(name => s"drop table $name;")
         .mkString("\n")
 
-    db.update(
-      s"""
-         |BEGIN;
-         |$drops
-         |COMMIT;
-         |""".stripMargin
-    )
+    s"""
+       |BEGIN;
+       |$drops
+       |COMMIT;
+       |""".stripMargin.update()
   }
 }

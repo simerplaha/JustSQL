@@ -8,7 +8,7 @@ import scala.util.{Failure, Success, Try, Using}
 
 object JustSQL {
 
-  @inline def apply[DS <: DataSource with AutoCloseable](ds: DS) =
+  @inline def apply[D <: DataSource with AutoCloseable](ds: D) =
     new JustSQL(ds)
 
   @inline private def assertHasOneRow[T](rows: Array[T]): Try[T] =
@@ -21,19 +21,19 @@ object JustSQL {
 
 class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
 
-  def select[T: ClassTag](sql: String)(implicit rowParser: RowParser[T]): Try[Array[T]] =
+  def select[ROW: ClassTag](sql: String)(implicit rowParser: RowParser[ROW]): Try[Array[ROW]] =
     selectMapRS(sql)(rowParser)
 
-  def selectHead[T: ClassTag](sql: String)(implicit rowParser: RowParser[T]): Try[T] =
+  def selectHead[ROW: ClassTag](sql: String)(implicit rowParser: RowParser[ROW]): Try[ROW] =
     select(sql) flatMap JustSQL.assertHasOneRow
 
-  def selectHeadRS[T: ClassTag](sql: String)(parser: ResultSet => T): Try[T] =
-    selectMapRS[T](sql)(parser) flatMap JustSQL.assertHasOneRow
+  def selectHeadRS[ROW: ClassTag](sql: String)(parser: ResultSet => ROW): Try[ROW] =
+    selectMapRS[ROW](sql)(parser) flatMap JustSQL.assertHasOneRow
 
-  def selectMap[T, R: ClassTag](sql: String)(f: T => R)(implicit rowParser: RowParser[T]): Try[Array[R]] =
+  def selectMap[ROW, B: ClassTag](sql: String)(f: ROW => B)(implicit rowParser: RowParser[ROW]): Try[Array[B]] =
     selectMapRS(sql)(resultSet => f(rowParser(resultSet)))
 
-  def selectMapRS[T: ClassTag](sql: String)(rowParser: ResultSet => T): Try[Array[T]] =
+  def selectMapRS[ROW: ClassTag](sql: String)(rowParser: ResultSet => ROW): Try[Array[ROW]] =
     Using.Manager {
       manager =>
         val connection = manager(db.getConnection())
@@ -41,7 +41,7 @@ class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
         val resultSet = manager(statement.executeQuery())
 
         if (resultSet.last()) {
-          val array = new Array[T](resultSet.getRow)
+          val array = new Array[ROW](resultSet.getRow)
 
           resultSet.beforeFirst()
 
@@ -52,7 +52,7 @@ class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
           }
           array
         } else {
-          Array.empty[T]
+          Array.empty[ROW]
         }
     }
 
