@@ -99,7 +99,7 @@ There are two types for parsing a row
 
 Unsafe APIs give direct access to low level `java.sql.ResultSet` type.
 
-For example:
+## unsafeSelect()
 
 ```scala
 //read the names of all Users
