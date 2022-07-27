@@ -25,7 +25,7 @@ val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update()
 val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ryan')".update() 
 ```
 
-Or transitionally
+Or transactionally
 
 ```scala
 val transaction: Try[Int] =
