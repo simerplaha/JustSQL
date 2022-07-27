@@ -51,13 +51,13 @@ object Example extends App {
   //Build a row parser for User
   implicit val userParser = RowParser(User.tupled)
 
-  //Run Select query
+  //Select all users
   val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]()
   //Select first row
   val head: Try[Int] = "SELECT count(*) FROM USERS".selectHead[Int]()
-  //Select map
+  //Select and map to names
   val userNames: Try[Array[String]] = "SELECT * FROM USERS".selectMap[User, String](_.name)
-  //Manual map
+  //Select all and then map to names
   val userNamesMap: Try[Array[String]] = "SELECT * FROM USERS".select[User]().map(_.map(_.name))
   //Unsafe select
   val unsafeNames: Try[Array[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name"))
