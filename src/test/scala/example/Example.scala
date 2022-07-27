@@ -24,8 +24,6 @@ object Example extends App {
 
   implicit val db = JustSQL(datasource = HikariDS())
 
-  "DROP TABLE USERS".update() //create table
-
   /** WRITING */
   val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update() //create table
   val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Tony'), (2, 'Howard')".update() //insert rows
