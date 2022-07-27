@@ -12,6 +12,8 @@ import justsql._ //single import
 implicit val db = JustSQL(datasource = HikariDS()) //create database instance
 ```
 
+The code snippets below can be found in [Example.scala](/src/test/scala/example/Example.scala).
+
 # update()
 
 Queries that mutate like `CREATE, INSERT OR UPDATE` queries are executed via `update()` function.
