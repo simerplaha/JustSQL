@@ -8,8 +8,8 @@ import scala.util.{Failure, Success, Try, Using}
 
 object JustSQL {
 
-  @inline def apply[D <: DataSource with AutoCloseable](ds: D) =
-    new JustSQL(ds)
+  @inline def apply[D <: DataSource with AutoCloseable](datasource: D) =
+    new JustSQL(datasource)
 
   @inline def assertHasOneRow[T](rows: Array[T]): Try[T] =
     if (rows.length == 1)

@@ -4,38 +4,36 @@ Just write SQL as `String` and parse results into types.
 
 # Setup
 
-I'm using here HikariCP & Postgres here, but you use any `DataSource`.
+I'm using here HikariCP & Postgres here, but you use any `DataSource` of your choice.
 
 ```scala
 import justsql._ //single import
 
-implicit val db = JustSQL(new HikariDataSource()) //create JustSQL instance
-
-val users: Try[Array[User]] = "SELECT * FROM USERS".select[User] //run query
+implicit val db = JustSQL(datasource = HikariDS())
 ```
 
 # update()
 
-A query that mutates the database like `CREATE, INSERT OR UPDATE` queries are executed via `update()` function.
+Queries that mutates the database like `CREATE, INSERT OR UPDATE` queries are executed via `update()` function.
 
-For example:
+Let's create a `USERS` tables
 
 ```scala
-//Create and insert to the table transactionally
-val result: Try[Int] =
+//create table
+val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update()
+//insert rows
+val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Tony'), (2, 'Howard')".update() 
+```
+
+Or transitionally
+
+```scala
+val transaction: Try[Int] =
   """
     |BEGIN;
     |
-    |CREATE TABLE TEST_TABLE(
-    |   int SERIAL PRIMARY KEY,
-    |   string VARCHAR NOT NULL,
-    |   bool BOOLEAN NOT NUll
-    |);
-    |
-    |INSERT INTO TEST_TABLE
-    |values (0, 'string1', 'true'),
-    |       (1, 'string2', 'false'),
-    |       (2, 'string3', 'true');
+    |CREATE TABLE USERS (id INT, name VARCHAR);
+    |INSERT INTO USERS (id, name) VALUES (1, 'Tony'), (2, 'Howard');
     |
     |COMMIT;
     |""".stripMargin.update()
@@ -43,10 +41,57 @@ val result: Try[Int] =
 
 # select()
 
-# selectMap()
+First, we need to create a `case class User` that represents a table row
+which in this case our `User` table's row.
+
+```scala
+//case class that represents a table row
+case class User(id: Int, name: String)
+//Build a row parser for User
+implicit val userParser = RowParser(User.tupled)
+```
+
+Read all `User`s
+
+```scala
+val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]()
+```
 
 # selectHead()
 
-# unsafeMap()
+Expects `1` row else returns `Failure`  
 
-# unsafeHead()
+```scala
+val count: Try[Int] = "SELECT count(*) FROM USERS".selectHead[Int]()
+```
+
+# selectMap()
+
+`selectMap` transforms `User` into another type within the parser.   
+
+```scala
+val map: Try[Array[String]] = "SELECT * FROM USERS".selectMap[User, String](_.name)
+```
+
+Alternative you can always map on basic `select`
+
+```scala
+val names: Try[Array[String]] = "SELECT * FROM USERS".select[User]().map(_.map(_.name))
+```
+
+# Unsafe
+
+Unsafe APIs give direct access to low level `java.sql.ResultSet` type. 
+
+For example:
+
+```scala
+//read the names of all Users
+val names: Try[Array[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name"))
+```
+
+## unsafeHead()
+
+```scala
+val unsafeCount: Try[Int] = "SELECT count(*) as count FROM USERS".unsafeSelectHead(_.getInt("count"))
+```
