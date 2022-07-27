@@ -1,11 +1,7 @@
 import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 import xerial.sbt.Sonatype._
 
-ThisBuild / version := "0.1.0"
-
 val scala213 = "2.13.8"
-
-ThisBuild / scalaVersion := scala213
 
 val scalaOptions =
   Seq(
@@ -55,6 +51,7 @@ val publishSettings = Seq[Setting[_]](
 lazy val root = (project in file("."))
   .settings(
     name := "JustSQL",
+    ThisBuild / scalaVersion := scala213,
     publishSettings,
     libraryDependencies ++=
       Seq(
