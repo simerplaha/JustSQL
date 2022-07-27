@@ -92,7 +92,7 @@ val names: Try[Array[String]] = "SELECT * FROM USERS".select[User]().map(_.map(_
 
 There are two types for parsing a row
 
-- `RowParser` - Parser for a table row. This is just a combination of one or many `ColParser(s)`.
+- `RowParser` - Parser for a table row. It's a combination of one or many `ColParser(s)`.
 - `ColParser` - Parser for a table column.
 
 # Unsafe
