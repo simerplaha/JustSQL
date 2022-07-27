@@ -74,13 +74,13 @@ val count: Try[Int] = "SELECT count(*) FROM USERS".selectHead[Int]()
 
 # selectMap()
 
-`selectMap` transforms `User` into another type within the parser.   
+`selectMap` transforms `User` into another type within the parser.
 
 ```scala
 val map: Try[Array[String]] = "SELECT * FROM USERS".selectMap[User, String](_.name)
 ```
 
-Alternative you can always map on basic `select`
+Alternative you can always run `map` on basic `select`
 
 ```scala
 val names: Try[Array[String]] = "SELECT * FROM USERS".select[User]().map(_.map(_.name))
