@@ -9,7 +9,7 @@ I'm using here HikariCP & Postgres here, but you use any `DataSource` of your ch
 ```scala
 import justsql._ //single import
 
-implicit val db = JustSQL(datasource = HikariDS())
+implicit val db = JustSQL(datasource = HikariDS()) //create database instance
 ```
 
 # update()
@@ -22,7 +22,7 @@ Let's create our example `USERS` table
 //create table
 val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update()
 //insert rows
-val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Tony'), (2, 'Howard')".update() 
+val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ryan')".update() 
 ```
 
 Or transitionally
@@ -33,7 +33,7 @@ val transaction: Try[Int] =
     |BEGIN;
     |
     |CREATE TABLE USERS (id INT, name VARCHAR);
-    |INSERT INTO USERS (id, name) VALUES (1, 'Tony'), (2, 'Howard');
+    |INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ryan');
     |
     |COMMIT;
     |"""
