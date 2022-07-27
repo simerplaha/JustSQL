@@ -44,14 +44,14 @@ val transaction: Try[Int] =
     .recoverWith {
       _ =>
         //if there was an error rollback
-        "ROLLBACK".update() 
+        "ROLLBACK".update()
     }
 ```
 
 # select()
 
 First, we need to create a `case class` that represents a table row
-which in this case our `User`
+which in our case is a `User`
 
 ```scala
 //case class that represents a table row
@@ -68,7 +68,7 @@ val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]()
 
 # selectHead()
 
-Expects `1` row else returns `Failure`  
+Expects `1` row else returns `Failure`
 
 ```scala
 val count: Try[Int] = "SELECT count(*) FROM USERS".selectHead[Int]()
@@ -88,9 +88,16 @@ Alternative you can always run `map` on basic `select`
 val names: Try[Array[String]] = "SELECT * FROM USERS".select[User]().map(_.map(_.name))
 ```
 
+# Parser
+
+There are two types for parsing a row
+
+- `RowParser` - Parser for a table row. This is just a combination of one or many `ColParser(s)`.
+- `ColParser` - Parser for a table column.
+
 # Unsafe
 
-Unsafe APIs give direct access to low level `java.sql.ResultSet` type. 
+Unsafe APIs give direct access to low level `java.sql.ResultSet` type.
 
 For example:
 
