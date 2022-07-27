@@ -48,8 +48,8 @@ val transaction: Try[Int] =
 
 # select()
 
-First, we need to create a `case class User` that represents a table row
-which in this case our `User` table's row.
+First, we need to create a `case class` that represents a table row
+which in this case our `User`
 
 ```scala
 //case class that represents a table row
