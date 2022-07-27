@@ -36,7 +36,14 @@ val transaction: Try[Int] =
     |INSERT INTO USERS (id, name) VALUES (1, 'Tony'), (2, 'Howard');
     |
     |COMMIT;
-    |""".stripMargin.update()
+    |"""
+    .stripMargin
+    .update()
+    .recoverWith {
+      _ =>
+        //if there was an error rollback
+        "ROLLBACK".update() 
+    }
 ```
 
 # select()

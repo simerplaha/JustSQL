@@ -33,8 +33,8 @@ class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
   def update(sql: String): Try[Int] =
     Using.Manager {
       manager =>
-        val session = manager(db.getConnection())
-        val statement = manager(session.prepareStatement(sql))
+        val connection = manager(db.getConnection())
+        val statement = manager(connection.prepareStatement(sql))
         statement.executeUpdate()
     }
 

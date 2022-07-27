@@ -23,8 +23,13 @@ object Example extends App {
       |INSERT INTO USERS (id, name) VALUES (1, 'Tony'), (2, 'Howard');
       |
       |COMMIT;
-      |""".stripMargin.update()
-
+      |"""
+      .stripMargin
+      .update()
+      .recoverWith {
+        _ =>
+          "ROLLBACK".update() //if there was an error rollback
+      }
 
   /** READING */
   //  case class that represents a table row
