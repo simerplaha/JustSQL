@@ -16,7 +16,7 @@ implicit val db = JustSQL(datasource = HikariDS())
 
 Queries that mutate like `CREATE, INSERT OR UPDATE` queries are executed via `update()` function.
 
-Let's create our example `USERS` tables
+Let's create our example `USERS` table
 
 ```scala
 //create table
