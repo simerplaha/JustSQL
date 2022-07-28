@@ -23,11 +23,11 @@ object SqlParams {
     SqlParams(ListBuffer.empty)
 }
 
-case class SqlParams(params: ListBuffer[SqlParamType[_]],
+case class SqlParams(params: ListBuffer[SqlParamSetter[_]],
                      placeholder: String = "?") {
 
   def apply[P](param: P)(implicit setter: SqlParam[P]): String = {
-    params addOne SqlParamType(param, setter)
+    params addOne SqlParamSetter(param, setter)
     placeholder
   }
 
@@ -48,6 +48,5 @@ case class SqlParams(params: ListBuffer[SqlParamType[_]],
       param =>
         s"(${apply(param)})"
     }.mkString(", ")
-
 
 }

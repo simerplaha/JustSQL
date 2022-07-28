@@ -18,11 +18,13 @@ package justsql.param
 
 import java.sql.PreparedStatement
 
-case class SqlParamType[P](param: P, queryParam: SqlParam[P]) {
-  def apply(preparedStatement: PreparedStatement, index: Int): Unit =
-    queryParam.set(
-      statement = preparedStatement,
+case class SqlParamSetter[P](param: P, sqlParam: SqlParam[P]) {
+
+  def set(statement: PreparedStatement, index: Int): Unit =
+    sqlParam.set(
+      statement = statement,
       index = index,
       param = param
     )
+
 }

@@ -18,9 +18,9 @@ package justsql.param
 
 import java.sql.PreparedStatement
 
-trait SqlParam[T] {
+trait SqlParam[P] {
 
-  def set(statement: PreparedStatement, index: Int, param: T): Unit
+  def set(statement: PreparedStatement, index: Int, param: P): Unit
 
 }
 

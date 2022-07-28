@@ -35,11 +35,14 @@ object JustSQL {
     else
       Failure(new Exception(s"Invalid row count. Expected 1. Actual ${rows.length}"))
 
-  @inline def setParam(params: SqlParams, statement: PreparedStatement) = {
+  @inline def setParams(params: SqlParams, statement: PreparedStatement) = {
     var index = 1
     params.params foreach {
       param =>
-        param(statement, index)
+        param.set(
+          statement = statement,
+          index = index
+        )
         index += 1
     }
   }
@@ -61,7 +64,7 @@ class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
       manager =>
         val connection = manager(db.getConnection())
         val statement = manager(connection.prepareStatement(sql.query))
-        setParam(sql.params, statement)
+        setParams(sql.params, statement)
         statement.executeUpdate()
     }
 
@@ -73,7 +76,7 @@ class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
       manager =>
         val connection = manager(db.getConnection())
         val statement = manager(connection.prepareStatement(sql.query, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
-        setParam(sql.params, statement)
+        setParams(sql.params, statement)
 
         val resultSet = manager(statement.executeQuery())
 
