@@ -28,6 +28,12 @@ object Example extends App {
   val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update() //create table
   val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Tony'), (2, 'Howard')".update() //insert rows
 
+  val insertParametric: Try[Int] =
+    Sql {
+      param =>
+        s"INSERT INTO USERS (id, name) VALUES (${param(1)}, ${param("Harry")}), (${param(2)}, ${param("Ryan")})"
+    }.update()
+
   //  Or Transactionally
   val transaction: Try[Int] =
     """

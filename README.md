@@ -24,7 +24,13 @@ Let's create our example `USERS` table
 //create table
 val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update()
 //insert rows
-val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ryan')".update() 
+val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ryan')".update()
+//Or insert using parameters
+val insertParametric: Try[Int] =
+  Sql {
+    param =>
+      s"INSERT INTO USERS (id, name) VALUES (${param(1)}, ${param("Harry")}), (${param(2)}, ${param("Ryan")})"
+  }.update()
 ```
 
 Or transactionally
@@ -82,7 +88,7 @@ val count: Try[Int] = "SELECT count(*) FROM USERS".selectOne[Int]()
 val map: Try[Array[String]] = "SELECT * FROM USERS".selectMap[User, String](_.name)
 ```
 
-Alternative you can always run `map` on basic `select`
+Alternatively, you can always run `map` on basic `select`
 
 ```scala
 val names: Try[Array[String]] = "SELECT * FROM USERS".select[User]().map(_.map(_.name))
