@@ -25,6 +25,11 @@ Let's create our example `USERS` table
 val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update()
 //insert rows
 val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ryan')".update()
+```
+
+Or `INSERT` using parameters
+
+```scala
 //Or insert using parameters
 val insertParametric: Try[Int] =
   Sql {
