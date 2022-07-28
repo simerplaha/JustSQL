@@ -21,15 +21,15 @@ import scala.collection.mutable.ListBuffer
 
 object Sql {
 
-  def apply(f: SqlParam => String): Sql = {
-    val params = SqlParam(ListBuffer.empty)
+  def apply(f: SqlParams => String): Sql = {
+    val params = SqlParams(ListBuffer.empty)
     val sql = f(params)
     new Sql(sql, params)
   }
 
   def apply(sql: String): Sql =
-    new Sql(sql, SqlParam.empty)
+    new Sql(sql, SqlParams.empty)
 
 }
 
-case class Sql(query: String, params: SqlParam)
+case class Sql(query: String, params: SqlParams)

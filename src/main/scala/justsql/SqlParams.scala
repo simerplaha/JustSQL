@@ -18,16 +18,16 @@ package justsql
 
 import scala.collection.mutable.ListBuffer
 
-object SqlParam {
-  val empty: SqlParam =
-    SqlParam(ListBuffer.empty)
+object SqlParams {
+  val empty: SqlParams =
+    SqlParams(ListBuffer.empty)
 }
 
-case class SqlParam(params: ListBuffer[ColWriterPair[_]],
-                    placeholder: String = "?") {
+case class SqlParams(params: ListBuffer[SqlParamWriter[_]],
+                     placeholder: String = "?") {
 
   def apply[P](col: P)(implicit colWriter: ColWriter[P]): String = {
-    params addOne ColWriterPair(col, colWriter)
+    params addOne SqlParamWriter(col, colWriter)
     placeholder
   }
 

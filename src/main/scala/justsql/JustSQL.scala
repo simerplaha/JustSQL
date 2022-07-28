@@ -34,7 +34,7 @@ object JustSQL {
     else
       Failure(new Exception(s"Invalid row count. Expected 1. Actual ${rows.length}"))
 
-  @inline def setParams(params: SqlParam, statement: PreparedStatement) = {
+  @inline def setParams(params: SqlParams, statement: PreparedStatement) = {
     var index = 1
     params.params foreach {
       param =>
