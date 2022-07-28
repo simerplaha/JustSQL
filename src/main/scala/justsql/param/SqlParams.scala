@@ -26,24 +26,24 @@ object SqlParams {
 case class SqlParams(params: ListBuffer[SqlParamSetter[_]],
                      placeholder: String = "?") {
 
-  def apply[P](param: P)(implicit setter: SqlParam[P]): String = {
-    params addOne SqlParamSetter(param, setter)
+  def apply[P](param: P)(implicit sqlParam: SqlParam[P]): String = {
+    params addOne SqlParamSetter(param, sqlParam)
     placeholder
   }
 
-  def apply[P](params: P*)(implicit setter: SqlParam[P]): Seq[String] =
+  def apply[P](params: P*)(implicit sqlParam: SqlParam[P]): Seq[String] =
     params map apply[P]
 
-  def apply[P](params: Iterable[P])(implicit setter: SqlParam[P]): Iterable[String] =
+  def apply[P](params: Iterable[P])(implicit sqlParam: SqlParam[P]): Iterable[String] =
     params map apply[P]
 
-  def rows[P](params: P*)(implicit setter: SqlParam[P]): String =
+  def rows[P](params: P*)(implicit sqlParam: SqlParam[P]): String =
     params.map {
       param =>
         s"(${apply(param)})"
     }.mkString(", ")
 
-  def rows[P](params: Iterable[P])(implicit setter: SqlParam[P]): String =
+  def rows[P](params: Iterable[P])(implicit sqlParam: SqlParam[P]): String =
     params.map {
       param =>
         s"(${apply(param)})"
