@@ -18,9 +18,9 @@ package justsql
 
 import scala.collection.mutable.ListBuffer
 
-object SqlParamsBuilder {
-  val empty: SqlParamsBuilder =
-    SqlParamsBuilder(ListBuffer.empty)
+object SqlParamBuilder {
+  val empty: SqlParamBuilder =
+    SqlParamBuilder(ListBuffer.empty)
 }
 
 /**
@@ -28,8 +28,8 @@ object SqlParamsBuilder {
  *
  * Double `??` indicates each parameter is comma seperated and within closed parentheses (?, ?), (?, ?).
  * */
-case class SqlParamsBuilder(params: ListBuffer[SqlParamWriter[_]],
-                            placeholder: String = "?") {
+case class SqlParamBuilder(params: ListBuffer[SqlParamWriter[_]],
+                           placeholder: String = "?") {
 
   def ?[P](col: P)(implicit colWriter: SqlParam[P]): String = {
     params addOne SqlParamWriter(col, colWriter)
