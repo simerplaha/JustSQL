@@ -18,9 +18,9 @@ package justsql
 
 import scala.collection.mutable.ListBuffer
 
-object SqlParams {
-  val empty: SqlParams =
-    SqlParams(ListBuffer.empty)
+object SqlParamsBuilder {
+  val empty: SqlParamsBuilder =
+    SqlParamsBuilder(ListBuffer.empty)
 }
 
 /**
@@ -28,55 +28,55 @@ object SqlParams {
  *
  * Double `??` indicates each parameter is comma seperated and within closed parentheses (?, ?), (?, ?).
  * */
-case class SqlParams(params: ListBuffer[SqlParamWriterPair[_]],
-                     placeholder: String = "?") {
+case class SqlParamsBuilder(params: ListBuffer[SqlParamWriter[_]],
+                            placeholder: String = "?") {
 
-  def ?[P](col: P)(implicit colWriter: SqlParamWriter[P]): String = {
-    params addOne SqlParamWriterPair(col, colWriter)
+  def ?[P](col: P)(implicit colWriter: SqlParam[P]): String = {
+    params addOne SqlParamWriter(col, colWriter)
     Array.fill(colWriter.parametersCount())(placeholder).mkString(", ")
   }
 
-  def ?[P](col: P*)(implicit colWriter: SqlParamWriter[P]): String =
+  def ?[P](col: P*)(implicit colWriter: SqlParam[P]): String =
     col.map {
       param =>
         ?(param)(colWriter)
     }.mkString(", ")
 
-  def ?[P](col: Iterable[P])(implicit colWriter: SqlParamWriter[P]): String =
+  def ?[P](col: Iterable[P])(implicit colWriter: SqlParam[P]): String =
     col.map {
       param =>
         ?(param)(colWriter)
     }.mkString(", ")
 
-  def ??[P](col: P)(implicit colWriter: SqlParamWriter[P]): String = {
-    params addOne SqlParamWriterPair(col, colWriter)
+  def ??[P](col: P)(implicit colWriter: SqlParam[P]): String = {
+    params addOne SqlParamWriter(col, colWriter)
     Array.fill(colWriter.parametersCount())(placeholder).mkString("(", ", ", ")")
   }
 
-  def ??[P](col: P*)(implicit colWriter: SqlParamWriter[P]): String =
+  def ??[P](col: P*)(implicit colWriter: SqlParam[P]): String =
     col.map {
       param =>
         ??(param)(colWriter)
     }.mkString(", ")
 
-  def ??[P](col: Iterable[P])(implicit colWriter: SqlParamWriter[P]): String =
+  def ??[P](col: Iterable[P])(implicit colWriter: SqlParam[P]): String =
     col.map {
       param =>
         ??(param)(colWriter)
     }.mkString(", ")
 
-  def apply[P](col: P)(implicit colWriter: SqlParamWriter[P]): Array[String] = {
-    params addOne SqlParamWriterPair(col, colWriter)
+  def apply[P](col: P)(implicit colWriter: SqlParam[P]): Array[String] = {
+    params addOne SqlParamWriter(col, colWriter)
     Array.fill(colWriter.parametersCount())(placeholder)
   }
 
-  def apply[P](col: P*)(implicit colWriter: SqlParamWriter[P]): Seq[String] =
+  def apply[P](col: P*)(implicit colWriter: SqlParam[P]): Seq[String] =
     col flatMap {
       param =>
         apply(param)(colWriter)
     }
 
-  def apply[P](col: Iterable[P])(implicit colWriter: SqlParamWriter[P]): Iterable[String] =
+  def apply[P](col: Iterable[P])(implicit colWriter: SqlParam[P]): Iterable[String] =
     col flatMap {
       param =>
         apply(param)(colWriter)
