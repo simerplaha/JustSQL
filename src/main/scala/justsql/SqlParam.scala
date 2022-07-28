@@ -14,22 +14,20 @@
  *  limitations under the License.
  */
 
-package justsql.param
-
-import justsql.ColWriter
+package justsql
 
 import scala.collection.mutable.ListBuffer
 
-object SqlWriter {
-  val empty: SqlWriter =
-    SqlWriter(ListBuffer.empty)
+object SqlParam {
+  val empty: SqlParam =
+    SqlParam(ListBuffer.empty)
 }
 
-case class SqlWriter(params: ListBuffer[ParamColPair[_]],
-                     placeholder: String = "?") {
+case class SqlParam(params: ListBuffer[ColWriterPair[_]],
+                    placeholder: String = "?") {
 
   def apply[P](col: P)(implicit colWriter: ColWriter[P]): String = {
-    params addOne ParamColPair(col, colWriter)
+    params addOne ColWriterPair(col, colWriter)
     placeholder
   }
 

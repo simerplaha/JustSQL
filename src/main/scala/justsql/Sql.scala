@@ -16,21 +16,20 @@
 
 package justsql
 
-import justsql.param.SqlWriter
 
 import scala.collection.mutable.ListBuffer
 
 object Sql {
 
-  def apply(f: SqlWriter => String): Sql = {
-    val params = SqlWriter(ListBuffer.empty)
+  def apply(f: SqlParam => String): Sql = {
+    val params = SqlParam(ListBuffer.empty)
     val sql = f(params)
     new Sql(sql, params)
   }
 
   def apply(sql: String): Sql =
-    new Sql(sql, SqlWriter.empty)
+    new Sql(sql, SqlParam.empty)
 
 }
 
-case class Sql(query: String, params: SqlWriter)
+case class Sql(query: String, params: SqlParam)
