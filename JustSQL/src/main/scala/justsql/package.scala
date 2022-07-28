@@ -21,4 +21,24 @@ package object justsql {
   @inline implicit def convertStringToSQL(sql: String): Sql =
     Sql(sql)
 
+  implicit class ParamImplicits[P](val param: P) extends AnyVal {
+    def ?(implicit colWriter: SqlParam[P],
+          builder: SqlParamBuilder): String =
+      builder ? param
+
+    def ??(implicit colWriter: SqlParam[P],
+           builder: SqlParamBuilder): String =
+      builder ?? param
+  }
+
+  implicit class MultiParamImplicits[P](val param: Iterable[P]) extends AnyVal {
+    def ?(implicit colWriter: SqlParam[P],
+          builder: SqlParamBuilder): String =
+      builder ? param
+
+    def ??(implicit colWriter: SqlParam[P],
+           builder: SqlParamBuilder): String =
+      builder ?? param
+  }
+
 }

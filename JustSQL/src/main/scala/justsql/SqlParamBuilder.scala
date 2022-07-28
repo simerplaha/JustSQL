@@ -31,54 +31,39 @@ object SqlParamBuilder {
 case class SqlParamBuilder(params: ListBuffer[SqlParamWriter[_]],
                            placeholder: String = "?") {
 
-  def ?[P](col: P)(implicit colWriter: SqlParam[P]): String = {
-    params addOne SqlParamWriter(col, colWriter)
-    Array.fill(colWriter.parametersCount())(placeholder).mkString(", ")
+  def ?[P](param: P)(implicit sqlParam: SqlParam[P]): String = {
+    params addOne SqlParamWriter(param, sqlParam)
+    Array.fill(sqlParam.parametersCount())(placeholder).mkString(", ")
   }
 
-  def ?[P](col: P*)(implicit colWriter: SqlParam[P]): String =
-    col.map {
+  def ?[P](params: Iterable[P])(implicit sqlParam: SqlParam[P]): String =
+    params.map {
       param =>
-        ?(param)(colWriter)
+        this ? param
     }.mkString(", ")
 
-  def ?[P](col: Iterable[P])(implicit colWriter: SqlParam[P]): String =
-    col.map {
-      param =>
-        ?(param)(colWriter)
-    }.mkString(", ")
-
-  def ??[P](col: P)(implicit colWriter: SqlParam[P]): String = {
-    params addOne SqlParamWriter(col, colWriter)
-    Array.fill(colWriter.parametersCount())(placeholder).mkString("(", ", ", ")")
+  def ??[P](param: P)(implicit sqlParam: SqlParam[P]): String = {
+    params addOne SqlParamWriter(param, sqlParam)
+    Array.fill(sqlParam.parametersCount())(placeholder).mkString("(", ", ", ")")
   }
 
-  def ??[P](col: P*)(implicit colWriter: SqlParam[P]): String =
-    col.map {
+  def ??[P](params: Iterable[P])(implicit sqlParam: SqlParam[P]): String =
+    params.map {
       param =>
-        ??(param)(colWriter)
+        this ?? param
     }.mkString(", ")
 
-  def ??[P](col: Iterable[P])(implicit colWriter: SqlParam[P]): String =
-    col.map {
-      param =>
-        ??(param)(colWriter)
-    }.mkString(", ")
-
-  def apply[P](col: P)(implicit colWriter: SqlParam[P]): Array[String] = {
-    params addOne SqlParamWriter(col, colWriter)
-    Array.fill(colWriter.parametersCount())(placeholder)
+  def apply[P](param: P)(implicit sqlParam: SqlParam[P]): Array[String] = {
+    params addOne SqlParamWriter(param, sqlParam)
+    Array.fill(sqlParam.parametersCount())(placeholder)
   }
 
-  def apply[P](col: P*)(implicit colWriter: SqlParam[P]): Seq[String] =
-    col flatMap {
-      param =>
-        apply(param)(colWriter)
-    }
+  def apply[P](params: P*)(implicit sqlParam: SqlParam[P]): Iterable[String] =
+    apply(params)
 
-  def apply[P](col: Iterable[P])(implicit colWriter: SqlParam[P]): Iterable[String] =
-    col flatMap {
+  def apply[P](params: Iterable[P])(implicit sqlParam: SqlParam[P]): Iterable[String] =
+    params flatMap {
       param =>
-        apply(param)(colWriter)
+        apply(param)(sqlParam)
     }
 }

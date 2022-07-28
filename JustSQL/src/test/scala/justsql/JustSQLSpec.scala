@@ -33,8 +33,8 @@ class JustSQLSpec extends AnyWordSpec {
           "INSERT INTO TEST_TABLE values ('value1')".update() shouldBe Success(1)
 
           Sql {
-            param =>
-              s"INSERT INTO TEST_TABLE values (${param ? "value2"})"
+            implicit param =>
+              s"INSERT INTO TEST_TABLE values (${"value2".?})"
           }.update() shouldBe Success(1)
         }
       }
@@ -43,14 +43,14 @@ class JustSQLSpec extends AnyWordSpec {
         "parametrised" in {
           withDB { implicit db =>
             Sql {
-              param =>
+              implicit param =>
                 s"""
                    |BEGIN;
                    |
                    |CREATE TABLE TEST_TABLE (value INT);
-                   |INSERT INTO TEST_TABLE values (${param ? 1}), (${param ? 2});
-                   |INSERT INTO TEST_TABLE values ${param ?? (3, 4, 5)};
-                   |INSERT INTO TEST_TABLE values ${param ?? (6, 7, 8)};
+                   |INSERT INTO TEST_TABLE values (${1.?}), (${2.?});
+                   |INSERT INTO TEST_TABLE values ${Seq(3, 4, 5).??};
+                   |INSERT INTO TEST_TABLE values ${Seq(6, 7, 8).??};
                    |
                    |COMMIT;
                    |""".stripMargin
