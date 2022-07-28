@@ -20,7 +20,7 @@ import java.sql.PreparedStatement
 
 case class ColWriterPair[P](param: P, colWriter: ColWriter[P]) {
 
-  def set(statement: PreparedStatement, index: Int): Unit =
+  def set(statement: PreparedStatement, index: Int): Int =
     colWriter(
       statement = statement,
       index = index,

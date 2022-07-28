@@ -34,17 +34,14 @@ object JustSQL {
     else
       Failure(new Exception(s"Invalid row count. Expected 1. Actual ${rows.length}"))
 
-  @inline def setParams(params: SqlParams, statement: PreparedStatement) = {
-    var index = 1
-    params.params foreach {
-      param =>
+  @inline def setParams(params: SqlParams, statement: PreparedStatement) =
+    params.params.foldLeft(1) {
+      case (index, param) =>
         param.set(
           statement = statement,
           index = index
         )
-        index += 1
     }
-  }
 }
 
 class JustSQL(db: DataSource with AutoCloseable) extends Closeable {

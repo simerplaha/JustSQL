@@ -18,39 +18,171 @@ package justsql
 
 import java.sql.PreparedStatement
 
-trait ColWriter[P] extends ((PreparedStatement, Int, P) => Unit) {
+trait ColWriter[P] extends ((PreparedStatement, Int, P) => Int) {
 
-  override def apply(statement: PreparedStatement, index: Int, param: P): Unit
+  /** Return the index of the next position */
+  override def apply(statement: PreparedStatement, index: Int, param: P): Int
 
 }
 
 object ColWriter {
 
-  implicit val intColWriter: ColWriter[Int] = _.setInt(_, _)
-  implicit val stringColWriter: ColWriter[String] = _.setString(_, _)
-  implicit val booleanColWriter: ColWriter[Boolean] = _.setBoolean(_, _)
-  implicit val longColWriter: ColWriter[Long] = _.setLong(_, _)
-  implicit val byteColWriter: ColWriter[Byte] = _.setByte(_, _)
-  implicit val doubleColWriter: ColWriter[Double] = _.setDouble(_, _)
-  implicit val floatColWriter: ColWriter[Float] = _.setFloat(_, _)
-  implicit val shortColWriter: ColWriter[Short] = _.setShort(_, _)
-  implicit val bigDecimalColWriter: ColWriter[java.math.BigDecimal] = _.setBigDecimal(_, _)
-  implicit val byteArrayColWriter: ColWriter[Array[Byte]] = _.setBytes(_, _)
+  implicit case object IntColWriter extends ColWriter[Int] {
+    override def apply(statement: PreparedStatement, index: Int, param: Int): Int = {
+      statement.setInt(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object StringColWriter extends ColWriter[String] {
+    override def apply(statement: PreparedStatement, index: Int, param: String): Int = {
+      statement.setString(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object BooleanColWriter extends ColWriter[Boolean] {
+    override def apply(statement: PreparedStatement, index: Int, param: Boolean): Int = {
+      statement.setBoolean(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object LongColWriter extends ColWriter[Long] {
+    override def apply(statement: PreparedStatement, index: Int, param: Long): Int = {
+      statement.setLong(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object ByteColWriter extends ColWriter[Byte] {
+    override def apply(statement: PreparedStatement, index: Int, param: Byte): Int = {
+      statement.setByte(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object DoubleColWriter extends ColWriter[Double] {
+    override def apply(statement: PreparedStatement, index: Int, param: Double): Int = {
+      statement.setDouble(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object FloatColWriter extends ColWriter[Float] {
+    override def apply(statement: PreparedStatement, index: Int, param: Float): Int = {
+      statement.setFloat(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object ShortColWriter extends ColWriter[Short] {
+    override def apply(statement: PreparedStatement, index: Int, param: Short): Int = {
+      statement.setShort(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object BigDecimalColWriter extends ColWriter[java.math.BigDecimal] {
+    override def apply(statement: PreparedStatement, index: Int, param: java.math.BigDecimal): Int = {
+      statement.setBigDecimal(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object ByteArrayColWriter extends ColWriter[Array[Byte]] {
+    override def apply(statement: PreparedStatement, index: Int, param: Array[Byte]): Int = {
+      statement.setBytes(index, param)
+      index + 1
+    }
+  }
+
 
   //java.sql types
-  implicit val timestampColWriter: ColWriter[java.sql.Timestamp] = _.setTimestamp(_, _)
-  implicit val blobColWriter: ColWriter[java.sql.Blob] = _.setBlob(_, _)
-  implicit val clobColWriter: ColWriter[java.sql.Clob] = _.setClob(_, _)
-  implicit val dateColWriter: ColWriter[java.sql.Date] = _.setDate(_, _)
-  implicit val timeColWriter: ColWriter[java.sql.Time] = _.setTime(_, _)
-  implicit val refColWriter: ColWriter[java.sql.Ref] = _.setRef(_, _)
-  implicit val nClobColWriter: ColWriter[java.sql.NClob] = _.setNClob(_, _)
-  implicit val rowIdColWriter: ColWriter[java.sql.RowId] = _.setRowId(_, _)
-  implicit val sqlXMLColWriter: ColWriter[java.sql.SQLXML] = _.setSQLXML(_, _)
+  implicit case object TimestampColWriter extends ColWriter[java.sql.Timestamp] {
+    override def apply(statement: PreparedStatement, index: Int, param: java.sql.Timestamp): Int = {
+      statement.setTimestamp(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object BlobColWriter extends ColWriter[java.sql.Blob] {
+    override def apply(statement: PreparedStatement, index: Int, param: java.sql.Blob): Int = {
+      statement.setBlob(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object ClobColWriter extends ColWriter[java.sql.Clob] {
+    override def apply(statement: PreparedStatement, index: Int, param: java.sql.Clob): Int = {
+      statement.setClob(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object DateColWriter extends ColWriter[java.sql.Date] {
+    override def apply(statement: PreparedStatement, index: Int, param: java.sql.Date): Int = {
+      statement.setDate(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object TimeColWriter extends ColWriter[java.sql.Time] {
+    override def apply(statement: PreparedStatement, index: Int, param: java.sql.Time): Int = {
+      statement.setTime(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object RefColWriter extends ColWriter[java.sql.Ref] {
+    override def apply(statement: PreparedStatement, index: Int, param: java.sql.Ref): Int = {
+      statement.setRef(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object NClobColWriter extends ColWriter[java.sql.NClob] {
+    override def apply(statement: PreparedStatement, index: Int, param: java.sql.NClob): Int = {
+      statement.setNClob(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object RowIdColWriter extends ColWriter[java.sql.RowId] {
+    override def apply(statement: PreparedStatement, index: Int, param: java.sql.RowId): Int = {
+      statement.setRowId(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object SqlXMLColWriter extends ColWriter[java.sql.SQLXML] {
+    override def apply(statement: PreparedStatement, index: Int, param: java.sql.SQLXML): Int = {
+      statement.setSQLXML(index, param)
+      index + 1
+    }
+  }
+
 
   //other types
-  implicit val characterStreamColWriter: ColWriter[java.io.Reader] = _.setCharacterStream(_, _)
-  implicit val binaryStreamColWriter: ColWriter[java.io.InputStream] = _.setBinaryStream(_, _)
-  implicit val urlColWriter: ColWriter[java.net.URL] = _.setURL(_, _)
+  implicit case object CharacterStreamColWriter extends ColWriter[java.io.Reader] {
+    override def apply(statement: PreparedStatement, index: Int, param: java.io.Reader): Int = {
+      statement.setCharacterStream(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object BinaryStreamColWriter extends ColWriter[java.io.InputStream] {
+    override def apply(statement: PreparedStatement, index: Int, param: java.io.InputStream): Int = {
+      statement.setBinaryStream(index, param)
+      index + 1
+    }
+  }
+
+  implicit case object UrlColWriter extends ColWriter[java.net.URL] {
+    override def apply(statement: PreparedStatement, index: Int, param: java.net.URL): Int = {
+      statement.setURL(index, param)
+      index + 1
+    }
+  }
 
 }
