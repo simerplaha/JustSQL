@@ -23,21 +23,21 @@ object SqlParams {
     SqlParams(ListBuffer.empty)
 }
 
-case class SqlParams(params: ListBuffer[ColWriterPair[_]],
+case class SqlParams(params: ListBuffer[SqlParamWriterPair[_]],
                      placeholder: String = "?") {
 
-  def apply[P](col: P)(implicit colWriter: ColWriter[P]): Array[String] = {
-    params addOne ColWriterPair(col, colWriter)
+  def apply[P](col: P)(implicit colWriter: SqlParamWriter[P]): Array[String] = {
+    params addOne SqlParamWriterPair(col, colWriter)
     Array.fill(colWriter.parametersCount())(placeholder)
   }
 
-  def apply[P](col: P*)(implicit colWriter: ColWriter[P]): Seq[String] =
+  def apply[P](col: P*)(implicit colWriter: SqlParamWriter[P]): Seq[String] =
     col flatMap {
       param =>
         apply(param)(colWriter)
     }
 
-  def apply[P](col: Iterable[P])(implicit colWriter: ColWriter[P]): Iterable[String] =
+  def apply[P](col: Iterable[P])(implicit colWriter: SqlParamWriter[P]): Iterable[String] =
     col flatMap {
       param =>
         apply(param)(colWriter)

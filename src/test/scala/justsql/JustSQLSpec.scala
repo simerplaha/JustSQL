@@ -49,8 +49,8 @@ class JustSQLSpec extends AnyWordSpec {
                    |
                    |CREATE TABLE TEST_TABLE (value INT);
                    |INSERT INTO TEST_TABLE values (${param(1).mkString}), (${param(2).mkString});
-                   |INSERT INTO TEST_TABLE values ${param(Seq(3, 4, 5)).map(int => s"($int)").mkString(", ")};
-                   |INSERT INTO TEST_TABLE values ${param(6, 7, 8).map(int => s"($int)").mkString(", ")};
+                   |INSERT INTO TEST_TABLE values ${param(Seq(3, 4, 5)).map(placeholder => s"($placeholder)").mkString(", ")};
+                   |INSERT INTO TEST_TABLE values ${param(6, 7, 8).map(placeholder => s"($placeholder)").mkString(", ")};
                    |
                    |COMMIT;
                    |""".stripMargin

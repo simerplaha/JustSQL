@@ -34,18 +34,15 @@ object JustSQL {
     else
       Failure(new Exception(s"Invalid row count. Expected 1. Actual ${rows.length}"))
 
-  @inline def setParams(params: SqlParams, statement: PreparedStatement) =
+  @inline def setParams(params: SqlParams, statement: PreparedStatement): Int =
     params.params.foldLeft(1) {
-      case (index, param) =>
-        param.set(
-          statement = statement,
-          index = index
-        )
+      case (index, writer) =>
+        writer.set(statement = statement, index = index)
+        index + writer.paramWriter.parametersCount()
     }
 }
 
 class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
-
 
 
   def select[ROW: ClassTag](sql: Sql)(implicit rowParser: RowParser[ROW]): Try[Array[ROW]] =
