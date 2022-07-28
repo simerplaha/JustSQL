@@ -35,4 +35,5 @@ object SqlParam {
     override def set(statement: PreparedStatement, index: Int, param: String): Unit =
       statement.setString(index, param)
   }
+
 }

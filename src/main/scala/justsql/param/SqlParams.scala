@@ -23,10 +23,31 @@ object SqlParams {
     SqlParams(ListBuffer.empty)
 }
 
-case class SqlParams(params: ListBuffer[SqlParamType[_]]) extends AnyVal {
+case class SqlParams(params: ListBuffer[SqlParamType[_]],
+                     placeholder: String = "?") {
 
   def apply[P](param: P)(implicit setter: SqlParam[P]): String = {
     params addOne SqlParamType(param, setter)
-    "?"
+    placeholder
   }
+
+  def apply[P](params: P*)(implicit setter: SqlParam[P]): Seq[String] =
+    params map apply[P]
+
+  def apply[P](params: Iterable[P])(implicit setter: SqlParam[P]): Iterable[String] =
+    params map apply[P]
+
+  def rows[P](params: P*)(implicit setter: SqlParam[P]): String =
+    params.map {
+      param =>
+        s"(${apply(param)})"
+    }.mkString(", ")
+
+  def rows[P](params: Iterable[P])(implicit setter: SqlParam[P]): String =
+    params.map {
+      param =>
+        s"(${apply(param)})"
+    }.mkString(", ")
+
+
 }

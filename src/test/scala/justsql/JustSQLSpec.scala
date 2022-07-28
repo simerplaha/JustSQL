@@ -25,17 +25,61 @@ import scala.util.Success
 
 class JustSQLSpec extends AnyWordSpec {
 
-  "run update" in {
-    withDB { implicit db =>
-      "CREATE TABLE TEST_TABLE (value varchar)".update() shouldBe Success(0)
-      "INSERT INTO TEST_TABLE values ('value1')".update() shouldBe Success(1)
+  "update" should {
+    "create and insert" when {
+      "not transactional" in {
+        withDB { implicit db =>
+          "CREATE TABLE TEST_TABLE (value varchar)".update() shouldBe Success(0)
+          "INSERT INTO TEST_TABLE values ('value1')".update() shouldBe Success(1)
 
-      Sql {
-        param =>
-          s"INSERT INTO TEST_TABLE values (${param("value2")})"
-      }.update() shouldBe Success(1)
+          Sql {
+            param =>
+              s"INSERT INTO TEST_TABLE values (${param("value2")})"
+          }.update() shouldBe Success(1)
+        }
+      }
+
+      "transactional" when {
+        "parametrised" in {
+          withDB { implicit db =>
+            Sql {
+              param =>
+                s"""
+                   |BEGIN;
+                   |
+                   |CREATE TABLE TEST_TABLE (value INT);
+                   |INSERT INTO TEST_TABLE values (${param(1)}), (${param(2)});
+                   |INSERT INTO TEST_TABLE values ${param.rows(Seq(3, 4, 5))};
+                   |INSERT INTO TEST_TABLE values ${param.rows(6, 7, 8)};
+                   |
+                   |COMMIT;
+                   |""".stripMargin
+            }.update() shouldBe Success(0)
+
+            "SELECT * from TEST_TABLE".select[Int]().success.value shouldBe (1 to 8)
+          }
+        }
+
+        "not parametrised" in {
+          withDB { implicit db =>
+            """
+              |BEGIN;
+              |
+              |CREATE TABLE TEST_TABLE (value Int);
+              |INSERT INTO TEST_TABLE values (1), (2), (3);
+              |
+              |COMMIT;
+              |"""
+              .stripMargin
+              .update() shouldBe Success(0)
+
+            "SELECT * from TEST_TABLE".select[Int]().success.value shouldBe (1 to 3)
+          }
+        }
+      }
     }
   }
+
 
   "return empty select on empty table" in {
     withDB { implicit db =>
