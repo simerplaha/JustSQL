@@ -29,7 +29,11 @@ val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'R
 val insertParametric: Try[Int] =
   Sql {
     param =>
-      s"INSERT INTO USERS (id, name) VALUES (${param(1)}, ${param("Harry")}), (${param(2)}, ${param("Ryan")})"
+      s"""
+         |INSERT INTO USERS (id, name)
+         |     VALUES (${param(1)}, ${param("Harry")}),
+         |            (${param(2)}, ${param("Ryan")})
+         |""".stripMargin
   }.update()
 ```
 

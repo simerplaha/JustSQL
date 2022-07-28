@@ -31,7 +31,11 @@ object Example extends App {
   val insertParametric: Try[Int] =
     Sql {
       param =>
-        s"INSERT INTO USERS (id, name) VALUES (${param(1)}, ${param("Harry")}), (${param(2)}, ${param("Ryan")})"
+        s"""
+           |INSERT INTO USERS (id, name)
+           |     VALUES (${param(1)}, ${param("Harry")}),
+           |            (${param(2)}, ${param("Ryan")})
+           |""".stripMargin
     }.update()
 
   //  Or Transactionally
