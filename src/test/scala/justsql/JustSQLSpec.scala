@@ -34,7 +34,7 @@ class JustSQLSpec extends AnyWordSpec {
 
           Sql {
             param =>
-              s"INSERT INTO TEST_TABLE values (${param("value2").mkString})"
+              s"INSERT INTO TEST_TABLE values (${param ? "value2"})"
           }.update() shouldBe Success(1)
         }
       }
@@ -48,9 +48,9 @@ class JustSQLSpec extends AnyWordSpec {
                    |BEGIN;
                    |
                    |CREATE TABLE TEST_TABLE (value INT);
-                   |INSERT INTO TEST_TABLE values (${param(1).mkString}), (${param(2).mkString});
-                   |INSERT INTO TEST_TABLE values ${param(Seq(3, 4, 5)).map(placeholder => s"($placeholder)").mkString(", ")};
-                   |INSERT INTO TEST_TABLE values ${param(6, 7, 8).map(placeholder => s"($placeholder)").mkString(", ")};
+                   |INSERT INTO TEST_TABLE values (${param ? 1}), (${param ? 2});
+                   |INSERT INTO TEST_TABLE values ${param ?? (3, 4, 5)};
+                   |INSERT INTO TEST_TABLE values ${param ?? (6, 7, 8)};
                    |
                    |COMMIT;
                    |""".stripMargin
@@ -84,7 +84,7 @@ class JustSQLSpec extends AnyWordSpec {
 
           Sql {
             param =>
-              s"INSERT INTO TEST_TABLE values (${param(("String", 1)).mkString(", ")})"
+              s"INSERT INTO TEST_TABLE values (${param ? (("String", 1))})"
           }.update() shouldBe Success(1)
 
           "SELECT * from TEST_TABLE".select[(String, Int)]().success.value should contain only (("String", 1))

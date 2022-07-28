@@ -23,8 +23,47 @@ object SqlParams {
     SqlParams(ListBuffer.empty)
 }
 
+/**
+ * Single `?` indicates each parameter is comma seperated ?, ?, ?, ?.
+ *
+ * Double `??` indicates each parameter is comma seperated and within closed parentheses (?, ?), (?, ?).
+ * */
 case class SqlParams(params: ListBuffer[SqlParamWriterPair[_]],
                      placeholder: String = "?") {
+
+  def ?[P](col: P)(implicit colWriter: SqlParamWriter[P]): String = {
+    params addOne SqlParamWriterPair(col, colWriter)
+    Array.fill(colWriter.parametersCount())(placeholder).mkString(", ")
+  }
+
+  def ?[P](col: P*)(implicit colWriter: SqlParamWriter[P]): String =
+    col.map {
+      param =>
+        ?(param)(colWriter)
+    }.mkString(", ")
+
+  def ?[P](col: Iterable[P])(implicit colWriter: SqlParamWriter[P]): String =
+    col.map {
+      param =>
+        ?(param)(colWriter)
+    }.mkString(", ")
+
+  def ??[P](col: P)(implicit colWriter: SqlParamWriter[P]): String = {
+    params addOne SqlParamWriterPair(col, colWriter)
+    Array.fill(colWriter.parametersCount())(placeholder).mkString("(", ", ", ")")
+  }
+
+  def ??[P](col: P*)(implicit colWriter: SqlParamWriter[P]): String =
+    col.map {
+      param =>
+        ??(param)(colWriter)
+    }.mkString(", ")
+
+  def ??[P](col: Iterable[P])(implicit colWriter: SqlParamWriter[P]): String =
+    col.map {
+      param =>
+        ??(param)(colWriter)
+    }.mkString(", ")
 
   def apply[P](col: P)(implicit colWriter: SqlParamWriter[P]): Array[String] = {
     params addOne SqlParamWriterPair(col, colWriter)
