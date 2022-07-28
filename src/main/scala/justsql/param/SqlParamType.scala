@@ -14,26 +14,15 @@
  *  limitations under the License.
  */
 
-package justsql
+package justsql.param
 
 import java.sql.PreparedStatement
 
-trait QueryParam[T] extends ((PreparedStatement, Int, T) => Unit) {
-
-  override def apply(statement: PreparedStatement, index: Int, param: T): Unit
-
-}
-
-object QueryParam {
-
-  implicit object IntQueryParam extends QueryParam[Int] {
-    override def apply(statement: PreparedStatement, index: Int, param: Int): Unit =
-      statement.setInt(index, param)
-  }
-
-  implicit object StringQueryParam extends QueryParam[String] {
-    override def apply(statement: PreparedStatement, index: Int, param: String): Unit =
-      statement.setString(index, param)
-  }
-
+case class SqlParamType[P](param: P, queryParam: SqlParam[P]) {
+  def apply(preparedStatement: PreparedStatement, index: Int): Unit =
+    queryParam.set(
+      statement = preparedStatement,
+      index = index,
+      param = param
+    )
 }

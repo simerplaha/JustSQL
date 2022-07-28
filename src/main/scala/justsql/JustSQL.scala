@@ -22,6 +22,7 @@ import javax.sql.DataSource
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try, Using}
 import JustSQL._
+import justsql.param.SqlParams
 
 object JustSQL {
 
@@ -34,12 +35,14 @@ object JustSQL {
     else
       Failure(new Exception(s"Invalid row count. Expected 1. Actual ${rows.length}"))
 
-  def setParam(params: QueryParams, statement: PreparedStatement) =
-    params.params.zipWithIndex foreach {
-      case (param, index) =>
-        param(statement, index + 1)
+  @inline def setParam(params: SqlParams, statement: PreparedStatement) = {
+    var index = 1
+    params.params foreach {
+      param =>
+        param(statement, index)
+        index += 1
     }
-
+  }
 }
 
 class JustSQL(db: DataSource with AutoCloseable) extends Closeable {

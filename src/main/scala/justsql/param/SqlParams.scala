@@ -14,19 +14,19 @@
  *  limitations under the License.
  */
 
-package justsql
+package justsql.param
 
 import scala.collection.mutable.ListBuffer
 
-object QueryParams {
-  val empty: QueryParams =
-    QueryParams(ListBuffer.empty)
+object SqlParams {
+  val empty: SqlParams =
+    SqlParams(ListBuffer.empty)
 }
 
-case class QueryParams(params: ListBuffer[QueryParamTuple[_]]) {
+case class SqlParams(params: ListBuffer[SqlParamType[_]]) extends AnyVal {
 
-  def apply[P](param: P)(implicit setter: QueryParam[P]): String = {
-    params addOne QueryParamTuple(param, setter)
+  def apply[P](param: P)(implicit setter: SqlParam[P]): String = {
+    params addOne SqlParamType(param, setter)
     "?"
   }
 }
