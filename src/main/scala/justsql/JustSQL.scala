@@ -46,6 +46,8 @@ object JustSQL {
 
 class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
 
+
+
   def select[ROW: ClassTag](sql: Sql)(implicit rowParser: RowParser[ROW]): Try[Array[ROW]] =
     unsafeSelect(sql)(rowParser)
 

@@ -20,11 +20,13 @@ import java.sql.PreparedStatement
 
 case class ColWriterPair[P](param: P, colWriter: ColWriter[P]) {
 
-  def set(statement: PreparedStatement, index: Int): Int =
+  def set(statement: PreparedStatement, index: Int): Int = {
     colWriter(
       statement = statement,
       parameterIndex = index,
       paramValue = param
     )
+    index + colWriter.parametersCount()
+  }
 
 }

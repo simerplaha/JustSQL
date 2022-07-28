@@ -33,8 +33,8 @@ object Example extends App {
       param =>
         s"""
            |INSERT INTO USERS (id, name)
-           |     VALUES (${param(1)}, ${param("Harry")}),
-           |            (${param(2)}, ${param("Ryan")})
+           |     VALUES ${param((1, "Harry")).mkString("(", ", ", ")")},
+           |            ${param((2, "Ryan")).mkString("(", ", ", ")")}
            |""".stripMargin
     }.update()
 
