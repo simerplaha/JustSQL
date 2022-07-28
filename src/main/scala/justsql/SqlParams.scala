@@ -23,11 +23,11 @@ object SqlParams {
     SqlParams(ListBuffer.empty)
 }
 
-case class SqlParams(params: ListBuffer[SqlParamWriter[_]],
+case class SqlParams(params: ListBuffer[ColWriterPair[_]],
                      placeholder: String = "?") {
 
   def apply[P](col: P)(implicit colWriter: ColWriter[P]): String = {
-    params addOne SqlParamWriter(col, colWriter)
+    params addOne ColWriterPair(col, colWriter)
     placeholder
   }
 

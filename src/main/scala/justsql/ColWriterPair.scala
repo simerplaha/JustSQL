@@ -18,7 +18,7 @@ package justsql
 
 import java.sql.PreparedStatement
 
-case class SqlParamWriter[P](param: P, colWriter: ColWriter[P]) {
+case class ColWriterPair[P](param: P, colWriter: ColWriter[P]) {
 
   def set(statement: PreparedStatement, index: Int): Unit =
     colWriter(
