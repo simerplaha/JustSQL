@@ -16,24 +16,17 @@
 
 package justsql.param
 
+import justsql.ColWriter
+
 import java.sql.PreparedStatement
 
-trait SqlParam[P] {
+case class ParamColPair[P](param: P, colWriter: ColWriter[P]) {
 
-  def set(statement: PreparedStatement, index: Int, param: P): Unit
-
-}
-
-object SqlParam {
-
-  implicit object IntSqlParam extends SqlParam[Int] {
-    override def set(statement: PreparedStatement, index: Int, param: Int): Unit =
-      statement.setInt(index, param)
-  }
-
-  implicit object StringSqlParam extends SqlParam[String] {
-    override def set(statement: PreparedStatement, index: Int, param: String): Unit =
-      statement.setString(index, param)
-  }
+  def set(statement: PreparedStatement, index: Int): Unit =
+    colWriter(
+      statement = statement,
+      index = index,
+      param = param
+    )
 
 }

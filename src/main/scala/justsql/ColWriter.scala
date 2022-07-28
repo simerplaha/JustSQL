@@ -14,17 +14,26 @@
  *  limitations under the License.
  */
 
-package justsql.param
+package justsql
 
 import java.sql.PreparedStatement
 
-case class SqlParamSetter[P](param: P, sqlParam: SqlParam[P]) {
+trait ColWriter[P] extends ((PreparedStatement, Int, P) => Unit) {
 
-  def set(statement: PreparedStatement, index: Int): Unit =
-    sqlParam.set(
-      statement = statement,
-      index = index,
-      param = param
-    )
+  override def apply(statement: PreparedStatement, index: Int, param: P): Unit
+
+}
+
+object ColWriter {
+
+  implicit object IntColWriter extends ColWriter[Int] {
+    override def apply(statement: PreparedStatement, index: Int, param: Int): Unit =
+      statement.setInt(index, param)
+  }
+
+  implicit object StringColWriter extends ColWriter[String] {
+    override def apply(statement: PreparedStatement, index: Int, param: String): Unit =
+      statement.setString(index, param)
+  }
 
 }

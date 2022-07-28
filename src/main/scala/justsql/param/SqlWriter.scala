@@ -16,35 +16,37 @@
 
 package justsql.param
 
+import justsql.ColWriter
+
 import scala.collection.mutable.ListBuffer
 
-object SqlParams {
-  val empty: SqlParams =
-    SqlParams(ListBuffer.empty)
+object SqlWriter {
+  val empty: SqlWriter =
+    SqlWriter(ListBuffer.empty)
 }
 
-case class SqlParams(params: ListBuffer[SqlParamSetter[_]],
+case class SqlWriter(params: ListBuffer[ParamColPair[_]],
                      placeholder: String = "?") {
 
-  def apply[P](param: P)(implicit sqlParam: SqlParam[P]): String = {
-    params addOne SqlParamSetter(param, sqlParam)
+  def apply[P](col: P)(implicit colWriter: ColWriter[P]): String = {
+    params addOne ParamColPair(col, colWriter)
     placeholder
   }
 
-  def apply[P](params: P*)(implicit sqlParam: SqlParam[P]): Seq[String] =
-    params map apply[P]
+  def apply[P](col: P*)(implicit colWriter: ColWriter[P]): Seq[String] =
+    col map apply[P]
 
-  def apply[P](params: Iterable[P])(implicit sqlParam: SqlParam[P]): Iterable[String] =
-    params map apply[P]
+  def apply[P](col: Iterable[P])(implicit colWriter: ColWriter[P]): Iterable[String] =
+    col map apply[P]
 
-  def rows[P](params: P*)(implicit sqlParam: SqlParam[P]): String =
-    params.map {
+  def rows[P](rows: P*)(implicit colWriter: ColWriter[P]): String =
+    rows.map {
       param =>
         s"(${apply(param)})"
     }.mkString(", ")
 
-  def rows[P](params: Iterable[P])(implicit sqlParam: SqlParam[P]): String =
-    params.map {
+  def rows[P](rows: Iterable[P])(implicit colWriter: ColWriter[P]): String =
+    rows.map {
       param =>
         s"(${apply(param)})"
     }.mkString(", ")

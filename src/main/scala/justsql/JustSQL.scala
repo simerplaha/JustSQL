@@ -22,7 +22,7 @@ import javax.sql.DataSource
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try, Using}
 import JustSQL._
-import justsql.param.SqlParams
+import justsql.param.SqlWriter
 
 object JustSQL {
 
@@ -35,7 +35,7 @@ object JustSQL {
     else
       Failure(new Exception(s"Invalid row count. Expected 1. Actual ${rows.length}"))
 
-  @inline def setParams(params: SqlParams, statement: PreparedStatement) = {
+  @inline def setParams(params: SqlWriter, statement: PreparedStatement) = {
     var index = 1
     params.params foreach {
       param =>
