@@ -23,8 +23,8 @@ case class ColWriterPair[P](param: P, colWriter: ColWriter[P]) {
   def set(statement: PreparedStatement, index: Int): Int =
     colWriter(
       statement = statement,
-      index = index,
-      param = param
+      parameterIndex = index,
+      paramValue = param
     )
 
 }

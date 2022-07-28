@@ -77,6 +77,19 @@ class JustSQLSpec extends AnyWordSpec {
           }
         }
       }
+
+      "insert tuple" in {
+        withDB { implicit db =>
+          "CREATE TABLE TEST_TABLE (value varchar, int INT)".update() shouldBe Success(0)
+
+          Sql {
+            param =>
+              s"INSERT INTO TEST_TABLE values (${param(("String", 1)).mkString(", ")})"
+          }.update() shouldBe Success(1)
+
+          "SELECT * from TEST_TABLE".select[(String, Int)]().success.value should contain only (("String", 1))
+        }
+      }
     }
   }
 
