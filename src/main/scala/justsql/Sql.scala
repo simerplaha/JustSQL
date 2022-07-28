@@ -30,7 +30,7 @@ object Sql {
     new Sql(sql, params)
   }
 
-  def apply(sql: String): Sql =
+  @inline def apply(sql: String): Sql =
     new Sql(sql, SqlParams.empty)
 
 }
