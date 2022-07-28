@@ -19,7 +19,7 @@ package justsql
 
 import java.sql.ResultSet
 
-sealed trait RowParser[ROW] extends Function[ResultSet, ROW] {
+trait RowParser[ROW] extends Function[ResultSet, ROW] {
   def apply(resultSet: ResultSet): ROW
 }
 
