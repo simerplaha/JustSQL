@@ -33,11 +33,11 @@ Or `INSERT` using parameters
 //Or insert using parameters
 val insertParametric: Try[Int] =
   Sql {
-    param =>
+    implicit params =>
       s"""
          |INSERT INTO USERS (id, name)
-         |     VALUES ${param ?? ((1, "Harry"))},
-         |            ${param ?? ((2, "Ryan"))}
+         |     VALUES ${(1, "Harry") ??},
+         |            ${(2, "Ryan") ??}
          |""".stripMargin
   }.update()
 ```

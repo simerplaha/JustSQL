@@ -30,7 +30,7 @@ object Example extends App {
 
   val insertParametric: Try[Int] =
     Sql {
-      implicit param =>
+      implicit params =>
         s"""
            |INSERT INTO USERS (id, name)
            |     VALUES ${(1, "Harry") ??},
