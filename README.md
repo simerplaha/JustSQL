@@ -31,8 +31,8 @@ val insertParametric: Try[Int] =
     param =>
       s"""
          |INSERT INTO USERS (id, name)
-         |     VALUES (${param(1)}, ${param("Harry")}),
-         |            (${param(2)}, ${param("Ryan")})
+         |     VALUES ${param ?? ((1, "Harry"))},
+         |            ${param ?? ((2, "Ryan"))}
          |""".stripMargin
   }.update()
 ```
