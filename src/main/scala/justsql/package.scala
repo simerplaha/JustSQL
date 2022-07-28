@@ -1,5 +1,6 @@
 import java.sql.ResultSet
 import scala.reflect.ClassTag
+
 /*
  * Copyright 2022 Simer JS Plaha (simer.j@gmail.com - @simerplaha)
  *
@@ -21,7 +22,7 @@ import scala.util.Try
 package object justsql {
 
   /** Query Implicits */
-  implicit class SQLImplicits(val sql: String) extends AnyVal {
+  implicit class SQLImplicits(val sql: Sql) extends AnyVal {
     def select[ROW: ClassTag]()(implicit db: JustSQL,
                                 rowParser: RowParser[ROW]): Try[Array[ROW]] =
       db.select(sql)
@@ -42,6 +43,29 @@ package object justsql {
 
     def unsafeSelectHead[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[ROW] =
       db.unsafeSelectHead(sql)(rowParser)
+  }
+
+  implicit class StringSQLImplicits(val sql: String) extends AnyVal {
+    def select[ROW: ClassTag]()(implicit db: JustSQL,
+                                rowParser: RowParser[ROW]): Try[Array[ROW]] =
+      Sql(sql).select()
+
+    def selectHead[ROW: ClassTag]()(implicit db: JustSQL,
+                                    rowParser: RowParser[ROW]): Try[ROW] =
+      Sql(sql).selectHead()
+
+    def selectMap[ROW, B: ClassTag](f: ROW => B)(implicit db: JustSQL,
+                                                 rowParser: RowParser[ROW]): Try[Array[B]] =
+      Sql(sql).selectMap(f)
+
+    def update()(implicit db: JustSQL): Try[Int] =
+      Sql(sql).update()
+
+    def unsafeSelect[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[Array[ROW]] =
+      Sql(sql).unsafeSelect(rowParser)
+
+    def unsafeSelectHead[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[ROW] =
+      Sql(sql).unsafeSelectHead(rowParser)
   }
 
 }

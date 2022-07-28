@@ -28,7 +28,12 @@ class JustSQLSpec extends AnyWordSpec {
   "run update" in {
     withDB { implicit db =>
       "CREATE TABLE TEST_TABLE (value varchar)".update() shouldBe Success(0)
-      "INSERT INTO TEST_TABLE values ('value')".update() shouldBe Success(1)
+      "INSERT INTO TEST_TABLE values ('value1')".update() shouldBe Success(1)
+
+      Sql {
+        param =>
+          s"INSERT INTO TEST_TABLE values (${param("value2")})"
+      }.update() shouldBe Success(1)
     }
   }
 

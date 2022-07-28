@@ -17,10 +17,11 @@
 package justsql
 
 import java.io.Closeable
-import java.sql.ResultSet
+import java.sql.{PreparedStatement, ResultSet}
 import javax.sql.DataSource
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try, Using}
+import JustSQL._
 
 object JustSQL {
 
@@ -33,35 +34,44 @@ object JustSQL {
     else
       Failure(new Exception(s"Invalid row count. Expected 1. Actual ${rows.length}"))
 
+  def setParam(params: QueryParams, statement: PreparedStatement) =
+    params.params.zipWithIndex foreach {
+      case (param, index) =>
+        param(statement, index + 1)
+    }
+
 }
 
 class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
 
-  def select[ROW: ClassTag](sql: String)(implicit rowParser: RowParser[ROW]): Try[Array[ROW]] =
+  def select[ROW: ClassTag](sql: Sql)(implicit rowParser: RowParser[ROW]): Try[Array[ROW]] =
     unsafeSelect(sql)(rowParser)
 
-  def selectHead[ROW: ClassTag](sql: String)(implicit rowParser: RowParser[ROW]): Try[ROW] =
+  def selectHead[ROW: ClassTag](sql: Sql)(implicit rowParser: RowParser[ROW]): Try[ROW] =
     select(sql) flatMap JustSQL.assertHasOneRow
 
-  def selectMap[ROW, B: ClassTag](sql: String)(f: ROW => B)(implicit rowParser: RowParser[ROW]): Try[Array[B]] =
+  def selectMap[ROW, B: ClassTag](sql: Sql)(f: ROW => B)(implicit rowParser: RowParser[ROW]): Try[Array[B]] =
     unsafeSelect(sql)(resultSet => f(rowParser(resultSet)))
 
-  def update(sql: String): Try[Int] =
+  def update(sql: Sql): Try[Int] =
     Using.Manager {
       manager =>
         val connection = manager(db.getConnection())
-        val statement = manager(connection.prepareStatement(sql))
+        val statement = manager(connection.prepareStatement(sql.query))
+        setParam(sql.params, statement)
         statement.executeUpdate()
     }
 
-  def unsafeSelectHead[ROW: ClassTag](sql: String)(parser: ResultSet => ROW): Try[ROW] =
+  def unsafeSelectHead[ROW: ClassTag](sql: Sql)(parser: ResultSet => ROW): Try[ROW] =
     unsafeSelect[ROW](sql)(parser) flatMap JustSQL.assertHasOneRow
 
-  def unsafeSelect[ROW: ClassTag](sql: String)(rowParser: ResultSet => ROW): Try[Array[ROW]] =
+  def unsafeSelect[ROW: ClassTag](sql: Sql)(rowParser: ResultSet => ROW): Try[Array[ROW]] =
     Using.Manager {
       manager =>
         val connection = manager(db.getConnection())
-        val statement = manager(connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
+        val statement = manager(connection.prepareStatement(sql.query, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
+        setParam(sql.params, statement)
+
         val resultSet = manager(statement.executeQuery())
 
         if (resultSet.last()) {
