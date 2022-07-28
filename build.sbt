@@ -48,22 +48,36 @@ val publishSettings = Seq[Setting[_]](
     )
 )
 
-lazy val root = (project in file("."))
-  .settings(
-    name := "JustSQL",
-    ThisBuild / scalaVersion := scala213,
-    publishSettings,
-    libraryDependencies ++=
-      Seq(
-        /** LOGS */
-        "ch.qos.logback" % "logback-classic" % "1.2.11" % Test,
-        "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" % Test,
+lazy val root =
+  (project in file("."))
+    .settings(
+      name := "JustSQL",
+      ThisBuild / scalaVersion := scala213,
+      publishSettings
+    ).aggregate(JustSQL, HikariCP)
 
-        /** DATABASE */
-        "com.zaxxer" % "HikariCP" % "5.0.1" % Test,
-        "org.postgresql" % "postgresql" % "42.3.6" % Test,
+lazy val JustSQL =
+  (project in file("JustSQL"))
+    .settings(
+      name := "JustSQL",
+      ThisBuild / scalaVersion := scala213,
+      publishSettings,
+      libraryDependencies ++=
+        Seq(
+          /** TEST */
+          "ch.qos.logback" % "logback-classic" % "1.2.11" % Test,
+          "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" % Test,
+          "org.postgresql" % "postgresql" % "42.3.6" % Test,
+          "org.scalatest" %% "scalatest" % "3.2.12" % Test
+        )
+    ).dependsOn(HikariCP % Test)
 
-        /** TEST */
-        "org.scalatest" %% "scalatest" % "3.2.12" % Test,
-      )
-  )
+lazy val HikariCP =
+  (project in file("HikariCP"))
+    .settings(
+      name := "hikariCP",
+      ThisBuild / scalaVersion := scala213,
+      publishSettings,
+      libraryDependencies ++=
+        Seq("com.zaxxer" % "HikariCP" % "5.0.1")
+    )
