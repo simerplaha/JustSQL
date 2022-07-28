@@ -62,7 +62,7 @@ class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
     Using.Manager {
       manager =>
         val connection = manager(db.getConnection())
-        val statement = manager(connection.prepareStatement(sql.query))
+        val statement = manager(connection.prepareStatement(sql.sql))
         setParams(sql.params, statement)
         statement.executeUpdate()
     }
@@ -74,7 +74,7 @@ class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
     Using.Manager {
       manager =>
         val connection = manager(db.getConnection())
-        val statement = manager(connection.prepareStatement(sql.query, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
+        val statement = manager(connection.prepareStatement(sql.sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
         setParams(sql.params, statement)
 
         val resultSet = manager(statement.executeQuery())

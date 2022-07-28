@@ -1,5 +1,4 @@
-import java.sql.ResultSet
-import scala.reflect.ClassTag
+
 
 /*
  * Copyright 2022 Simer JS Plaha (simer.j@gmail.com - @simerplaha)
@@ -17,55 +16,9 @@ import scala.reflect.ClassTag
  *  limitations under the License.
  */
 
-import scala.util.Try
-
 package object justsql {
 
-  /** Query Implicits */
-  implicit class SQLImplicits(val sql: Sql) extends AnyVal {
-    def select[ROW: ClassTag]()(implicit db: JustSQL,
-                                rowParser: RowParser[ROW]): Try[Array[ROW]] =
-      db.select(sql)
-
-    def selectOne[ROW: ClassTag]()(implicit db: JustSQL,
-                                    rowParser: RowParser[ROW]): Try[ROW] =
-      db.selectOne(sql)
-
-    def selectMap[ROW, B: ClassTag](f: ROW => B)(implicit db: JustSQL,
-                                                 rowParser: RowParser[ROW]): Try[Array[B]] =
-      db.selectMap(sql)(f)
-
-    def update()(implicit db: JustSQL): Try[Int] =
-      db.update(sql)
-
-    def unsafeSelect[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[Array[ROW]] =
-      db.unsafeSelect(sql)(rowParser)
-
-    def unsafeSelectOne[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[ROW] =
-      db.unsafeSelectOne(sql)(rowParser)
-  }
-
-  implicit class StringSQLImplicits(val sql: String) extends AnyVal {
-    def select[ROW: ClassTag]()(implicit db: JustSQL,
-                                rowParser: RowParser[ROW]): Try[Array[ROW]] =
-      Sql(sql).select()
-
-    def selectOne[ROW: ClassTag]()(implicit db: JustSQL,
-                                    rowParser: RowParser[ROW]): Try[ROW] =
-      Sql(sql).selectOne()
-
-    def selectMap[ROW, B: ClassTag](f: ROW => B)(implicit db: JustSQL,
-                                                 rowParser: RowParser[ROW]): Try[Array[B]] =
-      Sql(sql).selectMap(f)
-
-    def update()(implicit db: JustSQL): Try[Int] =
-      Sql(sql).update()
-
-    def unsafeSelect[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[Array[ROW]] =
-      Sql(sql).unsafeSelect(rowParser)
-
-    def unsafeSelectOne[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[ROW] =
-      Sql(sql).unsafeSelectOne(rowParser)
-  }
+  @inline implicit def convertStringToSQL(sql: String): Sql =
+    Sql(sql)
 
 }
