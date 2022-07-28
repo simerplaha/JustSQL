@@ -27,9 +27,9 @@ package object justsql {
                                 rowParser: RowParser[ROW]): Try[Array[ROW]] =
       db.select(sql)
 
-    def selectHead[ROW: ClassTag]()(implicit db: JustSQL,
+    def selectOne[ROW: ClassTag]()(implicit db: JustSQL,
                                     rowParser: RowParser[ROW]): Try[ROW] =
-      db.selectHead(sql)
+      db.selectOne(sql)
 
     def selectMap[ROW, B: ClassTag](f: ROW => B)(implicit db: JustSQL,
                                                  rowParser: RowParser[ROW]): Try[Array[B]] =
@@ -41,8 +41,8 @@ package object justsql {
     def unsafeSelect[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[Array[ROW]] =
       db.unsafeSelect(sql)(rowParser)
 
-    def unsafeSelectHead[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[ROW] =
-      db.unsafeSelectHead(sql)(rowParser)
+    def unsafeSelectOne[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[ROW] =
+      db.unsafeSelectOne(sql)(rowParser)
   }
 
   implicit class StringSQLImplicits(val sql: String) extends AnyVal {
@@ -50,9 +50,9 @@ package object justsql {
                                 rowParser: RowParser[ROW]): Try[Array[ROW]] =
       Sql(sql).select()
 
-    def selectHead[ROW: ClassTag]()(implicit db: JustSQL,
+    def selectOne[ROW: ClassTag]()(implicit db: JustSQL,
                                     rowParser: RowParser[ROW]): Try[ROW] =
-      Sql(sql).selectHead()
+      Sql(sql).selectOne()
 
     def selectMap[ROW, B: ClassTag](f: ROW => B)(implicit db: JustSQL,
                                                  rowParser: RowParser[ROW]): Try[Array[B]] =
@@ -64,8 +64,8 @@ package object justsql {
     def unsafeSelect[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[Array[ROW]] =
       Sql(sql).unsafeSelect(rowParser)
 
-    def unsafeSelectHead[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[ROW] =
-      Sql(sql).unsafeSelectHead(rowParser)
+    def unsafeSelectOne[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[ROW] =
+      Sql(sql).unsafeSelectOne(rowParser)
   }
 
 }

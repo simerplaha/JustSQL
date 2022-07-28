@@ -95,9 +95,9 @@ class JustSQLSpec extends AnyWordSpec {
 
       /** COUNT */
       //Count using typed API
-      "SELECT count(*) FROM TEST_TABLE".selectHead[Int]() shouldBe Success(0)
+      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]() shouldBe Success(0)
       //Count using ResultSet
-      "SELECT count(*) as c FROM TEST_TABLE".unsafeSelectHead(_.getInt("c")) shouldBe Success(0)
+      "SELECT count(*) as c FROM TEST_TABLE".unsafeSelectOne(_.getInt("c")) shouldBe Success(0)
     }
   }
 
@@ -116,9 +116,9 @@ class JustSQLSpec extends AnyWordSpec {
 
       /** COUNT */
       //Count using typed API
-      "SELECT count(*) FROM TEST_TABLE".selectHead[Int]() shouldBe Success(3)
+      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]() shouldBe Success(3)
       //Count using ResultSet
-      "SELECT count(*) as c FROM TEST_TABLE".unsafeSelectHead(_.getInt("c")) shouldBe Success(3)
+      "SELECT count(*) as c FROM TEST_TABLE".unsafeSelectOne(_.getInt("c")) shouldBe Success(3)
     }
   }
 
@@ -128,11 +128,11 @@ class JustSQLSpec extends AnyWordSpec {
 
       /** COUNT */
       //Count using typed API
-      "SELECT count(*) FROM TEST_TABLE".selectHead[Int]() shouldBe Success(0)
+      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]() shouldBe Success(0)
       //Count using typed API with naming column
-      "SELECT count(*) as count FROM TEST_TABLE".selectHead[Int]() shouldBe Success(0)
+      "SELECT count(*) as count FROM TEST_TABLE".selectOne[Int]() shouldBe Success(0)
       //Count using ResultSet
-      "SELECT count(*) as count FROM TEST_TABLE".unsafeSelectHead[Int](_.getInt("count")) shouldBe Success(0)
+      "SELECT count(*) as count FROM TEST_TABLE".unsafeSelectOne[Int](_.getInt("count")) shouldBe Success(0)
     }
   }
 
@@ -143,11 +143,11 @@ class JustSQLSpec extends AnyWordSpec {
 
       /** COUNT */
       //Count using typed API
-      "SELECT count(*) FROM TEST_TABLE".selectHead[Int]() shouldBe Success(3)
+      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]() shouldBe Success(3)
       //Count using typed API with naming column
-      "SELECT count(*) as count FROM TEST_TABLE".selectHead[Int]() shouldBe Success(3)
+      "SELECT count(*) as count FROM TEST_TABLE".selectOne[Int]() shouldBe Success(3)
       //Count using ResultSet
-      "SELECT count(*) as count FROM TEST_TABLE".unsafeSelectHead(_.getInt("count")) shouldBe Success(3)
+      "SELECT count(*) as count FROM TEST_TABLE".unsafeSelectOne(_.getInt("count")) shouldBe Success(3)
     }
   }
 
@@ -201,11 +201,11 @@ class JustSQLSpec extends AnyWordSpec {
 
       /** COUNT */
       //Count using typed API
-      "SELECT count(*) FROM TEST_TABLE".selectHead[Int]() shouldBe Success(3)
+      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]() shouldBe Success(3)
       //Count using typed API with naming column
-      "SELECT count(*) as count FROM TEST_TABLE".selectHead[Int]() shouldBe Success(3)
+      "SELECT count(*) as count FROM TEST_TABLE".selectOne[Int]() shouldBe Success(3)
       //Count using ResultSet
-      "SELECT count(*) as count FROM TEST_TABLE".unsafeSelectHead[Int](_.getInt("count")) shouldBe Success(3)
+      "SELECT count(*) as count FROM TEST_TABLE".unsafeSelectOne[Int](_.getInt("count")) shouldBe Success(3)
     }
   }
 }

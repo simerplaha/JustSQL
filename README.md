@@ -66,12 +66,12 @@ Read all `User`s
 val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]()
 ```
 
-# selectHead()
+# selectOne()
 
 Expects `1` row else returns `Failure`
 
 ```scala
-val count: Try[Int] = "SELECT count(*) FROM USERS".selectHead[Int]()
+val count: Try[Int] = "SELECT count(*) FROM USERS".selectOne[Int]()
 ```
 
 # selectMap()
@@ -106,8 +106,8 @@ Unsafe APIs give direct access to low level `java.sql.ResultSet` type.
 val names: Try[Array[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name"))
 ```
 
-## unsafeHead()
+## unsafeSelectOne()
 
 ```scala
-val unsafeCount: Try[Int] = "SELECT count(*) as count FROM USERS".unsafeSelectHead(_.getInt("count"))
+val unsafeCount: Try[Int] = "SELECT count(*) as count FROM USERS".unsafeSelectOne(_.getInt("count"))
 ```
