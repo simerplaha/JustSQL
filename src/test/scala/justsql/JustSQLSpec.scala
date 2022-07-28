@@ -49,8 +49,8 @@ class JustSQLSpec extends AnyWordSpec {
                    |
                    |CREATE TABLE TEST_TABLE (value INT);
                    |INSERT INTO TEST_TABLE values (${param(1)}), (${param(2)});
-                   |INSERT INTO TEST_TABLE values ${param.rows(Seq(3, 4, 5))};
-                   |INSERT INTO TEST_TABLE values ${param.rows(6, 7, 8)};
+                   |INSERT INTO TEST_TABLE values ${param.tupled(Seq(3, 4, 5))};
+                   |INSERT INTO TEST_TABLE values ${param.tupled(6, 7, 8)};
                    |
                    |COMMIT;
                    |""".stripMargin

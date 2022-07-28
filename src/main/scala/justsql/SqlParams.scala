@@ -37,13 +37,13 @@ case class SqlParams(params: ListBuffer[ColWriterPair[_]],
   def apply[P](col: Iterable[P])(implicit colWriter: ColWriter[P]): Iterable[String] =
     col map apply[P]
 
-  def rows[P](rows: P*)(implicit colWriter: ColWriter[P]): String =
+  def tupled[P](rows: P*)(implicit colWriter: ColWriter[P]): String =
     rows.map {
       param =>
         s"(${apply(param)})"
     }.mkString(", ")
 
-  def rows[P](rows: Iterable[P])(implicit colWriter: ColWriter[P]): String =
+  def tupled[P](rows: Iterable[P])(implicit colWriter: ColWriter[P]): String =
     rows.map {
       param =>
         s"(${apply(param)})"
