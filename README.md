@@ -36,8 +36,8 @@ val insertParametric: Try[Int] =
     implicit params =>
       s"""
          |INSERT INTO USERS (id, name)
-         |     VALUES ${(1, "Harry") ??},
-         |            ${(2, "Ryan") ??}
+         |     VALUES ${(1, "Harry").??},
+         |            ${(2, "Ryan").??}
          |""".stripMargin
   }.update()
 ```
