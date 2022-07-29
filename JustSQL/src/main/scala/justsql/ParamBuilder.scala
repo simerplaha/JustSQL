@@ -16,18 +16,22 @@
 
 package justsql
 
+import justsql.ParamBuilder._
+
 import scala.collection.mutable.ListBuffer
 
 object ParamBuilder {
-  val empty: ParamBuilder =
+  final val placeholder: String =
+    "?"
+
+  final val empty: ParamBuilder =
     ParamBuilder(ListBuffer.empty)
 }
 
 /**
  * `?` indicates each parameter is comma seperated ?, ?, ?, ?
  * */
-case class ParamBuilder(params: ListBuffer[ParamValueSetter[_]],
-                        placeholder: String = "?") {
+case class ParamBuilder(params: ListBuffer[ParamValueSetter[_]]) extends AnyVal {
 
   @inline def ?[P](param: P)(implicit sqlParam: ParamSetter[P]): String =
     apply(param).mkString(", ")
