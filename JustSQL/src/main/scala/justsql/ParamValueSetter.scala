@@ -1,5 +1,3 @@
-
-
 /*
  * Copyright 2022 Simer JS Plaha (simer.j@gmail.com - @simerplaha)
  *
@@ -16,21 +14,17 @@
  *  limitations under the License.
  */
 
-package object justsql {
+package justsql
 
-  @inline implicit def convertStringToSQL(sql: String): Sql =
-    Sql(sql)
+import java.sql.PreparedStatement
 
-  implicit class ParamImplicits[P](val param: P) extends AnyVal {
-    def ?(implicit sqlParam: ParamSetter[P],
-          builder: ParamBuilder): String =
-      builder ? param
-  }
+case class ParamValueSetter[P](paramValue: P, param: ParamSetter[P]) {
 
-  implicit class MultiParamImplicits[P](val param: Iterable[P]) extends AnyVal {
-    def ?(implicit sqlParam: ParamSetter[P],
-          builder: ParamBuilder): String =
-      builder ? param
-  }
+  def set(statement: PreparedStatement, paramIndex: Int): Unit =
+    param(
+      statement = statement,
+      paramIndex = paramIndex,
+      paramValue = paramValue
+    )
 
 }

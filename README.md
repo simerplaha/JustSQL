@@ -29,7 +29,7 @@ val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'R
 
 Or `INSERT` using parameters. 
 
-Types with suffix `?` get used as SQL parameters. 
+SQL parameters are set with the suffix `?`. 
 
 ```scala
 //Or insert using parameters
