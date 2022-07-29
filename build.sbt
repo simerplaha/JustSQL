@@ -54,7 +54,7 @@ lazy val root =
       name := "JustSQL-root",
       ThisBuild / scalaVersion := scala213,
       publishSettings
-    ).aggregate(JustSQL, HikariCP)
+    ).aggregate(JustSQL, HikariDS)
 
 lazy val JustSQL =
   (project in file("JustSQL"))
@@ -69,12 +69,12 @@ lazy val JustSQL =
           "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" % Test,
           "org.scalatest" %% "scalatest" % "3.2.12" % Test
         )
-    ).dependsOn(HikariCP % Test)
+    ).dependsOn(HikariDS % Test)
 
-lazy val HikariCP =
-  (project in file("HikariCP"))
+lazy val HikariDS =
+  (project in file("HikariDS"))
     .settings(
-      name := "hikariCP",
+      name := "hikariDS",
       ThisBuild / scalaVersion := scala213,
       publishSettings,
       libraryDependencies ++=
