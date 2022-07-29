@@ -25,20 +25,12 @@ package object justsql {
     def ?(implicit colWriter: SqlParam[P],
           builder: SqlParamBuilder): String =
       builder ? param
-
-    def ??(implicit colWriter: SqlParam[P],
-           builder: SqlParamBuilder): String =
-      builder ?? param
   }
 
   implicit class MultiParamImplicits[P](val param: Iterable[P]) extends AnyVal {
     def ?(implicit colWriter: SqlParam[P],
           builder: SqlParamBuilder): String =
       builder ? param
-
-    def ??(implicit colWriter: SqlParam[P],
-           builder: SqlParamBuilder): String =
-      builder ?? param
   }
 
 }

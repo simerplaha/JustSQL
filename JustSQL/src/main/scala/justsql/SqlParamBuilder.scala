@@ -24,9 +24,7 @@ object SqlParamBuilder {
 }
 
 /**
- * Single `?` indicates each parameter is comma seperated ?, ?, ?, ?.
- *
- * Double `??` indicates each parameter is comma seperated and within closed parentheses (?, ?), (?, ?).
+ * `?` indicates each parameter is comma seperated ?, ?, ?, ?
  * */
 case class SqlParamBuilder(params: ListBuffer[SqlParamWriter[_]],
                            placeholder: String = "?") {
@@ -40,17 +38,6 @@ case class SqlParamBuilder(params: ListBuffer[SqlParamWriter[_]],
     params.map {
       param =>
         this ? param
-    }.mkString(", ")
-
-  def ??[P](param: P)(implicit sqlParam: SqlParam[P]): String = {
-    params addOne SqlParamWriter(param, sqlParam)
-    Array.fill(sqlParam.parametersCount())(placeholder).mkString("(", ", ", ")")
-  }
-
-  def ??[P](params: Iterable[P])(implicit sqlParam: SqlParam[P]): String =
-    params.map {
-      param =>
-        this ?? param
     }.mkString(", ")
 
   def apply[P](param: P)(implicit sqlParam: SqlParam[P]): Array[String] = {

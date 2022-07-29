@@ -49,14 +49,13 @@ class JustSQLSpec extends AnyWordSpec {
                    |
                    |CREATE TABLE TEST_TABLE (value INT);
                    |INSERT INTO TEST_TABLE values (${1.?}), (${2.?});
-                   |INSERT INTO TEST_TABLE values ${Seq(3, 4, 5).??};
-                   |INSERT INTO TEST_TABLE values ${Seq(6, 7, 8).??};
+                   |INSERT INTO TEST_TABLE values (${3.?}), (${4.?});
                    |
                    |COMMIT;
                    |""".stripMargin
             }.update() shouldBe Success(0)
 
-            "SELECT * from TEST_TABLE".select[Int]().success.value shouldBe (1 to 8)
+            "SELECT * from TEST_TABLE".select[Int]().success.value shouldBe (1 to 4)
           }
         }
 
