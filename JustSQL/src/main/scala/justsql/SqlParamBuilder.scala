@@ -29,10 +29,8 @@ object SqlParamBuilder {
 case class SqlParamBuilder(params: ListBuffer[SqlParamWriter[_]],
                            placeholder: String = "?") {
 
-  def ?[P](param: P)(implicit sqlParam: SqlParam[P]): String = {
-    params addOne SqlParamWriter(param, sqlParam)
-    Array.fill(sqlParam.parametersCount())(placeholder).mkString(", ")
-  }
+  @inline def ?[P](param: P)(implicit sqlParam: SqlParam[P]): String =
+    apply(param).mkString(", ")
 
   def ?[P](params: Iterable[P])(implicit sqlParam: SqlParam[P]): String =
     params.map {
@@ -45,7 +43,7 @@ case class SqlParamBuilder(params: ListBuffer[SqlParamWriter[_]],
     Array.fill(sqlParam.parametersCount())(placeholder)
   }
 
-  def apply[P](params: P*)(implicit sqlParam: SqlParam[P]): Iterable[String] =
+  @inline def apply[P](params: P*)(implicit sqlParam: SqlParam[P]): Iterable[String] =
     apply(params)
 
   def apply[P](params: Iterable[P])(implicit sqlParam: SqlParam[P]): Iterable[String] =
