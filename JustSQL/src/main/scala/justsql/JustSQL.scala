@@ -51,9 +51,6 @@ class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
   def selectOne[ROW: ClassTag](sql: Sql)(implicit rowParser: RowParser[ROW]): Try[ROW] =
     select(sql) flatMap JustSQL.assertHasOneRow
 
-  def selectMap[ROW, B: ClassTag](sql: Sql)(f: ROW => B)(implicit rowParser: RowParser[ROW]): Try[Array[B]] =
-    unsafeSelect(sql)(resultSet => f(rowParser(resultSet)))
-
   def update(sql: Sql): Try[Int] =
     Using.Manager {
       manager =>

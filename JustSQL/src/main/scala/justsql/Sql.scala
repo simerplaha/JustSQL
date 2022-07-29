@@ -45,10 +45,6 @@ case class Sql(sql: String, params: SqlParamBuilder) {
                                  rowParser: RowParser[ROW]): Try[ROW] =
     db.selectOne(this)
 
-  def selectMap[ROW, B: ClassTag](f: ROW => B)(implicit db: JustSQL,
-                                               rowParser: RowParser[ROW]): Try[Array[B]] =
-    db.selectMap(this)(f)
-
   def update()(implicit db: JustSQL): Try[Int] =
     db.update(this)
 

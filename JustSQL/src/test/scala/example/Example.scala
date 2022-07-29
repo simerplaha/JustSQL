@@ -65,8 +65,6 @@ object Example extends App {
   val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]()
   //Select first row
   val head: Try[Int] = "SELECT count(*) FROM USERS".selectOne[Int]()
-  //Select and map to names
-  val userNames: Try[Array[String]] = "SELECT * FROM USERS".selectMap[User, String](_.name)
   //Select all and then map to names
   val userNamesMap: Try[Array[String]] = "SELECT * FROM USERS".select[User]().map(_.map(_.name))
   //Unsafe select

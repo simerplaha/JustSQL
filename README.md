@@ -36,8 +36,8 @@ val insertParametric: Try[Int] =
     implicit params =>
       s"""
          |INSERT INTO USERS (id, name)
-         |     VALUES ${(1, "Harry").??},
-         |            ${(2, "Ryan").??}
+         |     VALUES (${1.?}, ${"Harry".?}),
+         |            (${2.?}, ${"Ryan".?})
          |""".stripMargin
   }.update()
 ```
@@ -87,20 +87,6 @@ Expects `1` row else returns `Failure`
 
 ```scala
 val count: Try[Int] = "SELECT count(*) FROM USERS".selectOne[Int]()
-```
-
-# selectMap()
-
-`selectMap` transforms `User` into another type within the parser.
-
-```scala
-val map: Try[Array[String]] = "SELECT * FROM USERS".selectMap[User, String](_.name)
-```
-
-Alternatively, you can always run `map` on basic `select`
-
-```scala
-val names: Try[Array[String]] = "SELECT * FROM USERS".select[User]().map(_.map(_.name))
 ```
 
 # Parser

@@ -81,14 +81,12 @@ class JustSQLSpec extends AnyWordSpec {
         withDB { implicit db =>
           "CREATE TABLE TEST_TABLE (value varchar, int INT)".update() shouldBe Success(0)
 
-          val data = ("String", 1)
-
           Sql {
-            param =>
-              s"INSERT INTO TEST_TABLE values ${param ?? data}"
+            implicit param =>
+              s"INSERT INTO TEST_TABLE values (${"String" ?}, ${1 ?})"
           }.update() shouldBe Success(1)
 
-          "SELECT * from TEST_TABLE".select[(String, Int)]().success.value should contain only data
+          "SELECT * from TEST_TABLE".select[(String, Int)]().success.value should contain only (("String", 1))
         }
       }
     }
@@ -102,8 +100,6 @@ class JustSQLSpec extends AnyWordSpec {
       /** SELECT */
       //Select using typed API
       "SELECT * FROM TEST_TABLE".select[String]().success.value shouldBe Array.empty[String]
-      //Select and then map
-      "SELECT * FROM TEST_TABLE".selectMap[String, Int](_.toInt).success.value shouldBe Array.empty[Int]
       //Select using Java ResultSet
       "SELECT * FROM TEST_TABLE".unsafeSelect[String](_.getString("key")).success.value shouldBe Array.empty[String]
 
@@ -123,8 +119,6 @@ class JustSQLSpec extends AnyWordSpec {
       /** SELECT */
       //Select using typed API
       "SELECT * FROM TEST_TABLE".select[String]().success.value shouldBe Array("1", "2", "3")
-      //Select and then map
-      "SELECT * FROM TEST_TABLE".selectMap[String, Int](_.toInt).success.value shouldBe Array(1, 2, 3)
       //Select using Java ResultSet
       "SELECT * FROM TEST_TABLE".unsafeSelect[String](_.getString("key")).success.value shouldBe Array("1", "2", "3")
 
@@ -203,14 +197,6 @@ class JustSQLSpec extends AnyWordSpec {
           (0, "string1", true),
           (1, "string2", false),
           (2, "string3", true)
-        )
-
-      /** SELECT USING A CASE CLASS & MAP TO ANOTHER VALUE (SELECT A VALUE OF COLUMN) */
-      "SELECT * FROM TEST_TABLE".selectMap[Row, String](_.string + "_UPDATED").success.value shouldBe
-        Array(
-          "string1_UPDATED",
-          "string2_UPDATED",
-          "string3_UPDATED"
         )
 
       /** COUNT */
