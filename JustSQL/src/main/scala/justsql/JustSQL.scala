@@ -38,7 +38,7 @@ object JustSQL {
     params.params.foldLeft(1) {
       case (index, writer) =>
         writer.set(statement = statement, paramIndex = index)
-        index + writer.param.parametersCount()
+        index + writer.param.paramCount()
     }
 }
 

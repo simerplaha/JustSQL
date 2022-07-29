@@ -40,7 +40,7 @@ case class ParamBuilder(params: ListBuffer[ParamValueSetter[_]],
 
   def apply[P](param: P)(implicit sqlParam: ParamSetter[P]): Array[String] = {
     params addOne ParamValueSetter(param, sqlParam)
-    Array.fill(sqlParam.parametersCount())(placeholder)
+    Array.fill(sqlParam.paramCount())(placeholder)
   }
 
   @inline def apply[P](params: P*)(implicit sqlParam: ParamSetter[P]): Iterable[String] =
