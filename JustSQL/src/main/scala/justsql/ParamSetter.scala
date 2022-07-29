@@ -18,11 +18,11 @@ package justsql
 
 import java.sql.PreparedStatement
 
-trait ParamSetter[P] extends ((PreparedStatement, Int, P) => Unit) {
+trait ParamSetter[PARAM] extends ((PreparedStatement, Int, PARAM) => Unit) {
   /** Total number of parameters this [[ParamSetter]] writes to a [[PreparedStatement]] */
   def paramCount(): Int
 
-  override def apply(statement: PreparedStatement, paramIndex: Int, paramValue: P): Unit
+  override def apply(statement: PreparedStatement, paramIndex: Int, paramValue: PARAM): Unit
 }
 
 trait OneParamSetter[P] extends ParamSetter[P] {
