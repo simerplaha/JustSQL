@@ -657,8 +657,8 @@ object RowParser {
                                            t2: ColParser[T2]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
-          t2(resultSet, 2))
+        f((t1(resultSet, 1),
+          t2(resultSet, 2)))
     }
 
   def apply[T1, T2, T3, R](f: ((T1, T2, T3)) => R)(implicit t1: ColParser[T1],
@@ -666,9 +666,9 @@ object RowParser {
                                                    t3: ColParser[T3]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
-          t3(resultSet, 3))
+          t3(resultSet, 3)))
     }
 
   def apply[T1, T2, T3, T4, R](f: ((T1, T2, T3, T4)) => R)(implicit t1: ColParser[T1],
@@ -677,10 +677,10 @@ object RowParser {
                                                            t4: ColParser[T4]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
-          t4(resultSet, 4))
+          t4(resultSet, 4)))
     }
 
   def apply[T1, T2, T3, T4, T5, R](f: ((T1, T2, T3, T4, T5)) => R)(implicit t1: ColParser[T1],
@@ -690,11 +690,11 @@ object RowParser {
                                                                    t5: ColParser[T5]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
-          t5(resultSet, 5))
+          t5(resultSet, 5)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, R](f: ((T1, T2, T3, T4, T5, T6)) => R)(implicit t1: ColParser[T1],
@@ -705,12 +705,12 @@ object RowParser {
                                                                            t6: ColParser[T6]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
           t5(resultSet, 5),
-          t6(resultSet, 6))
+          t6(resultSet, 6)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, R](f: ((T1, T2, T3, T4, T5, T6, T7)) => R)(implicit t1: ColParser[T1],
@@ -722,13 +722,13 @@ object RowParser {
                                                                                    t7: ColParser[T7]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
           t5(resultSet, 5),
           t6(resultSet, 6),
-          t7(resultSet, 7))
+          t7(resultSet, 7)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8)) => R)(implicit t1: ColParser[T1],
@@ -741,14 +741,14 @@ object RowParser {
                                                                                            t8: ColParser[T8]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
           t5(resultSet, 5),
           t6(resultSet, 6),
           t7(resultSet, 7),
-          t8(resultSet, 8))
+          t8(resultSet, 8)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9)) => R)(implicit t1: ColParser[T1],
@@ -762,7 +762,7 @@ object RowParser {
                                                                                                    t9: ColParser[T9]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -770,7 +770,7 @@ object RowParser {
           t6(resultSet, 6),
           t7(resultSet, 7),
           t8(resultSet, 8),
-          t9(resultSet, 9))
+          t9(resultSet, 9)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)) => R)(implicit t1: ColParser[T1],
@@ -785,7 +785,7 @@ object RowParser {
                                                                                                              t10: ColParser[T10]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -794,7 +794,7 @@ object RowParser {
           t7(resultSet, 7),
           t8(resultSet, 8),
           t9(resultSet, 9),
-          t10(resultSet, 10))
+          t10(resultSet, 10)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)) => R)(implicit t1: ColParser[T1],
@@ -810,7 +810,7 @@ object RowParser {
                                                                                                                        t11: ColParser[T11]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -820,7 +820,7 @@ object RowParser {
           t8(resultSet, 8),
           t9(resultSet, 9),
           t10(resultSet, 10),
-          t11(resultSet, 11))
+          t11(resultSet, 11)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12)) => R)(implicit t1: ColParser[T1],
@@ -837,7 +837,7 @@ object RowParser {
                                                                                                                                  t12: ColParser[T12]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -848,7 +848,7 @@ object RowParser {
           t9(resultSet, 9),
           t10(resultSet, 10),
           t11(resultSet, 11),
-          t12(resultSet, 12))
+          t12(resultSet, 12)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13)) => R)(implicit t1: ColParser[T1],
@@ -866,7 +866,7 @@ object RowParser {
                                                                                                                                            t13: ColParser[T13]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -878,7 +878,7 @@ object RowParser {
           t10(resultSet, 10),
           t11(resultSet, 11),
           t12(resultSet, 12),
-          t13(resultSet, 13))
+          t13(resultSet, 13)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14)) => R)(implicit t1: ColParser[T1],
@@ -897,7 +897,7 @@ object RowParser {
                                                                                                                                                      t14: ColParser[T14]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -910,7 +910,7 @@ object RowParser {
           t11(resultSet, 11),
           t12(resultSet, 12),
           t13(resultSet, 13),
-          t14(resultSet, 14))
+          t14(resultSet, 14)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15)) => R)(implicit t1: ColParser[T1],
@@ -930,7 +930,7 @@ object RowParser {
                                                                                                                                                                t15: ColParser[T15]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -944,7 +944,7 @@ object RowParser {
           t12(resultSet, 12),
           t13(resultSet, 13),
           t14(resultSet, 14),
-          t15(resultSet, 15))
+          t15(resultSet, 15)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16)) => R)(implicit t1: ColParser[T1],
@@ -965,7 +965,7 @@ object RowParser {
                                                                                                                                                                          t16: ColParser[T16]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -980,7 +980,7 @@ object RowParser {
           t13(resultSet, 13),
           t14(resultSet, 14),
           t15(resultSet, 15),
-          t16(resultSet, 16))
+          t16(resultSet, 16)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17)) => R)(implicit t1: ColParser[T1],
@@ -1002,7 +1002,7 @@ object RowParser {
                                                                                                                                                                                    t17: ColParser[T17]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -1018,7 +1018,7 @@ object RowParser {
           t14(resultSet, 14),
           t15(resultSet, 15),
           t16(resultSet, 16),
-          t17(resultSet, 17))
+          t17(resultSet, 17)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18)) => R)(implicit t1: ColParser[T1],
@@ -1041,7 +1041,7 @@ object RowParser {
                                                                                                                                                                                              t18: ColParser[T18]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -1058,7 +1058,7 @@ object RowParser {
           t15(resultSet, 15),
           t16(resultSet, 16),
           t17(resultSet, 17),
-          t18(resultSet, 18))
+          t18(resultSet, 18)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19)) => R)(implicit t1: ColParser[T1],
@@ -1082,7 +1082,7 @@ object RowParser {
                                                                                                                                                                                                        t19: ColParser[T19]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -1100,7 +1100,7 @@ object RowParser {
           t16(resultSet, 16),
           t17(resultSet, 17),
           t18(resultSet, 18),
-          t19(resultSet, 19))
+          t19(resultSet, 19)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20)) => R)(implicit t1: ColParser[T1],
@@ -1125,7 +1125,7 @@ object RowParser {
                                                                                                                                                                                                                  t20: ColParser[T20]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -1144,7 +1144,7 @@ object RowParser {
           t17(resultSet, 17),
           t18(resultSet, 18),
           t19(resultSet, 19),
-          t20(resultSet, 20))
+          t20(resultSet, 20)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21)) => R)(implicit t1: ColParser[T1],
@@ -1170,7 +1170,7 @@ object RowParser {
                                                                                                                                                                                                                            t21: ColParser[T21]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -1190,7 +1190,7 @@ object RowParser {
           t18(resultSet, 18),
           t19(resultSet, 19),
           t20(resultSet, 20),
-          t21(resultSet, 21))
+          t21(resultSet, 21)))
     }
 
   def apply[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22, R](f: ((T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22)) => R)(implicit t1: ColParser[T1],
@@ -1217,7 +1217,7 @@ object RowParser {
                                                                                                                                                                                                                                      t22: ColParser[T22]): RowParser[R] =
     new RowParser[R] {
       def apply(resultSet: ResultSet): R =
-        f(t1(resultSet, 1),
+        f((t1(resultSet, 1),
           t2(resultSet, 2),
           t3(resultSet, 3),
           t4(resultSet, 4),
@@ -1238,7 +1238,7 @@ object RowParser {
           t19(resultSet, 19),
           t20(resultSet, 20),
           t21(resultSet, 21),
-          t22(resultSet, 22))
+          t22(resultSet, 22)))
     }
 
 }
