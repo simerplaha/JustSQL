@@ -34,11 +34,11 @@ object JustSQL {
     else
       Failure(new Exception(s"Invalid row count. Expected 1. Actual ${rows.length}"))
 
-  @inline def setParams(params: SqlParamBuilder, statement: PreparedStatement): Int =
+  @inline def setParams(params: ParamBuilder, statement: PreparedStatement): Int =
     params.params.foldLeft(1) {
       case (index, writer) =>
-        writer.set(statement = statement, index = index)
-        index + writer.paramWriter.parametersCount()
+        writer.set(statement = statement, paramIndex = index)
+        index + writer.param.parametersCount()
     }
 }
 

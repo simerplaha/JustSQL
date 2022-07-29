@@ -18,13 +18,13 @@ package justsql
 
 import java.sql.PreparedStatement
 
-case class SqlParamWriter[P](param: P, paramWriter: SqlParam[P]) {
+case class ParamSetter[P](paramValue: P, param: Param[P]) {
 
-  def set(statement: PreparedStatement, index: Int): Unit =
-    paramWriter(
+  def set(statement: PreparedStatement, paramIndex: Int): Unit =
+    param(
       statement = statement,
-      parameterIndex = index,
-      paramValue = param
+      paramIndex = paramIndex,
+      paramValue = paramValue
     )
 
 }

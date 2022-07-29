@@ -18,35 +18,35 @@ package justsql
 
 import scala.collection.mutable.ListBuffer
 
-object SqlParamBuilder {
-  val empty: SqlParamBuilder =
-    SqlParamBuilder(ListBuffer.empty)
+object ParamBuilder {
+  val empty: ParamBuilder =
+    ParamBuilder(ListBuffer.empty)
 }
 
 /**
  * `?` indicates each parameter is comma seperated ?, ?, ?, ?
  * */
-case class SqlParamBuilder(params: ListBuffer[SqlParamWriter[_]],
-                           placeholder: String = "?") {
+case class ParamBuilder(params: ListBuffer[ParamSetter[_]],
+                        placeholder: String = "?") {
 
-  @inline def ?[P](param: P)(implicit sqlParam: SqlParam[P]): String =
+  @inline def ?[P](param: P)(implicit sqlParam: Param[P]): String =
     apply(param).mkString(", ")
 
-  def ?[P](params: Iterable[P])(implicit sqlParam: SqlParam[P]): String =
+  def ?[P](params: Iterable[P])(implicit sqlParam: Param[P]): String =
     params.map {
       param =>
         this ? param
     }.mkString(", ")
 
-  def apply[P](param: P)(implicit sqlParam: SqlParam[P]): Array[String] = {
-    params addOne SqlParamWriter(param, sqlParam)
+  def apply[P](param: P)(implicit sqlParam: Param[P]): Array[String] = {
+    params addOne ParamSetter(param, sqlParam)
     Array.fill(sqlParam.parametersCount())(placeholder)
   }
 
-  @inline def apply[P](params: P*)(implicit sqlParam: SqlParam[P]): Iterable[String] =
+  @inline def apply[P](params: P*)(implicit sqlParam: Param[P]): Iterable[String] =
     apply(params)
 
-  def apply[P](params: Iterable[P])(implicit sqlParam: SqlParam[P]): Iterable[String] =
+  def apply[P](params: Iterable[P])(implicit sqlParam: Param[P]): Iterable[String] =
     params flatMap {
       param =>
         apply(param)(sqlParam)
