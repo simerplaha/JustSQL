@@ -12,7 +12,7 @@ import justsql._ //single import
 implicit val db = JustSQL(datasource = HikariDS()) //create database instance
 ```
 
-The code snippets below can be found in [Example.scala](/src/test/scala/example/Example.scala).
+The code snippets below can be found in [Example.scala](/JustSQL/src/test/scala/example/Example.scala).
 
 # update()
 
@@ -27,7 +27,9 @@ val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update()
 val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ryan')".update()
 ```
 
-Or `INSERT` using parameters
+Or `INSERT` using parameters. 
+
+Types with suffix `?` get used as SQL parameters. 
 
 ```scala
 //Or insert using parameters
