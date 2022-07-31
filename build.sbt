@@ -74,7 +74,7 @@ lazy val JustSQL =
 lazy val HikariDS =
   (project in file("HikariDS"))
     .settings(
-      name := "hikariDS",
+      name := "JustSQL-hikariDS",
       ThisBuild / scalaVersion := scala213,
       publishSettings,
       libraryDependencies ++=
