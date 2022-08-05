@@ -21,7 +21,7 @@ import scala.util.{Failure, Success, Try}
 object TestUtil {
 
   def withDB[O](f: JustSQL => O): O =
-    using(JustSQL(HikariDS()))(f)
+    using(JustSQL(SQLConnector(HikariDS())))(f)
 
   def using[O](db: JustSQL)(f: JustSQL => O): O =
     dropTables()(db) match {

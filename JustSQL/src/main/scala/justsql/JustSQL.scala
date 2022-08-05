@@ -16,16 +16,16 @@
 
 package justsql
 
+import justsql.JustSQL._
+
 import java.io.Closeable
-import java.sql.{PreparedStatement, ResultSet}
-import javax.sql.DataSource
+import java.sql.{Connection, PreparedStatement, ResultSet}
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try, Using}
-import JustSQL._
 
 object JustSQL {
 
-  @inline def apply[D <: DataSource with AutoCloseable](datasource: D) =
+  @inline def apply[D <: SQLConnector](datasource: D) =
     new JustSQL(datasource)
 
   @inline def assertHasOneRow[T](rows: Array[T]): Try[T] =
@@ -42,7 +42,7 @@ object JustSQL {
     }
 }
 
-class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
+class JustSQL(connector: SQLConnector) extends Closeable {
 
 
   def select[ROW: ClassTag](sql: Sql)(implicit rowParser: RowParser[ROW]): Try[Array[ROW]] =
@@ -54,7 +54,7 @@ class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
   def update(sql: Sql): Try[Int] =
     Using.Manager {
       manager =>
-        val connection = manager(db.getConnection())
+        val connection: Connection = manager(connector.getConnection())
         val statement = manager(connection.prepareStatement(sql.sql))
         setParams(sql.params, statement)
         statement.executeUpdate()
@@ -66,7 +66,7 @@ class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
   def unsafeSelect[ROW: ClassTag](sql: Sql)(rowParser: ResultSet => ROW): Try[Array[ROW]] =
     Using.Manager {
       manager =>
-        val connection = manager(db.getConnection())
+        val connection = manager(connector.getConnection())
         val statement = manager(connection.prepareStatement(sql.sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
         setParams(sql.params, statement)
 
@@ -89,5 +89,5 @@ class JustSQL(db: DataSource with AutoCloseable) extends Closeable {
     }
 
   override def close(): Unit =
-    db.close()
+    connector.close()
 }

@@ -24,10 +24,10 @@ Let's create our example `USERS` table
 //create table
 val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update()
 //insert rows
-val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ryan')".update()
+val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
 ```
 
-Or `INSERT` using parameters. 
+## Use query parameters
 
 SQL parameters are set with the suffix `?`. 
 
@@ -39,12 +39,12 @@ val insertParametric: Try[Int] =
       s"""
          |INSERT INTO USERS (id, name)
          |     VALUES (${1.?}, ${"Harry".?}),
-         |            (${2.?}, ${"Ryan".?})
+         |            (${2.?}, ${"Ayman".?})
          |""".stripMargin
   }.update()
 ```
 
-Or transactionally
+## Transactionally
 
 ```scala
 val transaction: Try[Int] =
@@ -52,7 +52,7 @@ val transaction: Try[Int] =
     |BEGIN;
     |
     |CREATE TABLE USERS (id INT, name VARCHAR);
-    |INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ryan');
+    |INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman');
     |
     |COMMIT;
     |"""
