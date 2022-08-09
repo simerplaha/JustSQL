@@ -26,7 +26,7 @@ object Example extends App {
 
   /** WRITING */
   val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update() //create table
-  val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Tony'), (2, 'Howard')".update() //insert rows
+  val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update() //insert rows
 
   val insertParametric: Try[Int] =
     Sql {
@@ -34,7 +34,7 @@ object Example extends App {
         s"""
            |INSERT INTO USERS (id, name)
            |     VALUES (${1.?}, ${"Harry".?}),
-           |            (${2.?}, ${"Ryan".?})
+           |            (${2.?}, ${"Ayman".?})
            |""".stripMargin
     }.update()
 
@@ -44,7 +44,7 @@ object Example extends App {
       |BEGIN;
       |
       |CREATE TABLE USERS (id INT, name VARCHAR);
-      |INSERT INTO USERS (id, name) VALUES (1, 'Tony'), (2, 'Howard');
+      |INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman');
       |
       |COMMIT;
       |"""
