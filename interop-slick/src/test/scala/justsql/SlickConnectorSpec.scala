@@ -17,12 +17,16 @@
 package justsql
 
 import com.typesafe.config.ConfigFactory
+import org.scalatest.wordspec.AnyWordSpec
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
-class SlickConnectorSpec extends JustSQLCommonSpec {
+class SlickConnectorSpec extends AnyWordSpec with JustSQLCommonSpec {
 
-  def config() =
+  override def connector(): SQLConnector =
+    SlickConnector(config())
+
+  def config(): DatabaseConfig[JdbcProfile] =
     DatabaseConfig.forConfig[JdbcProfile](
       path = "db",
       config =
@@ -37,7 +41,4 @@ class SlickConnectorSpec extends JustSQLCommonSpec {
              |""".stripMargin
         )
     )
-
-  override def connector(): SQLConnector =
-    SlickConnector(config())
 }

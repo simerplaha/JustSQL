@@ -48,7 +48,7 @@ val publishSettings = Seq[Setting[_]](
     )
 )
 
-lazy val testLibraries =
+lazy val testDeps =
   Seq(
     "ch.qos.logback" % "logback-classic" % "1.2.11" % Test,
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" % Test,
@@ -65,12 +65,12 @@ lazy val root =
     ).aggregate(JustSQL, `interop-hikari`, `interop-slick`)
 
 lazy val JustSQL =
-  (project in file("JustSQL"))
+  project
     .settings(
       name := "JustSQL",
       ThisBuild / scalaVersion := scala213,
       publishSettings,
-      libraryDependencies ++= testLibraries
+      libraryDependencies ++= testDeps
     )
 
 lazy val `interop-hikari` =
@@ -78,14 +78,13 @@ lazy val `interop-hikari` =
     .settings(
       ThisBuild / scalaVersion := scala213,
       publishSettings,
-      libraryDependencies ++= testLibraries :+ "com.zaxxer" % "HikariCP" % "5.0.1"
-    ).dependsOn(JustSQL)
+      libraryDependencies ++= testDeps :+ "com.zaxxer" % "HikariCP" % "5.0.1"
+    ).dependsOn(JustSQL % "test->test;compile->compile")
 
 lazy val `interop-slick` =
   project
     .settings(
       ThisBuild / scalaVersion := scala213,
       publishSettings,
-      libraryDependencies ++= testLibraries :+ "com.typesafe.slick" %% "slick" % "3.3.3"
-    ).dependsOn(JustSQL)
-
+      libraryDependencies ++= testDeps :+ "com.typesafe.slick" %% "slick" % "3.3.3"
+    ).dependsOn(JustSQL % "test->test;compile->compile")

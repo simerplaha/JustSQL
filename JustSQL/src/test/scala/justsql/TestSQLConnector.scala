@@ -21,7 +21,7 @@ import java.sql.{Connection, DriverManager}
 object TestSQLConnector extends SQLConnector {
 
   override def getConnection(): Connection =
-    DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "")
+    DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "password")
 
   override def close(): Unit =
     ()
