@@ -16,7 +16,28 @@
 
 package justsql
 
-class JustSQLSpec extends JustSQLCommonSpec {
+import com.typesafe.config.ConfigFactory
+import slick.basic.DatabaseConfig
+import slick.jdbc.JdbcProfile
+
+class SlickConnectorSpec extends JustSQLCommonSpec {
+
+  def config() =
+    DatabaseConfig.forConfig[JdbcProfile](
+      path = "db",
+      config =
+        ConfigFactory.parseString(
+          s"""db = {
+             |  profile = "slick.jdbc.PostgresProfile$$"
+             |  db {
+             |    connectionPool = disabled
+             |    url            = "jdbc:postgresql://localhost:5432/postgres"
+             |  }
+             |}
+             |""".stripMargin
+        )
+    )
+
   override def connector(): SQLConnector =
-    TestSQLConnector
+    SlickConnector(config())
 }

@@ -16,6 +16,13 @@
 
 package justsql
 
-class Test {
+import com.zaxxer.hikari.HikariDataSource
+
+case class HikariConnector(database: String = "postgresql",
+                           host: String = "localhost",
+                           port: Int = 5432,
+                           dbName: String = "postgres") extends HikariDataSource with SQLConnector {
+
+  setJdbcUrl(s"jdbc:$database://$host:$port/$dbName")
 
 }

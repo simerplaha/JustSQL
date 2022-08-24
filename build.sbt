@@ -52,7 +52,8 @@ lazy val testLibraries =
   Seq(
     "ch.qos.logback" % "logback-classic" % "1.2.11" % Test,
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" % Test,
-    "org.scalatest" %% "scalatest" % "3.2.12" % Test
+    "org.scalatest" %% "scalatest" % "3.2.12" % Test,
+    "org.postgresql" % "postgresql" % "42.4.2" % Test
   )
 
 lazy val root =
@@ -61,7 +62,7 @@ lazy val root =
       name := "JustSQL-root",
       ThisBuild / scalaVersion := scala213,
       publishSettings
-    ).aggregate(JustSQL, HikariDS, SlickConnector)
+    ).aggregate(JustSQL, `interop-hikari`, `interop-slick`)
 
 lazy val JustSQL =
   (project in file("JustSQL"))
@@ -69,22 +70,20 @@ lazy val JustSQL =
       name := "JustSQL",
       ThisBuild / scalaVersion := scala213,
       publishSettings,
-      libraryDependencies ++= testLibraries :+ "org.postgresql" % "postgresql" % "42.4.2" % Test
-    ).dependsOn(HikariDS % Test)
-
-lazy val HikariDS =
-  (project in file("HikariDS"))
-    .settings(
-      name := "JustSQL-hikariDS",
-      ThisBuild / scalaVersion := scala213,
-      publishSettings,
-      libraryDependencies += "com.zaxxer" % "HikariCP" % "5.0.1"
+      libraryDependencies ++= testLibraries
     )
 
-lazy val SlickConnector =
-  (project in file("SlickConnector"))
+lazy val `interop-hikari` =
+  project
     .settings(
-      name := "JustSQL-SlickConnector",
+      ThisBuild / scalaVersion := scala213,
+      publishSettings,
+      libraryDependencies ++= testLibraries :+ "com.zaxxer" % "HikariCP" % "5.0.1"
+    ).dependsOn(JustSQL)
+
+lazy val `interop-slick` =
+  project
+    .settings(
       ThisBuild / scalaVersion := scala213,
       publishSettings,
       libraryDependencies ++= testLibraries :+ "com.typesafe.slick" %% "slick" % "3.3.3"

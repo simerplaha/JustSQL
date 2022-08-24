@@ -22,7 +22,7 @@ import scala.util.Try
 
 object Example extends App {
 
-  implicit val db = JustSQL(datasource = HikariConnector())
+  implicit val db = JustSQL(datasource = TestSQLConnector)
 
   /** WRITING */
   val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update() //create table

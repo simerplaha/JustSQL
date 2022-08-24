@@ -16,6 +16,7 @@
 
 package justsql
 
-class Test {
-
+class HikariDSSpec extends JustSQLCommonSpec {
+  override def connector(): SQLConnector =
+    HikariConnector()
 }

@@ -16,13 +16,14 @@
 
 package justsql
 
-import com.zaxxer.hikari.HikariDataSource
+import java.sql.{Connection, DriverManager}
 
-final case class HikariConnector(database: String = "postgresql",
-                                 host: String = "localhost",
-                                 port: Int = 5432,
-                                 dbName: String = "postgres") extends HikariDataSource {
+object TestSQLConnector extends SQLConnector {
 
-  setJdbcUrl(s"jdbc:$database://$host:$port/$dbName")
+  override def getConnection(): Connection =
+    DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "")
+
+  override def close(): Unit =
+    ()
 
 }
