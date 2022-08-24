@@ -138,17 +138,14 @@ val transaction: Try[Int] =
 
 # Custom `ParamWriter`
 
-TODO
-
 ```scala
+//My custom data types
 case class MyColumn(int: Int)
 
-val paramWriter =
-  new ParamWriter[MyColumn] {
-    override def paramCount(): Int = 1
-    override def apply(statement: PreparedStatement, paramIndex: Int, myColumn: MyColumn): Unit =
-      statement.setInt(paramIndex, myColumn.int)
-  }
+//Writer. See ParamWriter for more examples.
+val paramWriter: OneParamWriter[MyColumn] =
+  (statement: PositionedPreparedStatement, myColumn: MyColumn) =>
+    statement setInt myColumn.int
 ```
 
 # Custom `RowReader` and `ColReader`

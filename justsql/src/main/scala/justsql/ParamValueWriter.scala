@@ -16,14 +16,11 @@
 
 package justsql
 
-import java.sql.PreparedStatement
-
 case class ParamValueWriter[P](paramValue: P, param: ParamWriter[P]) {
 
-  def set(statement: PreparedStatement, paramIndex: Int): Unit =
+  def set(statement: PositionedPreparedStatement): Unit =
     param(
       statement = statement,
-      paramIndex = paramIndex,
       paramValue = paramValue
     )
 

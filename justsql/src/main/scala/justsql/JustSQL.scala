@@ -34,12 +34,10 @@ object JustSQL {
     else
       None
 
-  @inline def setParams(params: Params, statement: PreparedStatement): Int =
-    params.params.foldLeft(1) {
-      case (index, writer) =>
-        writer.set(statement = statement, paramIndex = index)
-        index + writer.param.paramCount()
-    }
+  @inline def setParams(params: Params, statement: PreparedStatement): Unit = {
+    val positionedStatements = PositionedPreparedStatement(statement)
+    params.params foreach (_.set(positionedStatements))
+  }
 }
 
 class JustSQL(connector: SQLConnector) extends Closeable {
