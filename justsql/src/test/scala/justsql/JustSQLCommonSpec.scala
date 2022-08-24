@@ -188,7 +188,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
       case class Row(int: Int, string: String, bool: Boolean)
 
-      implicit val rowParser: RowParser[Row] = RowParser(Row.tupled)
+      implicit val rowReader: RowReader[Row] = RowReader(Row.tupled)
 
       /** SELECT USING A CASE CLASS */
       "SELECT * FROM TEST_TABLE".select[Row]().success.value shouldBe

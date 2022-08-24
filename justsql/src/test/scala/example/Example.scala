@@ -58,8 +58,8 @@ object Example extends App {
   /** READING */
   //  case class that represents a table row
   case class User(id: Int, name: String)
-  //Build a row parser for User
-  implicit val userParser = RowParser(User.tupled)
+  //Build a row reader for User
+  implicit val userReader = RowReader(User.tupled)
 
   //Select all users
   val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]()

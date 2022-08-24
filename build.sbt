@@ -62,29 +62,28 @@ lazy val root =
       name := "JustSQL-root",
       ThisBuild / scalaVersion := scala213,
       publishSettings
-    ).aggregate(JustSQL, `interop-hikari`, `interop-slick`)
+    ).aggregate(justsql, `justsql-hikari`, `justsql-slick`)
 
-lazy val JustSQL =
+lazy val justsql =
   project
     .settings(
-      name := "JustSQL",
       ThisBuild / scalaVersion := scala213,
       publishSettings,
       libraryDependencies ++= testDeps
     )
 
-lazy val `interop-hikari` =
+lazy val `justsql-hikari` =
   project
     .settings(
       ThisBuild / scalaVersion := scala213,
       publishSettings,
       libraryDependencies ++= testDeps :+ "com.zaxxer" % "HikariCP" % "5.0.1"
-    ).dependsOn(JustSQL % "test->test;compile->compile")
+    ).dependsOn(justsql % "test->test;compile->compile")
 
-lazy val `interop-slick` =
+lazy val `justsql-slick` =
   project
     .settings(
       ThisBuild / scalaVersion := scala213,
       publishSettings,
       libraryDependencies ++= testDeps :+ "com.typesafe.slick" %% "slick" % "3.3.3"
-    ).dependsOn(JustSQL % "test->test;compile->compile")
+    ).dependsOn(justsql % "test->test;compile->compile")

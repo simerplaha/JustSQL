@@ -95,8 +95,8 @@ which in our case is a `User`
 ```scala
 //case class that represents a table row
 case class User(id: Int, name: String)
-//Build a row parser for User
-implicit val userParser = RowParser(User.tupled)
+//Build a row reader for User
+implicit val userReader = RowReader(User.tupled)
 ```
 
 Read all `User`s
@@ -136,35 +136,35 @@ val transaction: Try[Int] =
     }
 ```
 
-# Custom `ParamSetter`
+# Custom `ParamWriter`
 
 TODO
 
 ```scala
 case class MyColumn(int: Int)
 
-val paramSetter =
-  new ParamSetter[MyColumn] {
+val paramWriter =
+  new ParamWriter[MyColumn] {
     override def paramCount(): Int = 1
     override def apply(statement: PreparedStatement, paramIndex: Int, myColumn: MyColumn): Unit =
       statement.setInt(paramIndex, myColumn.int)
   }
 ```
 
-# Custom `RowParser` and `ColParser`
+# Custom `RowReader` and `ColReader`
 
 TODO
 
-A SQL table is just a bunch of a rows and columns. So we have a `RowParser` and a `ColParser`.
+A SQL table is just a bunch of a rows and columns. So we have a `RowReader` and a `ColReader`.
 
-A `RowParser` is just a collection of one or many `ColParser(s)`.
+A `RowReader` is just a collection of one or many `ColReader(s)`.
 
 ```scala
 //custom column
 case class MyColumn(int: Int)
 
-//custom column parser
-val colParser: ColParser[MyColumn] =
+//custom column reader
+val colReader: ColReader[MyColumn] =
   (resultSet: ResultSet, index: Int) =>
     MyColumn(resultSet.getInt(1))
 ```

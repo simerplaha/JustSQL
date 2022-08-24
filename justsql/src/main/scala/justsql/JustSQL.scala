@@ -44,10 +44,10 @@ object JustSQL {
 
 class JustSQL(connector: SQLConnector) extends Closeable {
 
-  def select[ROW: ClassTag](sql: Sql)(implicit rowParser: RowParser[ROW]): Try[Array[ROW]] =
-    unsafeSelect(sql)(rowParser)
+  def select[ROW: ClassTag](sql: Sql)(implicit rowReader: RowReader[ROW]): Try[Array[ROW]] =
+    unsafeSelect(sql)(rowReader)
 
-  def selectOne[ROW: ClassTag](sql: Sql)(implicit rowParser: RowParser[ROW]): Try[Option[ROW]] =
+  def selectOne[ROW: ClassTag](sql: Sql)(implicit rowReader: RowReader[ROW]): Try[Option[ROW]] =
     select(sql) map JustSQL.oneOrNone
 
   def update(sql: Sql): Try[Int] =
@@ -59,10 +59,10 @@ class JustSQL(connector: SQLConnector) extends Closeable {
         statement.executeUpdate()
     }
 
-  def unsafeSelectOne[ROW: ClassTag](sql: Sql)(parser: ResultSet => ROW): Try[Option[ROW]] =
-    unsafeSelect[ROW](sql)(parser) map JustSQL.oneOrNone
+  def unsafeSelectOne[ROW: ClassTag](sql: Sql)(reader: ResultSet => ROW): Try[Option[ROW]] =
+    unsafeSelect[ROW](sql)(reader) map JustSQL.oneOrNone
 
-  def unsafeSelect[ROW: ClassTag](sql: Sql)(rowParser: ResultSet => ROW): Try[Array[ROW]] =
+  def unsafeSelect[ROW: ClassTag](sql: Sql)(rowReader: ResultSet => ROW): Try[Array[ROW]] =
     Using.Manager {
       manager =>
         val connection = manager(connector.getConnection())
@@ -78,7 +78,7 @@ class JustSQL(connector: SQLConnector) extends Closeable {
 
           var i = 0
           while (resultSet.next()) {
-            array(i) = rowParser(resultSet)
+            array(i) = rowReader(resultSet)
             i += 1
           }
           array

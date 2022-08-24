@@ -31,26 +31,26 @@ object Params {
 /**
  * `?` indicates each parameter is comma seperated ?, ?, ?, ?
  * */
-case class Params(params: ListBuffer[ParamValueSetter[_]]) extends AnyVal {
+case class Params(params: ListBuffer[ParamValueWriter[_]]) extends AnyVal {
 
-  @inline def ?[P](param: P)(implicit sqlParam: ParamSetter[P]): String =
+  @inline def ?[P](param: P)(implicit sqlParam: ParamWriter[P]): String =
     apply(param).mkString(", ")
 
-  def ?[P](params: Iterable[P])(implicit sqlParam: ParamSetter[P]): String =
+  def ?[P](params: Iterable[P])(implicit sqlParam: ParamWriter[P]): String =
     params.map {
       param =>
         this ? param
     }.mkString(", ")
 
-  def apply[P](param: P)(implicit sqlParam: ParamSetter[P]): Array[String] = {
-    params addOne ParamValueSetter(param, sqlParam)
+  def apply[P](param: P)(implicit sqlParam: ParamWriter[P]): Array[String] = {
+    params addOne ParamValueWriter(param, sqlParam)
     Array.fill(sqlParam.paramCount())(placeholder)
   }
 
-  @inline def apply[P](params: P*)(implicit sqlParam: ParamSetter[P]): Iterable[String] =
+  @inline def apply[P](params: P*)(implicit sqlParam: ParamWriter[P]): Iterable[String] =
     apply(params)
 
-  def apply[P](params: Iterable[P])(implicit sqlParam: ParamSetter[P]): Iterable[String] =
+  def apply[P](params: Iterable[P])(implicit sqlParam: ParamWriter[P]): Iterable[String] =
     params flatMap {
       param =>
         apply(param)(sqlParam)

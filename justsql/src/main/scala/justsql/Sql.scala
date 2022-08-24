@@ -38,20 +38,20 @@ object Sql {
 case class Sql(sql: String, params: Params) {
 
   def select[ROW: ClassTag]()(implicit db: JustSQL,
-                              rowParser: RowParser[ROW]): Try[Array[ROW]] =
+                              rowReader: RowReader[ROW]): Try[Array[ROW]] =
     db.select(this)
 
   def selectOne[ROW: ClassTag]()(implicit db: JustSQL,
-                                 rowParser: RowParser[ROW]): Try[Option[ROW]] =
+                                 rowReader: RowReader[ROW]): Try[Option[ROW]] =
     db.selectOne(this)
 
   def update()(implicit db: JustSQL): Try[Int] =
     db.update(this)
 
-  def unsafeSelect[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[Array[ROW]] =
-    db.unsafeSelect(this)(rowParser)
+  def unsafeSelect[ROW: ClassTag](rowReader: ResultSet => ROW)(implicit db: JustSQL): Try[Array[ROW]] =
+    db.unsafeSelect(this)(rowReader)
 
-  def unsafeSelectOne[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[Option[ROW]] =
-    db.unsafeSelectOne(this)(rowParser)
+  def unsafeSelectOne[ROW: ClassTag](rowReader: ResultSet => ROW)(implicit db: JustSQL): Try[Option[ROW]] =
+    db.unsafeSelectOne(this)(rowReader)
 
 }

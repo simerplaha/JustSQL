@@ -22,13 +22,13 @@ package object justsql {
     Sql(sql)
 
   implicit class ParamImplicits[P](val param: P) extends AnyVal {
-    def ?(implicit sqlParam: ParamSetter[P],
+    def ?(implicit sqlParam: ParamWriter[P],
           builder: Params): String =
       builder ? param
   }
 
   implicit class MultiParamImplicits[P](val param: Iterable[P]) extends AnyVal {
-    def ?(implicit sqlParam: ParamSetter[P],
+    def ?(implicit sqlParam: ParamWriter[P],
           builder: Params): String =
       builder ? param
   }
