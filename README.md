@@ -1,8 +1,18 @@
 # JustSQL
 
-Just write SQL as `String` and parse results into types.
+Just write SQL as `String` and parse results in types.
 
-A think facade over 
+JustSQL is a thin facade over `java.sql.Connection` that adds type-safety to query results & parameters.
+
+## Why another SQL library?
+
+ORMs and custom string interpolation solutions are nice, but most are incomplete and restrictive, specially when writing
+complex SQL queries. Debugging performance issues also becomes challenging when generated queries by ORMs are not well
+optimised. I've noticed IntelliJ has better support for the default `s` string interpolation VS custom
+`sql` interpolation.
+
+Performance critical applications that want to write unrestricted SQL with type-safety add your query
+results & parameters will find JustSQL easy to work with.
 
 # Setup
 
@@ -31,7 +41,7 @@ val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'A
 
 ## Use query parameters
 
-SQL parameters are set with the suffix `?`. 
+SQL parameters are set with the suffix `?`.
 
 ```scala
 //Or insert using parameters
