@@ -36,11 +36,11 @@ for full-featured open-source licences to their awesome development tools!
 
 ```scala
 libraryDependencies ++= Seq(
-  "justsql" %% "justsql" % "0.1.0",
+  "com.github.simerplaha" %% "justsql" % "0.1.0",
   //Optional: For Slick interop
-  "interop-hikari" %% "interop-hikari" % "0.1.0",
+  "com.github.simerplaha" %% "justsql-hikari" % "0.1.0",
   //Optional: For hikariCP interop
-  "interop-slick" %% "interop-slick" % "0.1.0"
+  "com.github.simerplaha" %% "justsql-slick" % "0.1.0"
 )
 ```
 
@@ -171,11 +171,23 @@ val colParser: ColParser[MyColumn] =
 
 # Slick interop
 
-TODO - See test-cases
+Make sure the dependency `justsql-slick` is in your build.
+
+```scala
+//Your Slick DB config 
+val dbConfig: DatabaseConfig[JdbcProfile] = ???
+//Just pass it onto JustSQL
+implicit val justSQL = JustSQL(SlickSQLConnector(dbConfig))
+```
 
 # HikariCP interop
 
-TODO - See test-cases
+Make sure the dependency `justsql-hikari` is in your build.
+
+```scala
+//Pass HikariSQLConnector to JustSQL
+implicit val db = JustSQL(HikariSQLConnector())
+```
 
 # Unsafe
 
