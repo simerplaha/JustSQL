@@ -64,12 +64,12 @@ object Example extends App {
   //Select all users
   val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]()
   //Select first row
-  val head: Try[Int] = "SELECT count(*) FROM USERS".selectOne[Int]()
+  val head: Try[Option[Int]] = "SELECT count(*) FROM USERS".selectOne[Int]()
   //Select all and then map to names
   val userNamesMap: Try[Array[String]] = "SELECT * FROM USERS".select[User]().map(_.map(_.name))
   //Unsafe select
   val unsafeNames: Try[Array[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name"))
   //Unsafe select head
-  val unsafeCount: Try[Int] = "SELECT count(*) as count FROM USERS".unsafeSelectOne(_.getInt("count"))
+  val unsafeCount: Try[Option[Int]] = "SELECT count(*) as count FROM USERS".unsafeSelectOne(_.getInt("count"))
 
 }

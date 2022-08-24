@@ -21,18 +21,18 @@ import justsql.JustSQL._
 import java.io.Closeable
 import java.sql.{Connection, PreparedStatement, ResultSet}
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success, Try, Using}
+import scala.util.{Try, Using}
 
 object JustSQL {
 
   @inline def apply[D <: SQLConnector](datasource: D) =
     new JustSQL(datasource)
 
-  @inline def assertHasOneRow[T](rows: Array[T]): Try[T] =
+  @inline def oneOrNone[T](rows: Array[T]): Option[T] =
     if (rows.length == 1)
-      Success(rows(0))
+      Some(rows(0))
     else
-      Failure(new Exception(s"Invalid row count. Expected 1. Actual ${rows.length}"))
+      None
 
   @inline def setParams(params: ParamBuilder, statement: PreparedStatement): Int =
     params.params.foldLeft(1) {
@@ -44,12 +44,11 @@ object JustSQL {
 
 class JustSQL(connector: SQLConnector) extends Closeable {
 
-
   def select[ROW: ClassTag](sql: Sql)(implicit rowParser: RowParser[ROW]): Try[Array[ROW]] =
     unsafeSelect(sql)(rowParser)
 
-  def selectOne[ROW: ClassTag](sql: Sql)(implicit rowParser: RowParser[ROW]): Try[ROW] =
-    select(sql) flatMap JustSQL.assertHasOneRow
+  def selectOne[ROW: ClassTag](sql: Sql)(implicit rowParser: RowParser[ROW]): Try[Option[ROW]] =
+    select(sql) map JustSQL.oneOrNone
 
   def update(sql: Sql): Try[Int] =
     Using.Manager {
@@ -60,8 +59,8 @@ class JustSQL(connector: SQLConnector) extends Closeable {
         statement.executeUpdate()
     }
 
-  def unsafeSelectOne[ROW: ClassTag](sql: Sql)(parser: ResultSet => ROW): Try[ROW] =
-    unsafeSelect[ROW](sql)(parser) flatMap JustSQL.assertHasOneRow
+  def unsafeSelectOne[ROW: ClassTag](sql: Sql)(parser: ResultSet => ROW): Try[Option[ROW]] =
+    unsafeSelect[ROW](sql)(parser) map JustSQL.oneOrNone
 
   def unsafeSelect[ROW: ClassTag](sql: Sql)(rowParser: ResultSet => ROW): Try[Array[ROW]] =
     Using.Manager {

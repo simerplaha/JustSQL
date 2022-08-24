@@ -42,7 +42,7 @@ case class Sql(sql: String, params: ParamBuilder) {
     db.select(this)
 
   def selectOne[ROW: ClassTag]()(implicit db: JustSQL,
-                                 rowParser: RowParser[ROW]): Try[ROW] =
+                                 rowParser: RowParser[ROW]): Try[Option[ROW]] =
     db.selectOne(this)
 
   def update()(implicit db: JustSQL): Try[Int] =
@@ -51,7 +51,7 @@ case class Sql(sql: String, params: ParamBuilder) {
   def unsafeSelect[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[Array[ROW]] =
     db.unsafeSelect(this)(rowParser)
 
-  def unsafeSelectOne[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[ROW] =
+  def unsafeSelectOne[ROW: ClassTag](rowParser: ResultSet => ROW)(implicit db: JustSQL): Try[Option[ROW]] =
     db.unsafeSelectOne(this)(rowParser)
 
 }
