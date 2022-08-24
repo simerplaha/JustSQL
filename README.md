@@ -49,7 +49,7 @@ libraryDependencies ++= Seq(
 The code snippets below can be found in [Example.scala](/JustSQL/src/test/scala/example/Example.scala).
 
 I'm using Postgres and default `JavaSQLConnector` here, but you should a high-performance
-JDBC connection pool library. See [Slick Interop](#slick-interop) or [HikariCO Interop](#hikaricp-interop).
+JDBC connection pool library. See [Slick Interop](#slick-interop) or [HikariCP Interop](#hikaricp-interop).
 
 ```scala
 import justsql._ //single import
@@ -131,7 +131,7 @@ val transaction: Try[Int] =
     .update()
     .recoverWith {
       _ =>
-        //rollback in-case of an error
+        //rollback in-case of an error****
         "ROLLBACK".update()
     }
 ```
