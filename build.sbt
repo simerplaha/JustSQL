@@ -48,13 +48,20 @@ val publishSettings = Seq[Setting[_]](
     )
 )
 
+lazy val testLibraries =
+  Seq(
+    "ch.qos.logback" % "logback-classic" % "1.2.11" % Test,
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" % Test,
+    "org.scalatest" %% "scalatest" % "3.2.12" % Test
+  )
+
 lazy val root =
   (project in file("."))
     .settings(
       name := "JustSQL-root",
       ThisBuild / scalaVersion := scala213,
       publishSettings
-    ).aggregate(JustSQL, HikariDS, SlickDS)
+    ).aggregate(JustSQL, HikariDS, SlickConnector)
 
 lazy val JustSQL =
   (project in file("JustSQL"))
@@ -62,14 +69,7 @@ lazy val JustSQL =
       name := "JustSQL",
       ThisBuild / scalaVersion := scala213,
       publishSettings,
-      libraryDependencies ++=
-        Seq(
-          /** TEST */
-          "ch.qos.logback" % "logback-classic" % "1.2.11" % Test,
-          "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" % Test,
-          "org.scalatest" %% "scalatest" % "3.2.12" % Test,
-          "org.postgresql" % "postgresql" % "42.4.2" % Test
-        )
+      libraryDependencies ++= testLibraries :+ "org.postgresql" % "postgresql" % "42.4.2" % Test
     ).dependsOn(HikariDS % Test)
 
 lazy val HikariDS =
@@ -81,12 +81,12 @@ lazy val HikariDS =
       libraryDependencies += "com.zaxxer" % "HikariCP" % "5.0.1"
     )
 
-lazy val SlickDS =
-  (project in file("SlickDS"))
+lazy val SlickConnector =
+  (project in file("SlickConnector"))
     .settings(
-      name := "JustSQL-SlickDS",
+      name := "JustSQL-SlickConnector",
       ThisBuild / scalaVersion := scala213,
       publishSettings,
-      libraryDependencies += "com.typesafe.slick" %% "slick" % "3.3.3"
+      libraryDependencies ++= testLibraries :+ "com.typesafe.slick" %% "slick" % "3.3.3"
     ).dependsOn(JustSQL)
 
