@@ -20,10 +20,14 @@ import justsql.JustSQL._
 
 import java.io.Closeable
 import java.sql.{Connection, PreparedStatement, ResultSet}
+import javax.sql.DataSource
 import scala.reflect.ClassTag
 import scala.util.{Try, Using}
 
 object JustSQL {
+
+  @inline def apply(datasource: DataSource with AutoCloseable): JustSQL =
+    new JustSQL(SQLConnector(datasource))
 
   @inline def apply[D <: SQLConnector](datasource: D) =
     new JustSQL(datasource)
