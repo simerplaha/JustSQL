@@ -16,19 +16,14 @@
 
 package justsql
 
-import slick.basic.DatabaseConfig
-import slick.jdbc.JdbcProfile
+import java.sql.{Connection, DriverManager}
 
-import java.sql.Connection
+object BasicConnector extends SQLConnector {
 
-object SlickConnector {
+  override def getConnection(): Connection =
+    DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres", "postgres", "password")
 
-  def apply(config: DatabaseConfig[JdbcProfile]): SQLConnector =
-    new SQLConnector {
-      override def getConnection(): Connection =
-        config.db.createSession().conn
+  override def close(): Unit =
+    ()
 
-      override def close(): Unit =
-        config.db.close()
-    }
 }

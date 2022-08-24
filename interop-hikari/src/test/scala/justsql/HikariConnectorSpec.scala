@@ -18,5 +18,5 @@ package justsql
 
 class HikariConnectorSpec extends JustSQLCommonSpec {
   override def connector(): SQLConnector =
-    HikariConnector()
+    HikariSQLConnector()
 }

@@ -16,29 +16,19 @@
 
 package justsql
 
-import com.typesafe.config.ConfigFactory
-import org.scalatest.wordspec.AnyWordSpec
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
-class SlickConnectorSpec extends AnyWordSpec with JustSQLCommonSpec {
+import java.sql.Connection
 
-  override def connector(): SQLConnector =
-    SlickConnector(config())
+object SlickSQLConnector {
 
-  def config(): DatabaseConfig[JdbcProfile] =
-    DatabaseConfig.forConfig[JdbcProfile](
-      path = "db",
-      config =
-        ConfigFactory.parseString(
-          s"""db = {
-             |  profile = "slick.jdbc.PostgresProfile$$"
-             |  db {
-             |    connectionPool = disabled
-             |    url            = "jdbc:postgresql://localhost:5432/postgres"
-             |  }
-             |}
-             |""".stripMargin
-        )
-    )
+  def apply(config: DatabaseConfig[JdbcProfile]): SQLConnector =
+    new SQLConnector {
+      override def getConnection(): Connection =
+        config.db.createSession().conn
+
+      override def close(): Unit =
+        config.db.close()
+    }
 }

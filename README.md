@@ -2,6 +2,8 @@
 
 Just write SQL as `String` and parse results into types.
 
+A think facade over 
+
 # Setup
 
 I'm using here HikariCP & Postgres here, but you use any `DataSource` of your choice.
