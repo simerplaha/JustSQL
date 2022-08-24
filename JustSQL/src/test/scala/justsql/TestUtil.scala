@@ -21,10 +21,11 @@ import scala.util.{Failure, Success, Try}
 object TestUtil {
 
   def withDB[O](connector: SQLConnector)(f: JustSQL => O): O =
-    using(JustSQL(connector))(f)
+    cleanSlate(JustSQL(connector))(f)
 
-  def using[O](db: JustSQL)(f: JustSQL => O): O =
-    dropTables()(db) match {
+  /** Drops existing tables before running the test */
+  def cleanSlate[O](db: JustSQL)(f: JustSQL => O): O =
+    dropPublicTables()(db) match {
       case Success(_) =>
         try
           f(db)
@@ -35,10 +36,10 @@ object TestUtil {
         throw exception
     }
 
-  def dropTables()(implicit db: JustSQL): Try[Int] =
-    getAllTableNames() flatMap dropTables
+  def dropPublicTables()(implicit db: JustSQL): Try[Int] =
+    getPublicTables() flatMap dropTables
 
-  def getAllTableNames()(implicit db: JustSQL): Try[Array[String]] =
+  def getPublicTables()(implicit db: JustSQL): Try[Array[String]] =
     """
       |select table_name
       |from information_schema.tables

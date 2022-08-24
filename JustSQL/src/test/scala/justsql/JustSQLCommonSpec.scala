@@ -23,6 +23,11 @@ import org.scalatest.TryValues._
 
 import scala.util.Success
 
+/**
+ * Common test-cases for any [[SQLConnector]].
+ *
+ * Currently used for testing Slick, HikariCP & [[JavaSQLConnector]]
+ * */
 trait JustSQLCommonSpec extends AnyWordSpec {
 
   def connector(): SQLConnector
