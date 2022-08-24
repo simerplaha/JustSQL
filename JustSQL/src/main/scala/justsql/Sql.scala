@@ -24,18 +24,18 @@ import scala.util.Try
 
 object Sql {
 
-  def apply(f: ParamBuilder => String): Sql = {
-    val params = ParamBuilder(ListBuffer.empty)
+  def apply(f: Params => String): Sql = {
+    val params = Params(ListBuffer.empty)
     val sql = f(params)
     new Sql(sql, params)
   }
 
   @inline def apply(sql: String): Sql =
-    new Sql(sql, ParamBuilder.empty)
+    new Sql(sql, Params.empty)
 
 }
 
-case class Sql(sql: String, params: ParamBuilder) {
+case class Sql(sql: String, params: Params) {
 
   def select[ROW: ClassTag]()(implicit db: JustSQL,
                               rowParser: RowParser[ROW]): Try[Array[ROW]] =

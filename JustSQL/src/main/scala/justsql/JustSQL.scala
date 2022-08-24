@@ -38,7 +38,7 @@ object JustSQL {
     else
       None
 
-  @inline def setParams(params: ParamBuilder, statement: PreparedStatement): Int =
+  @inline def setParams(params: Params, statement: PreparedStatement): Int =
     params.params.foldLeft(1) {
       case (index, writer) =>
         writer.set(statement = statement, paramIndex = index)
