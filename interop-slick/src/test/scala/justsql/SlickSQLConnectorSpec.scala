@@ -17,11 +17,10 @@
 package justsql
 
 import com.typesafe.config.ConfigFactory
-import org.scalatest.wordspec.AnyWordSpec
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
-class SlickSQLConnectorSpec extends AnyWordSpec with JustSQLCommonSpec {
+class SlickSQLConnectorSpec extends JustSQLCommonSpec {
 
   override def connector(): SQLConnector =
     SlickSQLConnector(config())
