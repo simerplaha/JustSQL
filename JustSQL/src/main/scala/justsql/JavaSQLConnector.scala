@@ -18,9 +18,10 @@ package justsql
 
 import java.sql.{Connection, DriverManager}
 
-case class BasicSQLConnector(url: String = "jdbc:postgresql://localhost:5432/postgres",
-                             username: String = "postgres",
-                             password: String = "password") extends SQLConnector {
+/** Default [[SQLConnector]] */
+case class JavaSQLConnector(url: String = "jdbc:postgresql://localhost:5432/postgres",
+                            username: String = "postgres",
+                            password: String = "password") extends SQLConnector {
 
   override def getConnection(): Connection =
     DriverManager.getConnection(url, username, password)

@@ -18,5 +18,5 @@ package justsql
 
 class JustSQLSpec extends JustSQLCommonSpec {
   override def connector(): SQLConnector =
-    BasicSQLConnector()
+    JavaSQLConnector()
 }
