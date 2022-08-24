@@ -34,16 +34,28 @@ for full-featured open-source licences to their awesome development tools!
 
 # Setup
 
-I'm using here Postgres here and the default `JavaSQLConnector` here, but you should a high-performance
-JDBC connection pool library like `HikariCP`.
+```scala
+libraryDependencies ++= Seq(
+  "justsql" %% "justsql" % "0.1.0",
+  //Optional: For Slick interop
+  "interop-hikari" %% "interop-hikari" % "0.1.0",
+  //Optional: For hikariCP interop
+  "interop-slick" %% "interop-slick" % "0.1.0"
+)
+```
+
+# Create JustSQL
+
+The code snippets below can be found in [Example.scala](/JustSQL/src/test/scala/example/Example.scala).
+
+I'm using Postgres and default `JavaSQLConnector` here, but you should a high-performance
+JDBC connection pool library. See [Slick Interop](#slick-interop) or [HikariCO Interop](#hikaricp-interop).
 
 ```scala
 import justsql._ //single import
 
 implicit val db = JustSQL(datasource = JavaSQLConnector()) //create database instance
 ```
-
-The code snippets below can be found in [Example.scala](/JustSQL/src/test/scala/example/Example.scala).
 
 # update()
 
@@ -58,7 +70,7 @@ val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update()
 val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
 ```
 
-## Use query parameters
+# Query parameters
 
 SQL parameters are set with the suffix `?`.
 
@@ -73,27 +85,6 @@ val insertParametric: Try[Int] =
          |            (${2.?}, ${"Ayman".?})
          |""".stripMargin
   }.update()
-```
-
-## Transactionally
-
-```scala
-val transaction: Try[Int] =
-  """
-    |BEGIN;
-    |
-    |CREATE TABLE USERS (id INT, name VARCHAR);
-    |INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman');
-    |
-    |COMMIT;
-    |"""
-    .stripMargin
-    .update()
-    .recoverWith {
-      _ =>
-        //if there was an error rollback
-        "ROLLBACK".update()
-    }
 ```
 
 # select()
@@ -116,18 +107,75 @@ val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]()
 
 # selectOne()
 
-Expects `1` row else returns `Failure`
+Expects `1` row else returns `None`
 
 ```scala
-val count: Try[Int] = "SELECT count(*) FROM USERS".selectOne[Int]()
+val count: Try[Option[Int]] = "SELECT count(*) FROM USERS".selectOne[Int]()
 ```
 
-# Parser
+# Transactionally
 
-There are two types for parsing a row
+Being plain SQL, transactions are written using the usual `BEGIN;` and `COMMIT;` statements.
 
-- `RowParser` - Parser for a table row. It's a combination of one or many `ColParser(s)`.
-- `ColParser` - Parser for a table column.
+```scala
+val transaction: Try[Int] =
+  """
+    |BEGIN;
+    |
+    |CREATE TABLE USERS (id INT, name VARCHAR);
+    |INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman');
+    |
+    |COMMIT;
+    |"""
+    .stripMargin
+    .update()
+    .recoverWith {
+      _ =>
+        //rollback in-case of an error
+        "ROLLBACK".update()
+    }
+```
+
+# Custom `ParamSetter`
+
+TODO
+
+```scala
+case class MyColumn(int: Int)
+
+val paramSetter =
+  new ParamSetter[MyColumn] {
+    override def paramCount(): Int = 1
+    override def apply(statement: PreparedStatement, paramIndex: Int, myColumn: MyColumn): Unit =
+      statement.setInt(paramIndex, myColumn.int)
+  }
+```
+
+# Custom `RowParser` and `ColParser`
+
+TODO
+
+A SQL table is just a bunch of a rows and columns. So we have a `RowParser` and a `ColParser`.
+
+A `RowParser` is just a collection of one or many `ColParser(s)`.
+
+```scala
+//custom column
+case class MyColumn(int: Int)
+
+//custom column parser
+val colParser: ColParser[MyColumn] =
+  (resultSet: ResultSet, index: Int) =>
+    MyColumn(resultSet.getInt(1))
+```
+
+# Slick interop
+
+TODO - See test-cases
+
+# HikariCP interop
+
+TODO - See test-cases
 
 # Unsafe
 
