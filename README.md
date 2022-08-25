@@ -3,14 +3,15 @@
 Just write SQL as `String` and parse results into types.
 
 JustSQL is a thin facade over `java.sql` types that adds type-safety to query results & parameters.
+No external core dependency.
 
-Easy interop with existing ORMs. Interop for Slick and HikariCP is provided.
+Can be used in parallel with other libraries. Interop for Slick and HikariCP is provided.
 
 ## Why another SQL library/facade?
 
 - ORMs and custom string interpolation solutions are nice, but most are incomplete and restrictive, specially
   when writing complex SQL queries.
-- Debugging performance issues becomes a challenge when generated queries by ORMs are not well optimised.
+- Debugging performance issue is not easy when generated queries by ORMs are not well optimised.
 - Many ORMs do not have any support for `EXPLAIN ANALYZE` statements. Monitoring `indexes` is not as simple as it should
   be.
 - IDEs have better plugins and support for plain SQL queries and default Scala `s` string interpolation VS custom `sql`
@@ -53,7 +54,7 @@ See quick-start [Example.scala](/justsql/src/test/scala/example/Example.scala).
 
 # Create JustSQL
 
-I'm using Postgres and default `JavaSQLConnector` here, but you should a high-performance
+I'm using Postgres and the default `JavaSQLConnector` here, but you should a high-performance
 JDBC connection pool library. See [Slick Interop](#slick-interop) or [HikariCP Interop](#hikaricp-interop).
 
 ```scala
@@ -77,9 +78,9 @@ val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'A
 
 # Query parameters
 
-SQL parameters are set with the suffix `?`. 
+SQL parameters are set with the suffix `?`.
 
-The above `INSERT` query can be re-written with parameters as following
+The above `INSERT` query can be written with parameters as following
 
 ```scala
 //Or insert using parameters
@@ -96,8 +97,7 @@ val insertParametric: Try[Int] =
 
 # select()
 
-First, we need to create a `case class` that represents a table row
-which in our case is a `User`
+First, we need to create a `case class` that represents a table row, which in our case is a `User`
 
 ```scala
 //case class that represents a table row
@@ -122,7 +122,7 @@ val count: Try[Option[Int]] = "SELECT count(*) FROM USERS".selectOne[Int]()
 
 # Transactionally
 
-Being plain SQL, transactions are written using the usual `BEGIN;` and `COMMIT;` statements.
+Being just SQL, transactions are written with the usual `BEGIN;` and `COMMIT;` statements.
 
 ```scala
 val transaction: Try[Int] =
@@ -163,11 +163,15 @@ val paramWriter: OneParamWriter[MyColumn] =
 
 # Custom `RowReader` and `ColReader`
 
-TODO
+A SQL table is just a bunch of a rows and columns right. So we have a `RowReader` and a `ColReader` to represent those.
 
-A SQL table is just a bunch of a rows and columns. So we have a `RowReader` and a `ColReader`.
+## `RowReader`
 
 A `RowReader` is just a collection of one or many `ColReader(s)`.
+
+TODO
+
+## `ColReader`
 
 ```scala
 //custom column
