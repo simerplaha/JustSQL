@@ -1,8 +1,8 @@
 # JustSQL
 
-Just write SQL as `String` and parse results in types.
+Just write SQL as `String` and parse results into types.
 
-A thin facade over `java.sql` types that adds type-safety to query results & parameters.
+JustSQL is a thin facade over `java.sql` types that adds type-safety to query results & parameters.
 
 Easy interop with existing ORMs. Interop for Slick and HikariCP is provided.
 
@@ -11,12 +11,13 @@ Easy interop with existing ORMs. Interop for Slick and HikariCP is provided.
 - ORMs and custom string interpolation solutions are nice, but most are incomplete and restrictive, specially
   when writing complex SQL queries.
 - Debugging performance issues becomes a challenge when generated queries by ORMs are not well optimised.
-- Many ORMs do not have any support for `EXPLAIN ANALYZE` statements. Monitoring `index` performance becomes difficult.
-- IDEs have better support for plain SQL queries and default Scala `s` string interpolation VS custom `sql`
+- Many ORMs do not have any support for `EXPLAIN ANALYZE` statements. Monitoring `indexes` is not as simple as it should
+  be.
+- IDEs have better plugins and support for plain SQL queries and default Scala `s` string interpolation VS custom `sql`
   string interpolation.
 
-Performance critical applications that want to write unrestricted SQL with type-safety added to query
-results & parameters would find JustSQL much easy to work with.
+Performance critical applications that want to write unrestricted SQL with type-safety added
+to query results & parameters would find JustSQL much easy to work with.
 
 # Sponsors
 
@@ -32,21 +33,25 @@ for full-featured open-source licences to their awesome development tools!
   </tr>
 </table>
 
+### _NOTE: The following documentation and release is WIP_
+
 # Setup
 
 ```scala
 libraryDependencies ++= Seq(
   "com.github.simerplaha" %% "justsql" % "0.1.0",
   //Optional: For Slick interop
-  "com.github.simerplaha" %% "justsql-hikari" % "0.1.0",
+  "com.github.simerplaha" %% "justsql-slick" % "0.1.0",
   //Optional: For hikariCP interop
-  "com.github.simerplaha" %% "justsql-slick" % "0.1.0"
+  "com.github.simerplaha" %% "justsql-hikari" % "0.1.0"
 )
 ```
 
-# Create JustSQL
+# Quick start
 
-The code snippets below can be found in [Example.scala](/JustSQL/src/test/scala/example/Example.scala).
+See quick-start [Example.scala](/justsql/src/test/scala/example/Example.scala).
+
+# Create JustSQL
 
 I'm using Postgres and default `JavaSQLConnector` here, but you should a high-performance
 JDBC connection pool library. See [Slick Interop](#slick-interop) or [HikariCP Interop](#hikaricp-interop).
@@ -72,7 +77,9 @@ val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'A
 
 # Query parameters
 
-SQL parameters are set with the suffix `?`.
+SQL parameters are set with the suffix `?`. 
+
+The above `INSERT` query can be re-written with parameters as following
 
 ```scala
 //Or insert using parameters
@@ -131,12 +138,18 @@ val transaction: Try[Int] =
     .update()
     .recoverWith {
       _ =>
-        //rollback in-case of an error****
+        //rollback in-case of an error
         "ROLLBACK".update()
     }
 ```
 
 # Custom `ParamWriter`
+
+## `ParamWriter` - Data types with single or multiple JDBC parameters
+
+TODO
+
+## `OneParamWriter` - Data types with single JDBC parameter
 
 ```scala
 //My custom data types
@@ -168,10 +181,12 @@ val colReader: ColReader[MyColumn] =
 
 # Slick interop
 
-Make sure the dependency `justsql-slick` is in your build.
+Make sure the dependency [`justsql-slick`](#setup) is in your build.
+
+This allows JustSQL to borrow connections created by Slick.
 
 ```scala
-//Your Slick DB config 
+//Your Slick database-config 
 val dbConfig: DatabaseConfig[JdbcProfile] = ???
 //Just pass it onto JustSQL
 implicit val justSQL = JustSQL(SlickSQLConnector(dbConfig))
@@ -179,11 +194,11 @@ implicit val justSQL = JustSQL(SlickSQLConnector(dbConfig))
 
 # HikariCP interop
 
-Make sure the dependency `justsql-hikari` is in your build.
+Make sure the dependency [`justsql-hikari`](#setup) is in your build.
 
 ```scala
 //Pass HikariSQLConnector to JustSQL
-implicit val db = JustSQL(HikariSQLConnector())
+implicit val justSQL = JustSQL(HikariSQLConnector())
 ```
 
 # Unsafe
