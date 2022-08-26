@@ -21,8 +21,12 @@ import com.zaxxer.hikari.HikariDataSource
 case class HikariSQLConnector(database: String = "postgresql",
                               host: String = "localhost",
                               port: Int = 5432,
-                              dbName: String = "postgres") extends HikariDataSource with SQLConnector {
+                              dbName: String = "postgres",
+                              username: String = "postgres",
+                              password: String = "password") extends HikariDataSource with SQLConnector {
 
   setJdbcUrl(s"jdbc:$database://$host:$port/$dbName")
+  setUsername(username)
+  setPassword(password)
 
 }

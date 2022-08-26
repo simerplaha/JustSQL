@@ -22,8 +22,10 @@ import slick.jdbc.JdbcProfile
 
 class SlickSQLConnectorSpec extends JustSQLCommonSpec {
 
-  override def connector(): SQLConnector =
+  override def connector(): SQLConnector = {
+    new org.postgresql.Driver()
     SlickSQLConnector(config())
+  }
 
   def config(): DatabaseConfig[JdbcProfile] =
     DatabaseConfig.forConfig[JdbcProfile](
@@ -35,6 +37,8 @@ class SlickSQLConnectorSpec extends JustSQLCommonSpec {
              |  db {
              |    connectionPool = disabled
              |    url            = "jdbc:postgresql://localhost:5432/postgres"
+             |    username       = "postgres"
+             |    password       = "password"
              |  }
              |}
              |""".stripMargin

@@ -30,10 +30,25 @@ object TestUtil {
         try
           f(db)
         finally
-          db.close()
+          postTestCleanUp(db)
 
       case Failure(exception) =>
+        db.close()
         throw exception
+    }
+
+  /** After the test cleanup all the tables created only if the test passed
+   *
+   * This is so that same tests with same table names can be reused for new connections.
+   * */
+  private def postTestCleanUp(db: JustSQL): Unit =
+    dropPublicTables()(db) match {
+      case Failure(exception) =>
+        db.close()
+        throw exception
+
+      case Success(_) =>
+        db.close()
     }
 
   def dropPublicTables()(implicit db: JustSQL): Try[Int] =

@@ -109,11 +109,6 @@ case class PositionedPreparedStatement(stmt: PreparedStatement,
     _position += 1
   }
 
-  def setUnicodeStream(x: InputStream, length: Int): Unit = {
-    stmt.setUnicodeStream(_position, x, length)
-    _position += 1
-  }
-
   def setBinaryStream(x: InputStream, length: Int): Unit = {
     stmt.setBinaryStream(_position, x, length)
     _position += 1

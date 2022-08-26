@@ -17,6 +17,8 @@
 package justsql
 
 class JustSQLSpec extends JustSQLCommonSpec {
-  override def connector(): SQLConnector =
+  override def connector(): SQLConnector = {
+    new org.postgresql.Driver()
     JavaSQLConnector()
+  }
 }
