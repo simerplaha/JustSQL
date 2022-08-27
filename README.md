@@ -57,6 +57,9 @@ See quick-start [Example.scala](/justsql/src/test/scala/example/Example.scala).
 I'm using Postgres and the default `JavaSQLConnector` here, but you should a high-performance
 JDBC connection pool library. See [Slick Interop](#slick-interop) or [HikariCP Interop](#hikaricp-interop).
 
+A `JustSQL` instance is only required when executing a query i.e. invoking `run()`. Everywhere else
+queries are declarative, so you only define your queries without executing them and are therefore composable.
+
 ```scala
 import justsql._ //single import
 
@@ -150,14 +153,14 @@ val transaction: Try[Int] =
          |
          |COMMIT;
          |"""
-              .stripMargin
+        .stripMargin
   }
-  .update()
-  .recoverWith {
-    _ =>
-       //TODO: Needs to occur in the same session     
-      "ROLLBACK".update().run() //if there was an error rollback
-  }.run()
+    .update()
+    .recoverWith {
+      _ =>
+        //TODO: Needs to occur in the same session     
+        "ROLLBACK".update().run() //if there was an error rollback
+    }.run()
 ```
 
 # `union()` & `unionAll()`
