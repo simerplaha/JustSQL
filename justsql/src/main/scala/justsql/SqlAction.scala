@@ -19,7 +19,7 @@ package justsql
 import scala.util.Try
 
 case class SqlAction[ROW](sql: Sql,
-                          runner: (JustSQL, Sql) => Try[ROW]) {
+                          private val runner: (JustSQL, Sql) => Try[ROW]) {
 
   def run()(implicit db: JustSQL): Try[ROW] =
     runner(db, sql)
