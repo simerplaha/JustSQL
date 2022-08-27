@@ -144,6 +144,10 @@ val transaction: Try[Int] =
     }
 ```
 
+# Embed/Compose queries
+
+TODO (See tests)
+
 # Custom `ParamWriter`
 
 ## `ParamWriter` - Data types with single or multiple JDBC parameters
@@ -161,10 +165,6 @@ val paramWriter: OneParamWriter[MyColumn] =
   (statement: PositionedPreparedStatement, myColumn: MyColumn) =>
     statement setInt myColumn.int
 ```
-
-# Embed/Compose queries
-
-TODO (See tests)
 
 # Custom `RowReader` and `ColReader`
 
