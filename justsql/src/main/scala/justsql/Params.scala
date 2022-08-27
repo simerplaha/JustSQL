@@ -31,7 +31,11 @@ object Params {
 /**
  * `?` indicates each parameter is comma seperated ?, ?, ?, ?
  * */
-case class Params(params: ListBuffer[ParamValueWriter[_]]) extends AnyVal {
+case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]]) extends AnyVal {
+
+  /** Immutable params */
+  def params(): List[ParamValueWriter[_]] =
+    paramsMut.toList
 
   @inline def ?[P](param: P)(implicit sqlParam: ParamWriter[P]): String =
     apply(param).mkString(", ")
@@ -43,7 +47,7 @@ case class Params(params: ListBuffer[ParamValueWriter[_]]) extends AnyVal {
     }.mkString(", ")
 
   def apply[P](param: P)(implicit sqlParam: ParamWriter[P]): Array[String] = {
-    params addOne ParamValueWriter(param, sqlParam)
+    paramsMut addOne ParamValueWriter(param, sqlParam)
     Array.fill(sqlParam.paramCount())(placeholder)
   }
 
@@ -57,8 +61,12 @@ case class Params(params: ListBuffer[ParamValueWriter[_]]) extends AnyVal {
     }
 
   @inline def embed(query: Sql): String = {
-    params addAll query.params.params
+    paramsMut addAll query.params.paramsMut
     query.sql
   }
+
+  def foreach[T](f: ParamValueWriter[_] => T): Unit =
+    paramsMut foreach f
+
 
 }

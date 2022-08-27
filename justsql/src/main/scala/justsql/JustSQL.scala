@@ -36,7 +36,7 @@ object JustSQL {
 
   @inline def setParams(params: Params, statement: PreparedStatement): Unit = {
     val positionedStatements = PositionedPreparedStatement(statement)
-    params.params foreach (_.set(positionedStatements))
+    params foreach (_.set(positionedStatements))
   }
 }
 
