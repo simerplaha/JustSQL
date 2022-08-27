@@ -76,6 +76,18 @@ val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().run(
 val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().run()
 ```
 
+## Using for-comprehension
+
+```scala
+val action: SqlAction[(Int, Int)] =
+  for {
+    create <- "CREATE TABLE USERS (id INT, name VARCHAR)".update()
+    insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
+  } yield (create, insert)
+
+val result: Try[(Int, Int)] = action.run()
+```
+
 # Query parameters
 
 SQL parameters are set with the suffix `?`.
@@ -126,22 +138,25 @@ Being just SQL, transactions are written with the usual `BEGIN;` and `COMMIT;` s
 
 ```scala
 val transaction: Try[Int] =
-  """
-    |BEGIN;
-    |
-    |CREATE TABLE USERS (id INT, name VARCHAR);
-    |INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman');
-    |
-    |COMMIT;
-    |"""
-    .stripMargin
-    .update()
-    .run()
-    .recoverWith {
-      _ =>
-        //rollback in-case of an error
-        "ROLLBACK".update().run()
-    }
+  Sql {
+    implicit params =>
+      s"""
+         |BEGIN;
+         |
+         |CREATE TABLE USERS (id INT, name VARCHAR);
+         |INSERT INTO USERS   (id, name)
+         |            VALUES  (${1.?}, ${"Harry".?}),
+         |                    (${2.?}, ${"Ayman".?});
+         |
+         |COMMIT;
+         |"""
+              .stripMargin
+  }
+  .update()
+  .recoverWith {
+    _ =>
+      "ROLLBACK".update().run() //if there was an error rollback
+  }.run()
 ```
 
 # Embed/Compose queries

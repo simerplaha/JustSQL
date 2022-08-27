@@ -28,6 +28,15 @@ object Example extends App {
   val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().run() //create table
   val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().run() //insert rows
 
+  /** For-comprehension */
+  val action: SqlAction[(Int, Int)] =
+    for {
+      create <- "CREATE TABLE USERS (id INT, name VARCHAR)".update()
+      insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
+    } yield (create, insert)
+
+  val result: Try[(Int, Int)] = action.run()
+
   val insertParametric: Try[Int] =
     Sql {
       implicit params =>
@@ -40,21 +49,24 @@ object Example extends App {
 
   //  Or Transactionally
   val transaction: Try[Int] =
-    """
-      |BEGIN;
-      |
-      |CREATE TABLE USERS (id INT, name VARCHAR);
-      |INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman');
-      |
-      |COMMIT;
-      |"""
-      .stripMargin
-      .update()
-      .run()
+    Sql {
+      implicit params =>
+        s"""
+           |BEGIN;
+           |
+           |CREATE TABLE USERS (id INT, name VARCHAR);
+           |INSERT INTO USERS   (id, name)
+           |            VALUES  (${1.?}, ${"Harry".?}),
+           |                    (${2.?}, ${"Ayman".?});
+           |
+           |COMMIT;
+           |"""
+          .stripMargin
+    }.update()
       .recoverWith {
         _ =>
           "ROLLBACK".update().run() //if there was an error rollback
-      }
+      }.run()
 
   /** READING */
   //  case class that represents a table row

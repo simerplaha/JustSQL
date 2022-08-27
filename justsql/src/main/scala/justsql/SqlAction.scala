@@ -45,4 +45,30 @@ case class SqlAction[ROW](sql: Sql,
           }
     )
 
+  def recoverWith[B >: ROW](pf: PartialFunction[Throwable, Try[B]]): SqlAction[B] =
+    copy(
+      runner =
+        (db, sql) =>
+          self.runner(db, sql).recoverWith(pf)
+    )
+
+  def recover[B >: ROW](pf: PartialFunction[Throwable, B]): SqlAction[B] =
+    copy(
+      runner =
+        (db, sql) =>
+          self.runner(db, sql).recover(pf)
+    )
+
+  def recoverRollback()(implicit evd: ROW =:= Int): SqlAction[Int] =
+    copy(
+      runner =
+        (db, sql) =>
+          self
+            .runner(db, sql)
+            .asInstanceOf[Try[Int]]
+            .recoverWith {
+              case _: Throwable =>
+                "ROLLBACK".update().run()(db)
+            }
+    )
 }
