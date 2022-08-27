@@ -71,4 +71,19 @@ case class SqlAction[ROW](sql: Sql,
                 "ROLLBACK".update().run()(db)
             }
     )
+
+  def failed(): SqlAction[Throwable] =
+    copy(
+      runner =
+        (db, sql) =>
+          self.runner(db, sql).failed
+    )
+
+  def filter(p: ROW => Boolean): SqlAction[ROW] =
+    copy(
+      runner =
+        (db, sql) =>
+          self.runner(db, sql).filter(p)
+    )
+
 }
