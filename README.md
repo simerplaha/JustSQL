@@ -159,6 +159,10 @@ val transaction: Try[Int] =
   }.run()
 ```
 
+# `union()` & `unionAll()`
+
+TODO
+
 # Embed/Compose queries
 
 TODO (See tests)
