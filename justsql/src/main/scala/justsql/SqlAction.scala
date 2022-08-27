@@ -61,7 +61,7 @@ case class SqlAction[ROW](sql: Sql,
   def unionAll(other: SqlAction[ROW]): SqlAction[ROW] =
     combine("UNION ALL", other)
 
-  def transactional(): SqlAction[ROW] =
+  def transactional()(implicit evd: ROW =:= Int): SqlAction[ROW] =
     copy(sql = sql.copy(sql = "BEGIN;\n" + sql.sql + ";\nCOMMIT;"))
 
   def recoverWith[B >: ROW](pf: PartialFunction[Throwable, Try[B]]): SqlAction[B] =
