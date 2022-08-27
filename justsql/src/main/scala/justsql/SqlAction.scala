@@ -19,9 +19,30 @@ package justsql
 import scala.util.Try
 
 case class SqlAction[ROW](sql: Sql,
-                          private val runner: (JustSQL, Sql) => Try[ROW]) {
+                          private val runner: (JustSQL, Sql) => Try[ROW]) { self =>
 
   def run()(implicit db: JustSQL): Try[ROW] =
     runner(db, sql)
+
+  def map[B](f: ROW => B): SqlAction[B] =
+    copy(
+      runner =
+        (db, sql) =>
+          self.runner(db, sql).map(f)
+    )
+
+  /**
+   * Runs each [[SqlAction]] one after another.
+   *
+   * Eg: Calling flatMap twice will execute 2 queries in sequence */
+  def flatMap[B](f: ROW => SqlAction[B]): SqlAction[B] =
+    copy(
+      runner =
+        (db, sql) =>
+          self.runner(db, sql) flatMap {
+            row =>
+              f(row).run()(db)
+          }
+    )
 
 }
