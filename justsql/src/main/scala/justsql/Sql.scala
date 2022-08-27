@@ -16,11 +16,9 @@
 
 package justsql
 
-
 import java.sql.ResultSet
 import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
-import scala.util.Try
 
 object Sql {
 
@@ -37,21 +35,19 @@ object Sql {
 
 case class Sql(sql: String, params: Params) {
 
-  def select[ROW: ClassTag]()(implicit db: JustSQL,
-                              rowReader: RowReader[ROW]): Try[Array[ROW]] =
-    db.select(this)
+  def select[ROW: ClassTag]()(implicit rowReader: RowReader[ROW]): SqlAction[Array[ROW]] =
+    SqlAction(this, _.select(_))
 
-  def selectOne[ROW: ClassTag]()(implicit db: JustSQL,
-                                 rowReader: RowReader[ROW]): Try[Option[ROW]] =
-    db.selectOne(this)
+  def selectOne[ROW: ClassTag]()(implicit rowReader: RowReader[ROW]): SqlAction[Option[ROW]] =
+    SqlAction(this, _.selectOne(_))
 
-  def update()(implicit db: JustSQL): Try[Int] =
-    db.update(this)
+  def update()(implicit db: JustSQL): SqlAction[Int] =
+    SqlAction(this, _.update(_))
 
-  def unsafeSelect[ROW: ClassTag](rowReader: ResultSet => ROW)(implicit db: JustSQL): Try[Array[ROW]] =
-    db.unsafeSelect(this)(rowReader)
+  def unsafeSelect[ROW: ClassTag](rowReader: ResultSet => ROW): SqlAction[Array[ROW]] =
+    SqlAction(this, _.unsafeSelect(_)(rowReader))
 
-  def unsafeSelectOne[ROW: ClassTag](rowReader: ResultSet => ROW)(implicit db: JustSQL): Try[Option[ROW]] =
-    db.unsafeSelectOne(this)(rowReader)
+  def unsafeSelectOne[ROW: ClassTag](rowReader: ResultSet => ROW): SqlAction[Option[ROW]] =
+    SqlAction(this, _.unsafeSelectOne(_)(rowReader))
 
 }

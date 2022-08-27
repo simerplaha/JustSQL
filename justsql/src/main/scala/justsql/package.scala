@@ -1,4 +1,4 @@
-
+import scala.reflect.ClassTag
 
 /*
  * Copyright 2022 Simer JS Plaha (simer.j@gmail.com - @simerplaha)
@@ -33,9 +33,9 @@ package object justsql {
       builder ? param
   }
 
-  implicit class EmbedSqlImplicits(val sql: Sql) extends AnyVal {
+  implicit class EmbedSqlActionImplicits[ROW](val sql: SqlAction[ROW]) extends AnyVal {
     def embed(implicit builder: Params): String =
-      builder embed sql
+      builder embed sql.sql
   }
 
 }

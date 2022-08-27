@@ -21,8 +21,6 @@ import org.scalatest.matchers.should.Matchers._
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.TryValues._
 
-import scala.util.Success
-
 /**
  * Common test-cases for any [[SQLConnector]].
  *
@@ -36,13 +34,13 @@ trait JustSQLCommonSpec extends AnyWordSpec {
     "create and insert" when {
       "not transactional" in {
         withDB(connector()) { implicit db =>
-          "CREATE TABLE TEST_TABLE (value varchar)".update() shouldBe Success(0)
-          "INSERT INTO TEST_TABLE values ('value1')".update() shouldBe Success(1)
+          "CREATE TABLE TEST_TABLE (value varchar)".update().run().success.value shouldBe 0
+          "INSERT INTO TEST_TABLE values ('value1')".update().run().success.value shouldBe 1
 
           Sql {
             implicit param =>
               s"INSERT INTO TEST_TABLE values (${"value2".?})"
-          }.update() shouldBe Success(1)
+          }.update().run().success.value shouldBe 1
         }
       }
 
@@ -60,9 +58,9 @@ trait JustSQLCommonSpec extends AnyWordSpec {
                    |
                    |COMMIT;
                    |""".stripMargin
-            }.update() shouldBe Success(0)
+            }.update().run().success.value shouldBe 0
 
-            "SELECT * from TEST_TABLE".select[Int]().success.value shouldBe (1 to 4)
+            "SELECT * from TEST_TABLE".select[Int]().run().success.value shouldBe (1 to 4)
           }
         }
 
@@ -77,23 +75,23 @@ trait JustSQLCommonSpec extends AnyWordSpec {
               |COMMIT;
               |"""
               .stripMargin
-              .update() shouldBe Success(0)
+              .update().run().success.value shouldBe 0
 
-            "SELECT * from TEST_TABLE".select[Int]().success.value shouldBe (1 to 3)
+            "SELECT * from TEST_TABLE".select[Int]().run().success.value shouldBe (1 to 3)
           }
         }
       }
 
       "insert tuple" in {
         withDB(connector()) { implicit db =>
-          "CREATE TABLE TEST_TABLE (value varchar, int INT)".update() shouldBe Success(0)
+          "CREATE TABLE TEST_TABLE (value varchar, int INT)".update().run().success.value shouldBe 0
 
           Sql {
             implicit param =>
               s"INSERT INTO TEST_TABLE values (${"String" ?}, ${1 ?})"
-          }.update() shouldBe Success(1)
+          }.update().run().success.value shouldBe 1
 
-          "SELECT * from TEST_TABLE".select[(String, Int)]().success.value should contain only (("String", 1))
+          "SELECT * from TEST_TABLE".select[(String, Int)]().run().success.value should contain only (("String", 1))
         }
       }
     }
@@ -102,67 +100,67 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
   "return empty select on empty table" in {
     withDB(connector()) { implicit db =>
-      "CREATE TABLE TEST_TABLE(key varchar)".update() shouldBe Success(0)
+      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value shouldBe 0
 
       /** SELECT */
       //Select using typed API
-      "SELECT * FROM TEST_TABLE".select[String]().success.value shouldBe Array.empty[String]
+      "SELECT * FROM TEST_TABLE".select[String]().run().success.value shouldBe empty
       //Select using Java ResultSet
-      "SELECT * FROM TEST_TABLE".unsafeSelect[String](_.getString("key")).success.value shouldBe Array.empty[String]
+      "SELECT * FROM TEST_TABLE".unsafeSelect[String](_.getString("key")).run().success.value shouldBe empty
 
       /** COUNT */
       //Count using typed API
-      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]() shouldBe Success(Some(0))
+      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]().run().success.value should contain(0)
       //Count using ResultSet
-      "SELECT count(*) as c FROM TEST_TABLE".unsafeSelectOne(_.getInt("c")) shouldBe Success(Some(0))
+      "SELECT count(*) as c FROM TEST_TABLE".unsafeSelectOne(_.getInt("c")).run().success.value should contain(0)
     }
   }
 
   "return non-empty select on non-empty table" in {
     withDB(connector()) { implicit db =>
-      "CREATE TABLE TEST_TABLE(key varchar)".update() shouldBe Success(0)
-      "INSERT INTO TEST_TABLE values ('1'), ('2'), ('3')".update() shouldBe Success(3)
+      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value shouldBe 0
+      "INSERT INTO TEST_TABLE values ('1'), ('2'), ('3')".update().run().success.value shouldBe 3
 
       /** SELECT */
       //Select using typed API
-      "SELECT * FROM TEST_TABLE".select[String]().success.value shouldBe Array("1", "2", "3")
+      "SELECT * FROM TEST_TABLE".select[String]().run().success.value shouldBe Array("1", "2", "3")
       //Select using Java ResultSet
-      "SELECT * FROM TEST_TABLE".unsafeSelect[String](_.getString("key")).success.value shouldBe Array("1", "2", "3")
+      "SELECT * FROM TEST_TABLE".unsafeSelect[String](_.getString("key")).run().success.value shouldBe Array("1", "2", "3")
 
       /** COUNT */
       //Count using typed API
-      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]() shouldBe Success(Some(3))
+      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]().run().success.value should contain(3)
       //Count using ResultSet
-      "SELECT count(*) as c FROM TEST_TABLE".unsafeSelectOne(_.getInt("c")) shouldBe Success(Some(3))
+      "SELECT count(*) as c FROM TEST_TABLE".unsafeSelectOne(_.getInt("c")).run().success.value should contain(3)
     }
   }
 
   "return zero for count query when table shouldBe empty" in {
     withDB(connector()) { implicit db =>
-      "CREATE TABLE TEST_TABLE(key varchar)".update() shouldBe Success(0)
+      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value shouldBe 0
 
       /** COUNT */
       //Count using typed API
-      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]() shouldBe Success(Some(0))
+      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]().run().success.value should contain(0)
       //Count using typed API with naming column
-      "SELECT count(*) as count FROM TEST_TABLE".selectOne[Int]() shouldBe Success(Some(0))
+      "SELECT count(*) as count FROM TEST_TABLE".selectOne[Int]().run().success.value should contain(0)
       //Count using ResultSet
-      "SELECT count(*) as count FROM TEST_TABLE".unsafeSelectOne[Int](_.getInt("count")) shouldBe Success(Some(0))
+      "SELECT count(*) as count FROM TEST_TABLE".unsafeSelectOne[Int](_.getInt("count")).run().success.value should contain(0)
     }
   }
 
   "return row count when table shouldBe non-empty" in {
     withDB(connector()) { implicit db =>
-      "CREATE TABLE TEST_TABLE(key varchar)".update() shouldBe Success(0)
-      "INSERT INTO TEST_TABLE values ('one'), ('two'), ('three')".update() shouldBe Success(3)
+      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value shouldBe 0
+      "INSERT INTO TEST_TABLE values ('one'), ('two'), ('three')".update().run().success.value shouldBe 3
 
       /** COUNT */
       //Count using typed API
-      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]() shouldBe Success(Some(3))
+      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]().run().success.value should contain(3)
       //Count using typed API with naming column
-      "SELECT count(*) as count FROM TEST_TABLE".selectOne[Int]() shouldBe Success(Some(3))
+      "SELECT count(*) as count FROM TEST_TABLE".selectOne[Int]().run().success.value should contain(3)
       //Count using ResultSet
-      "SELECT count(*) as count FROM TEST_TABLE".unsafeSelectOne(_.getInt("count")) shouldBe Success(Some(3))
+      "SELECT count(*) as count FROM TEST_TABLE".unsafeSelectOne(_.getInt("count")).run().success.value should contain(3)
     }
   }
 
@@ -184,14 +182,14 @@ trait JustSQLCommonSpec extends AnyWordSpec {
         |       (2, 'string3', 'true');
         |
         |COMMIT;
-        |""".stripMargin.update() shouldBe Success(0)
+        |""".stripMargin.update().run().success.value shouldBe 0
 
       case class Row(int: Int, string: String, bool: Boolean)
 
       implicit val rowReader: RowReader[Row] = RowReader(Row.tupled)
 
       /** SELECT USING A CASE CLASS */
-      "SELECT * FROM TEST_TABLE".select[Row]().success.value shouldBe
+      "SELECT * FROM TEST_TABLE".select[Row]().run().success.value shouldBe
         Array(
           Row(int = 0, string = "string1", bool = true),
           Row(int = 1, string = "string2", bool = false),
@@ -199,7 +197,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
         )
 
       /** SELECT USING A TUPLE */
-      "SELECT * FROM TEST_TABLE".select[(Int, String, Boolean)]().success.value shouldBe
+      "SELECT * FROM TEST_TABLE".select[(Int, String, Boolean)]().run().success.value shouldBe
         Array(
           (0, "string1", true),
           (1, "string2", false),
@@ -208,18 +206,18 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
       /** COUNT */
       //Count using typed API
-      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]() shouldBe Success(Some(3))
+      "SELECT count(*) FROM TEST_TABLE".selectOne[Int]().run().success.value should contain(3)
       //Count using typed API with naming column
-      "SELECT count(*) as count FROM TEST_TABLE".selectOne[Int]() shouldBe Success(Some(3))
+      "SELECT count(*) as count FROM TEST_TABLE".selectOne[Int]().run().success.value should contain(3)
       //Count using ResultSet
-      "SELECT count(*) as count FROM TEST_TABLE".unsafeSelectOne[Int](_.getInt("count")) shouldBe Success(Some(3))
+      "SELECT count(*) as count FROM TEST_TABLE".unsafeSelectOne[Int](_.getInt("count")).run().success.value should contain(3)
     }
   }
 
   "embed queries" in {
     withDB(connector()) {
       implicit db =>
-        "CREATE TABLE TEST_TABLE(int int, bool boolean, string varchar)".update() shouldBe Success(0)
+        "CREATE TABLE TEST_TABLE(int int, bool boolean, string varchar)".update().run().success.value shouldBe 0
 
         Sql {
           implicit params =>
@@ -229,15 +227,15 @@ trait JustSQLCommonSpec extends AnyWordSpec {
                |                              (${3.?}, ${false.?}, ${"three".?})
                |
                |""".stripMargin
-        }.update() shouldBe Success(3)
+        }.update().run().success.value shouldBe 3
 
-        def maxIntQuery(): Sql =
+        def maxIntQuery(): SqlAction[Array[Int]] =
           Sql {
             implicit params =>
               s"""
                  |SELECT max(int) from TEST_TABLE where bool = ${true.?}
                  |""".stripMargin
-          }
+          }.select[Int]()
 
         val finalQuery =
           Sql {
@@ -248,7 +246,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
                  |""".stripMargin
           }
 
-        finalQuery.selectOne[Int]().success.value should contain(2)
+        finalQuery.selectOne[Int]().run().success.value should contain(2)
     }
 
   }

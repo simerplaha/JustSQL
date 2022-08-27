@@ -59,7 +59,7 @@ object TestUtil {
       |select table_name
       |from information_schema.tables
       |where table_schema = 'public';
-      |""".stripMargin.select()
+      |""".stripMargin.select[String]().run()
 
   def dropTables(tableNames: Array[String])(implicit db: JustSQL): Try[Int] = {
     val drops =
@@ -71,6 +71,9 @@ object TestUtil {
        |BEGIN;
        |$drops
        |COMMIT;
-       |""".stripMargin.update()
+       |"""
+      .stripMargin
+      .update()
+      .run()
   }
 }

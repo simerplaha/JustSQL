@@ -25,8 +25,8 @@ object Example extends App {
   implicit val db = JustSQL(datasource = JavaSQLConnector())
 
   /** WRITING */
-  val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update() //create table
-  val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update() //insert rows
+  val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().run() //create table
+  val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().run() //insert rows
 
   val insertParametric: Try[Int] =
     Sql {
@@ -36,7 +36,7 @@ object Example extends App {
            |     VALUES (${1.?}, ${"Harry".?}),
            |            (${2.?}, ${"Ayman".?})
            |""".stripMargin
-    }.update()
+    }.update().run()
 
   //  Or Transactionally
   val transaction: Try[Int] =
@@ -50,9 +50,10 @@ object Example extends App {
       |"""
       .stripMargin
       .update()
+      .run()
       .recoverWith {
         _ =>
-          "ROLLBACK".update() //if there was an error rollback
+          "ROLLBACK".update().run() //if there was an error rollback
       }
 
   /** READING */
@@ -62,14 +63,14 @@ object Example extends App {
   implicit val userReader = RowReader(User.tupled)
 
   //Select all users
-  val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]()
+  val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]().run()
   //Select first row
-  val head: Try[Option[Int]] = "SELECT count(*) FROM USERS".selectOne[Int]()
+  val head: Try[Option[Int]] = "SELECT count(*) FROM USERS".selectOne[Int]().run()
   //Select all and then map to names
-  val userNamesMap: Try[Array[String]] = "SELECT * FROM USERS".select[User]().map(_.map(_.name))
+  val userNamesMap: Try[Array[String]] = "SELECT * FROM USERS".select[User]().run().map(_.map(_.name))
   //Unsafe select
-  val unsafeNames: Try[Array[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name"))
+  val unsafeNames: Try[Array[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name")).run()
   //Unsafe select head
-  val unsafeCount: Try[Option[Int]] = "SELECT count(*) as count FROM USERS".unsafeSelectOne(_.getInt("count"))
+  val unsafeCount: Try[Option[Int]] = "SELECT count(*) as count FROM USERS".unsafeSelectOne(_.getInt("count")).run()
 
 }
