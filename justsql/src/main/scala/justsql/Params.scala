@@ -31,7 +31,7 @@ object Params {
 /**
  * `?` indicates each parameter is comma seperated ?, ?, ?, ?
  * */
-case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]]) extends AnyVal {
+case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]]) extends AnyVal { self =>
 
   /** Immutable params */
   def params(): List[ParamValueWriter[_]] =
@@ -43,7 +43,7 @@ case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]]) extend
   def ?[P](params: Iterable[P])(implicit sqlParam: ParamWriter[P]): String =
     params.map {
       param =>
-        this ? param
+        self ? param
     }.mkString(", ")
 
   def apply[P](param: P)(implicit sqlParam: ParamWriter[P]): Array[String] = {
@@ -68,5 +68,7 @@ case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]]) extend
   def foreach[T](f: ParamValueWriter[_] => T): Unit =
     paramsMut foreach f
 
+  def ++(right: Params): Params =
+    Params(self.paramsMut ++ right.paramsMut)
 
 }

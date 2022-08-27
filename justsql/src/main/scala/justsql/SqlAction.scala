@@ -45,6 +45,22 @@ case class SqlAction[ROW](sql: Sql,
           }
     )
 
+  private def combine(operator: String, other: SqlAction[ROW]): SqlAction[ROW] = {
+    val combinedSql =
+      Sql(
+        sql = self.sql + s";\n$operator\n" + other.sql,
+        params = self.sql.params ++ other.sql.params
+      )
+
+    copy(sql = combinedSql)
+  }
+
+  def union(other: SqlAction[ROW]): SqlAction[ROW] =
+    combine("UNION", other)
+
+  def unionAll(other: SqlAction[ROW]): SqlAction[ROW] =
+    combine("UNION ALL", other)
+
   def recoverWith[B >: ROW](pf: PartialFunction[Throwable, Try[B]]): SqlAction[B] =
     copy(
       runner =

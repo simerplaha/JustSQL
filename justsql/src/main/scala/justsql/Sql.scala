@@ -33,21 +33,21 @@ object Sql {
 
 }
 
-case class Sql(sql: String, params: Params) {
+case class Sql(sql: String, params: Params) { self =>
 
   def select[ROW: ClassTag]()(implicit rowReader: RowReader[ROW]): SqlAction[Array[ROW]] =
-    SqlAction(this, _.select(_))
+    SqlAction(self, _.select(_))
 
   def selectOne[ROW: ClassTag]()(implicit rowReader: RowReader[ROW]): SqlAction[Option[ROW]] =
-    SqlAction(this, _.selectOne(_))
+    SqlAction(self, _.selectOne(_))
 
   def update(): SqlAction[Int] =
-    SqlAction(this, _.update(_))
+    SqlAction(self, _.update(_))
 
   def unsafeSelect[ROW: ClassTag](rowReader: ResultSet => ROW): SqlAction[Array[ROW]] =
-    SqlAction(this, _.unsafeSelect(_)(rowReader))
+    SqlAction(self, _.unsafeSelect(_)(rowReader))
 
   def unsafeSelectOne[ROW: ClassTag](rowReader: ResultSet => ROW): SqlAction[Option[ROW]] =
-    SqlAction(this, _.unsafeSelectOne(_)(rowReader))
+    SqlAction(self, _.unsafeSelectOne(_)(rowReader))
 
 }
