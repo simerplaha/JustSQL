@@ -55,4 +55,10 @@ case class Params(params: ListBuffer[ParamValueWriter[_]]) extends AnyVal {
       param =>
         apply(param)(sqlParam)
     }
+
+  @inline def embed(query: Sql): String = {
+    params addAll query.params.params
+    query.sql
+  }
+
 }

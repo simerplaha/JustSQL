@@ -161,6 +161,10 @@ val paramWriter: OneParamWriter[MyColumn] =
     statement setInt myColumn.int
 ```
 
+# Embed/Compose queries
+
+TODO (See tests)
+
 # Custom `RowReader` and `ColReader`
 
 A SQL table is just a bunch of a rows and columns right. So we have a `RowReader` and a `ColReader` to represent those.

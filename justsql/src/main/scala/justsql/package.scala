@@ -33,4 +33,9 @@ package object justsql {
       builder ? param
   }
 
+  implicit class EmbedSqlImplicits(val sql: Sql) extends AnyVal {
+    def embed(implicit builder: Params): String =
+      builder embed sql
+  }
+
 }

@@ -215,4 +215,41 @@ trait JustSQLCommonSpec extends AnyWordSpec {
       "SELECT count(*) as count FROM TEST_TABLE".unsafeSelectOne[Int](_.getInt("count")) shouldBe Success(Some(3))
     }
   }
+
+  "embed queries" in {
+    withDB(connector()) {
+      implicit db =>
+        "CREATE TABLE TEST_TABLE(int int, bool boolean, string varchar)".update() shouldBe Success(0)
+
+        Sql {
+          implicit params =>
+            s"""
+               |INSERT INTO TEST_TABLE values (${1.?}, ${false.?}, ${"one".?}),
+               |                              (${2.?}, ${true.?},  ${"two".?}),
+               |                              (${3.?}, ${false.?}, ${"three".?})
+               |
+               |""".stripMargin
+        }.update() shouldBe Success(3)
+
+        def maxIntQuery(): Sql =
+          Sql {
+            implicit params =>
+              s"""
+                 |SELECT max(int) from TEST_TABLE where bool = ${true.?}
+                 |""".stripMargin
+          }
+
+        val finalQuery =
+          Sql {
+            implicit params =>
+              s"""
+                 |SELECT int from TEST_TABLE
+                 | WHERE int = (${maxIntQuery().embed})
+                 |""".stripMargin
+          }
+
+        finalQuery.selectOne[Int]().success.value should contain(2)
+    }
+
+  }
 }
