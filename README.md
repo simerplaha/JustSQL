@@ -71,9 +71,9 @@ Let's create our example `USERS` table
 
 ```scala
 //create table
-val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update()
+val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().run()
 //insert rows
-val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
+val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().run()
 ```
 
 # Query parameters
@@ -92,7 +92,7 @@ val insertParametric: Try[Int] =
          |     VALUES (${1.?}, ${"Harry".?}),
          |            (${2.?}, ${"Ayman".?})
          |""".stripMargin
-  }.update()
+  }.update().run()
 ```
 
 # select()
@@ -109,7 +109,7 @@ implicit val userReader = RowReader(User.tupled)
 Read all `User`s
 
 ```scala
-val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]()
+val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]().run()
 ```
 
 # selectOne()
@@ -117,7 +117,7 @@ val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]()
 Expects `1` row else returns `None`
 
 ```scala
-val count: Try[Option[Int]] = "SELECT count(*) FROM USERS".selectOne[Int]()
+val count: Try[Option[Int]] = "SELECT count(*) FROM USERS".selectOne[Int]().run()
 ```
 
 # Transactionally
@@ -136,10 +136,11 @@ val transaction: Try[Int] =
     |"""
     .stripMargin
     .update()
+    .run()
     .recoverWith {
       _ =>
         //rollback in-case of an error
-        "ROLLBACK".update()
+        "ROLLBACK".update().run()
     }
 ```
 
@@ -217,12 +218,12 @@ Unsafe APIs give direct access to low level `java.sql.ResultSet` type.
 
 ```scala
 //read the names of all Users
-val names: Try[Array[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name"))
+val names: Try[Array[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name")).run()
 ```
 
 ## unsafeSelectOne()
 
 ```scala
-val unsafeCount: Try[Int] = "SELECT count(*) as count FROM USERS".unsafeSelectOne(_.getInt("count"))
+val unsafeCount: Try[Int] = "SELECT count(*) as count FROM USERS".unsafeSelectOne(_.getInt("count")).run()
 ```
 
