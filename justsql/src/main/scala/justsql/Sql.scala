@@ -41,7 +41,7 @@ case class Sql(sql: String, params: Params) {
   def selectOne[ROW: ClassTag]()(implicit rowReader: RowReader[ROW]): SqlAction[Option[ROW]] =
     SqlAction(this, _.selectOne(_))
 
-  def update()(implicit db: JustSQL): SqlAction[Int] =
+  def update(): SqlAction[Int] =
     SqlAction(this, _.update(_))
 
   def unsafeSelect[ROW: ClassTag](rowReader: ResultSet => ROW): SqlAction[Array[ROW]] =
