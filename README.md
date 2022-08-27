@@ -155,6 +155,7 @@ val transaction: Try[Int] =
   .update()
   .recoverWith {
     _ =>
+       //TODO: Needs to occur in the same session     
       "ROLLBACK".update().run() //if there was an error rollback
   }.run()
 ```

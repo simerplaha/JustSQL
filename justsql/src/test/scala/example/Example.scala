@@ -65,6 +65,7 @@ object Example extends App {
     }.update()
       .recoverWith {
         _ =>
+          //TODO: Needs to occur in the same session
           "ROLLBACK".update().run() //if there was an error rollback
       }.run()
 
