@@ -59,19 +59,6 @@ case class SqlAction[ROW](sql: Sql,
           self.runner(db, sql).recover(pf)
     )
 
-  def recoverRollback()(implicit evd: ROW =:= Int): SqlAction[Int] =
-    copy(
-      runner =
-        (db, sql) =>
-          self
-            .runner(db, sql)
-            .asInstanceOf[Try[Int]]
-            .recoverWith {
-              case _: Throwable =>
-                "ROLLBACK".update().run()(db)
-            }
-    )
-
   def failed(): SqlAction[Throwable] =
     copy(
       runner =

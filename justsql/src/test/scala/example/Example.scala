@@ -63,8 +63,10 @@ object Example extends App {
            |"""
           .stripMargin
     }.update()
-      .recoverRollback()
-      .run()
+      .recoverWith {
+        _ =>
+          "ROLLBACK".update().run() //if there was an error rollback
+      }.run()
 
   /** READING */
   //  case class that represents a table row
