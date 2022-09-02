@@ -21,6 +21,7 @@ import justsql.JustSQL._
 import java.io.Closeable
 import java.sql.{Connection, PreparedStatement, ResultSet}
 import scala.reflect.ClassTag
+import scala.util.{Try, Using}
 
 object JustSQL {
 
@@ -41,8 +42,12 @@ object JustSQL {
 
 class JustSQL(connector: SQLConnector) extends Closeable {
 
-  def getConnection(): Connection =
-    connector.getConnection()
+  def run[ROW](f: (Connection, Using.Manager) => ROW): Try[ROW] =
+    Using.Manager {
+      manager =>
+        val connection = manager(connector.getConnection())
+        f(connection, manager)
+    }
 
   def update(sql: RawSQL)(context: SqlContext): Int = {
     import context._

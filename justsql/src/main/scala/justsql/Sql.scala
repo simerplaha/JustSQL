@@ -18,15 +18,14 @@ package justsql
 
 import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
-import scala.util.{Try, Using}
+import scala.util.Try
 
 sealed trait Sql[+ROW] { self =>
   protected def executeIO(db: JustSQL, context: SqlContext): ROW
 
   def run()(implicit db: JustSQL): Try[ROW] =
-    Using.Manager {
-      manager =>
-        val connection = manager(db.getConnection())
+    db.run {
+      (connection, manager) =>
         executeIO(db, SqlContext(connection, manager))
     }
 
@@ -87,6 +86,7 @@ case class RawSQL(sql: String, params: Params) extends EmbeddableSQL {
 
   def update(): UpdateSQL =
     UpdateSQL(this)
+
 
 }
 
