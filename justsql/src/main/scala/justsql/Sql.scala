@@ -83,11 +83,11 @@ sealed trait Sql[+ROW] { self =>
 
 }
 
-sealed trait SimpleSQL[+ROW] extends Sql[ROW] { self =>
+sealed trait TrackedSQL[+ROW] extends Sql[ROW] { self =>
   def rawSQL: RawSQL
 
-  private def combine[B >: ROW](operator: String, other: SimpleSQL[B]): SimpleSQL[B] =
-    new SimpleSQL[ROW] {
+  private def combine[B >: ROW](operator: String, other: TrackedSQL[B]): TrackedSQL[B] =
+    new TrackedSQL[ROW] {
       override def rawSQL: RawSQL = {
         RawSQL(
           sql = s"""${self.rawSQL.sql}\n$operator\n${other.rawSQL.sql}""",
@@ -99,20 +99,11 @@ sealed trait SimpleSQL[+ROW] extends Sql[ROW] { self =>
         self.runIO(db, connection, manager)
     }
 
-  def union[B >: ROW](other: SimpleSQL[B]): SimpleSQL[B] =
+  def union[B >: ROW](other: TrackedSQL[B]): TrackedSQL[B] =
     combine("UNION", other)
 
-  def unionAll[B >: ROW](other: SimpleSQL[B]): SimpleSQL[B] =
+  def unionAll[B >: ROW](other: TrackedSQL[B]): TrackedSQL[B] =
     combine("UNION ALL", other)
-
-  def transactional[B >: ROW](): SimpleSQL[B] =
-    new SimpleSQL[B] {
-      override def rawSQL: RawSQL =
-        self.rawSQL.copy(sql = s""""BEGIN;\n${self.rawSQL.sql.sql};\nCOMMIT;"""")
-
-      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): B =
-        self.runIO(db, connection, manager)
-    }
 }
 
 object Sql {
@@ -143,7 +134,7 @@ case class RawSQL(sql: String, params: Params) {
 }
 
 case class SelectSQL[ROW](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW],
-                                          classTag: ClassTag[ROW]) extends SimpleSQL[Array[ROW]] { self =>
+                                          classTag: ClassTag[ROW]) extends TrackedSQL[Array[ROW]] { self =>
 
   def head(): Sql[ROW] =
     new Sql[ROW] {
@@ -182,7 +173,10 @@ case class SelectSQL[ROW](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW],
     db.select[ROW](rawSQL)(connection, manager)
 }
 
-case class UpdateSQL(rawSQL: RawSQL) extends SimpleSQL[Int] { self =>
+case class UpdateSQL(rawSQL: RawSQL) extends TrackedSQL[Int] { self =>
+
+  def transactional(): UpdateSQL =
+    UpdateSQL(rawSQL.copy(sql = s""""BEGIN;\n${self.rawSQL.sql.sql};\nCOMMIT;""""))
 
   override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): Int =
     db.update(rawSQL)(connection, manager)

@@ -31,7 +31,7 @@ package object justsql {
       builder ? param
   }
 
-  implicit class EmbedSqlActionImplicits[ROW](val sql: SimpleSQL[ROW]) extends AnyVal {
+  implicit class EmbedSqlActionImplicits[ROW](val sql: TrackedSQL[ROW]) extends AnyVal {
     def embed(implicit builder: Params): String =
       builder embed sql.sql
   }
