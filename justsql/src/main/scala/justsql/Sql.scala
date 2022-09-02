@@ -72,13 +72,13 @@ sealed trait Sql[+ROW] { self =>
   def failed(): Sql[Throwable] =
     new Sql[Throwable] {
       override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): Throwable =
-        Try(self.runIO(db, connection, manager)).failed.get
-    }
-
-  def filter(p: ROW => Boolean): Sql[ROW] =
-    new Sql[ROW] {
-      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): ROW =
-        Try(self.runIO(db, connection, manager)).filter(p).get
+        try {
+          val result = self.runIO(db, connection, manager)
+          new IllegalStateException(s"Expected failure. Actual: ${result.getClass.getSimpleName}")
+        } catch {
+          case throwable: Throwable =>
+            throwable
+        }
     }
 
 }
