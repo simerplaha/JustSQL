@@ -100,7 +100,11 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
   "return empty select on empty table" in {
     withDB(connector()) { implicit db =>
+      "CREATE TABLE TEST_TABLE(key varchar)".update()
+
       "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value shouldBe 0
+
+      "SELECT * FROM TEST_TABLE".select[String]().head()
 
       /** SELECT */
       //Select using typed API

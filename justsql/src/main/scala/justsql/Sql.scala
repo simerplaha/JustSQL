@@ -133,6 +133,38 @@ case class RawSQL(sql: String, params: Params) {
 
 case class SelectSQL[ROW: ClassTag](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW]) extends EmbeddableSQL[Array[ROW]] { self =>
 
+  def head(): Sql[ROW] =
+    new Sql[ROW] {
+      override protected def executeIO(db: JustSQL, context: SqlContext): ROW =
+        self.executeIO(db, context).head
+    }
+
+  def headOption(): Sql[Option[ROW]] =
+    new Sql[Option[ROW]] {
+      override protected def executeIO(db: JustSQL, context: SqlContext) =
+        self.executeIO(db, context).headOption
+    }
+
+  def last(): Sql[ROW] =
+    new Sql[ROW] {
+      override protected def executeIO(db: JustSQL, context: SqlContext) =
+        self.executeIO(db, context).last
+    }
+
+  def lastOption(): Sql[Option[ROW]] =
+    new Sql[Option[ROW]] {
+      override protected def executeIO(db: JustSQL, context: SqlContext) =
+        self.executeIO(db, context).lastOption
+    }
+
+  def map[B: ClassTag](f: ROW => B): SelectSQL[B] = {
+    implicit val rowReader: RowReader[B] =
+      (resultSet: ResultSet) =>
+        f(self.rowReader(resultSet))
+
+    SelectSQL[B](rawSQL)
+  }
+
   override protected def executeIO(db: JustSQL, context: SqlContext): Array[ROW] =
     db.select[ROW](rawSQL)(context)
 }
