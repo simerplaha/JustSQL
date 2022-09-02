@@ -47,16 +47,26 @@ sealed trait Sql[+ROW] { self =>
           .runIO(db, connection, manager)
     }
 
-  def recoverWith[B >: ROW](pf: PartialFunction[Throwable, Try[B]]): Sql[B] =
+  def recoverWith[B >: ROW](pf: PartialFunction[Throwable, Sql[B]]): Sql[B] =
     new Sql[B] {
       override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): B =
-        Try(self.runIO(db, connection, manager)).recoverWith(pf).get
+        try
+          self.runIO(db, connection, manager)
+        catch {
+          case throwable: Throwable =>
+            pf(throwable).runIO(db, connection, manager)
+        }
     }
 
   def recover[B >: ROW](pf: PartialFunction[Throwable, B]): Sql[B] =
     new Sql[B] {
       override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): B =
-        Try(self.runIO(db, connection, manager)).recover(pf).get
+        try
+          self.runIO(db, connection, manager)
+        catch {
+          case throwable: Throwable =>
+            pf(throwable)
+        }
     }
 
   def failed(): Sql[Throwable] =

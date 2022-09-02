@@ -153,14 +153,12 @@ val transaction: Try[Int] =
          |
          |COMMIT;
          |"""
-        .stripMargin
-  }
-    .update()
-    .recoverWith {
-      _ =>
-        //TODO: Needs to occur in the same session     
-        "ROLLBACK".update().run() //if there was an error rollback
-    }.run()
+              .stripMargin
+  }.update()
+   .recoverWith {
+     _ =>
+       "ROLLBACK".update() //if there was an error rollback
+   }.run()
 ```
 
 # `union()` & `unionAll()`

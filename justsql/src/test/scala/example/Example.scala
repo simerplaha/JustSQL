@@ -66,8 +66,9 @@ object Example extends App {
     }.update()
       .recoverWith {
         _ =>
-          "ROLLBACK".update().run() //if there was an error rollback
+          "ROLLBACK".update() //if there was an error rollback
       }.run()
+
 
   /** READING */
   //  case class that represents a table row
