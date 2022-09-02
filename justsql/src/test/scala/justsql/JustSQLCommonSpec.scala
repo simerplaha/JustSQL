@@ -106,7 +106,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
       //Select using typed API
       "SELECT * FROM TEST_TABLE".select[String]().run().success.value shouldBe empty
       //Select using Java ResultSet
-      //      "SELECT * FROM TEST_TABLE".unsafeSelect[String](_.getString("key")).run().success.value shouldBe empty
+      "SELECT * FROM TEST_TABLE".unsafeSelect[String](_.getString("key")).run().success.value shouldBe empty
       //
       //      /** COUNT */
       //      //Count using typed API
@@ -125,7 +125,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
       //Select using typed API
       "SELECT * FROM TEST_TABLE".select[String]().run().success.value shouldBe Array("1", "2", "3")
       //Select using Java ResultSet
-      //      "SELECT * FROM TEST_TABLE".unsafeSelect[String](_.getString("key")).run().success.value shouldBe Array("1", "2", "3")
+      "SELECT * FROM TEST_TABLE".unsafeSelect[String](_.getString("key")).run().success.value shouldBe Array("1", "2", "3")
       //
       //      /** COUNT */
       //      //Count using typed API

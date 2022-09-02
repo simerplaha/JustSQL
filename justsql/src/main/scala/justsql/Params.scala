@@ -60,7 +60,7 @@ case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]]) extend
         apply(param)(sqlParam)
     }
 
-  @inline def embed(sql: EmbeddableSQL): String = {
+  @inline def embed(sql: EmbeddableSQL[_]): String = {
     paramsMut addAll sql.rawSQL.params.paramsMut
     sql.rawSQL.sql
   }

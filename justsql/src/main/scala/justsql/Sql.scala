@@ -16,6 +16,7 @@
 
 package justsql
 
+import java.sql.ResultSet
 import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
 import scala.util.Try
@@ -57,10 +58,51 @@ sealed trait Sql[+ROW] { self =>
       override protected def executeIO(db: JustSQL, context: SqlContext): B =
         Try(self.executeIO(db, context)).recover(pf).get
     }
+
+  def failed(): Sql[Throwable] =
+    new Sql[Throwable] {
+      override protected def executeIO(db: JustSQL, context: SqlContext): Throwable =
+        Try(self.executeIO(db, context)).failed.get
+    }
+
+  def filter(p: ROW => Boolean): Sql[ROW] =
+    new Sql[ROW] {
+      override protected def executeIO(db: JustSQL, context: SqlContext): ROW =
+        Try(self.executeIO(db, context)).filter(p).get
+    }
+
 }
 
-sealed trait EmbeddableSQL {
+sealed trait EmbeddableSQL[+ROW] extends Sql[ROW] { self =>
   def rawSQL: RawSQL
+
+  private def combine[B >: ROW](operator: String, other: EmbeddableSQL[B]): EmbeddableSQL[B] =
+    new EmbeddableSQL[ROW] {
+      override def rawSQL: RawSQL = {
+        RawSQL(
+          sql = self.rawSQL.sql + s";\n$operator\n" + other.rawSQL.sql,
+          params = self.rawSQL.sql.params ++ other.rawSQL.sql.params
+        )
+      }
+
+      override protected def executeIO(db: JustSQL, context: SqlContext): ROW =
+        self.executeIO(db, context)
+    }
+
+  def union[B >: ROW](other: EmbeddableSQL[B]): EmbeddableSQL[B] =
+    combine("UNION", other)
+
+  def unionAll[B >: ROW](other: EmbeddableSQL[B]): EmbeddableSQL[B] =
+    combine("UNION ALL", other)
+
+  def transactional[B >: ROW](): EmbeddableSQL[B] =
+    new EmbeddableSQL[B] {
+      override def rawSQL: RawSQL =
+        self.rawSQL.sql.copy(sql = "BEGIN;\n" + self.rawSQL.sql.sql + ";\nCOMMIT;")
+
+      override protected def executeIO(db: JustSQL, context: SqlContext): B =
+        self.executeIO(db, context)
+    }
 }
 
 object Sql {
@@ -76,28 +118,27 @@ object Sql {
 
 }
 
-case class RawSQL(sql: String, params: Params) extends EmbeddableSQL {
-
-  override def rawSQL: RawSQL =
-    this
+case class RawSQL(sql: String, params: Params) {
 
   def select[ROW: ClassTag]()(implicit rowReader: RowReader[ROW]): SelectSQL[ROW] =
     SelectSQL(this)
 
+  def unsafeSelect[ROW](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW] =
+    SelectSQL(this)(classTag, rowParser(_))
+
   def update(): UpdateSQL =
     UpdateSQL(this)
 
-
 }
 
-case class SelectSQL[ROW: ClassTag](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW]) extends Sql[Array[ROW]] with EmbeddableSQL { self =>
+case class SelectSQL[ROW: ClassTag](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW]) extends EmbeddableSQL[Array[ROW]] { self =>
 
   override protected def executeIO(db: JustSQL, context: SqlContext): Array[ROW] =
     db.select[ROW](rawSQL)(context)
 }
 
 
-case class UpdateSQL(rawSQL: RawSQL) extends Sql[Int] with EmbeddableSQL { self =>
+case class UpdateSQL(rawSQL: RawSQL) extends EmbeddableSQL[Int] { self =>
 
   override protected def executeIO(db: JustSQL, context: SqlContext): Int =
     db.update(rawSQL)(context)
