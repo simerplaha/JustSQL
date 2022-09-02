@@ -21,7 +21,6 @@ import justsql.JustSQL._
 import java.io.Closeable
 import java.sql.{Connection, PreparedStatement, ResultSet}
 import scala.reflect.ClassTag
-import scala.util.{Try, Using}
 
 object JustSQL {
 
@@ -42,48 +41,38 @@ object JustSQL {
 
 class JustSQL(connector: SQLConnector) extends Closeable {
 
-  def select[ROW: ClassTag](sql: Sql)(implicit rowReader: RowReader[ROW]): Try[Array[ROW]] =
-    unsafeSelect(sql)(rowReader)
+  def getConnection(): Connection =
+    connector.getConnection()
 
-  def selectOne[ROW: ClassTag](sql: Sql)(implicit rowReader: RowReader[ROW]): Try[Option[ROW]] =
-    select(sql) map JustSQL.oneOrNone
+  def update(sql: Sql)(context: SqlContext): Int = {
+    import context._
+    val statement = manager(connection.prepareStatement(sql.sql))
+    setParams(sql.params, statement)
+    statement.executeUpdate()
+  }
 
-  def update(sql: Sql): Try[Int] =
-    Using.Manager {
-      manager =>
-        val connection: Connection = manager(connector.getConnection())
-        val statement = manager(connection.prepareStatement(sql.sql))
-        setParams(sql.params, statement)
-        statement.executeUpdate()
+  def select[ROW: ClassTag](sql: Sql)(context: SqlContext)(implicit rowReader: RowReader[ROW]): Array[ROW] = {
+    import context._
+    val statement = manager(connection.prepareStatement(sql.sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
+    setParams(sql.params, statement)
+
+    val resultSet = manager(statement.executeQuery())
+
+    if (resultSet.last()) {
+      val array = new Array[ROW](resultSet.getRow)
+
+      resultSet.beforeFirst()
+
+      var i = 0
+      while (resultSet.next()) {
+        array(i) = rowReader(resultSet)
+        i += 1
+      }
+      array
+    } else {
+      Array.empty[ROW]
     }
-
-  def unsafeSelectOne[ROW: ClassTag](sql: Sql)(reader: ResultSet => ROW): Try[Option[ROW]] =
-    unsafeSelect[ROW](sql)(reader) map JustSQL.oneOrNone
-
-  def unsafeSelect[ROW: ClassTag](sql: Sql)(rowReader: ResultSet => ROW): Try[Array[ROW]] =
-    Using.Manager {
-      manager =>
-        val connection = manager(connector.getConnection())
-        val statement = manager(connection.prepareStatement(sql.sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
-        setParams(sql.params, statement)
-
-        val resultSet = manager(statement.executeQuery())
-
-        if (resultSet.last()) {
-          val array = new Array[ROW](resultSet.getRow)
-
-          resultSet.beforeFirst()
-
-          var i = 0
-          while (resultSet.next()) {
-            array(i) = rowReader(resultSet)
-            i += 1
-          }
-          array
-        } else {
-          Array.empty[ROW]
-        }
-    }
+  }
 
   override def close(): Unit =
     connector.close()

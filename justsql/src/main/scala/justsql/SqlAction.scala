@@ -16,19 +16,21 @@
 
 package justsql
 
-import scala.util.Try
+import scala.util.{Try, Using}
 
-case class SqlAction[ROW](sql: Sql,
-                          private val runner: (JustSQL, Sql) => Try[ROW]) { self =>
+case class SqlAction[ROW](private val executeIO: (JustSQL, SqlContext) => ROW) { self =>
 
   def run()(implicit db: JustSQL): Try[ROW] =
-    runner(db, sql)
+    Using.Manager {
+      manager =>
+        val connection = manager(db.getConnection())
+        executeIO(db, SqlContext(connection, manager))
+    }
 
   def map[B](f: ROW => B): SqlAction[B] =
-    copy(
-      runner =
-        (db, sql) =>
-          self.runner(db, sql).map(f)
+    SqlAction(
+      (db, context) =>
+        f(self.executeIO(db, context))
     )
 
   /**
@@ -36,60 +38,25 @@ case class SqlAction[ROW](sql: Sql,
    *
    * Eg: Calling flatMap twice will execute 2 queries in sequence */
   def flatMap[B](f: ROW => SqlAction[B]): SqlAction[B] =
-    copy(
-      runner =
-        (db, sql) =>
-          self.runner(db, sql) flatMap {
-            row =>
-              f(row).run()(db)
-          }
+    SqlAction(
+      (db, context) =>
+        f(self.executeIO(db, context))
+          .executeIO(db, context)
     )
 
-  private def combine(operator: String, other: SqlAction[ROW]): SqlAction[ROW] = {
-    val combinedSql =
-      Sql(
-        sql = self.sql + s";\n$operator\n" + other.sql,
-        params = self.sql.params ++ other.sql.params
-      )
+  //  def recoverWith[B >: ROW](pf: PartialFunction[Throwable, Try[B]]): SqlAction[B] =
+  //    copy(
+  //      executeIO =
+  //        (db, context) =>
+  //          Try(self.executeIO(db, context)).recoverWith(pf).get
+  //    )
+  //
+  //  def recover[B >: ROW](pf: PartialFunction[Throwable, B]): SqlAction[B] =
+  //    copy(
+  //      executeIO =
+  //        (db, context) =>
+  //          Try(self.executeIO(db, context)).recover(pf).get
+  //    )
 
-    copy(sql = combinedSql)
-  }
-
-  def union(other: SqlAction[ROW]): SqlAction[ROW] =
-    combine("UNION", other)
-
-  def unionAll(other: SqlAction[ROW]): SqlAction[ROW] =
-    combine("UNION ALL", other)
-
-  def transactional()(implicit evd: ROW =:= Int): SqlAction[ROW] =
-    copy(sql = sql.copy(sql = "BEGIN;\n" + sql.sql + ";\nCOMMIT;"))
-
-  def recoverWith[B >: ROW](pf: PartialFunction[Throwable, Try[B]]): SqlAction[B] =
-    copy(
-      runner =
-        (db, sql) =>
-          self.runner(db, sql).recoverWith(pf)
-    )
-
-  def recover[B >: ROW](pf: PartialFunction[Throwable, B]): SqlAction[B] =
-    copy(
-      runner =
-        (db, sql) =>
-          self.runner(db, sql).recover(pf)
-    )
-
-  def failed(): SqlAction[Throwable] =
-    copy(
-      runner =
-        (db, sql) =>
-          self.runner(db, sql).failed
-    )
-
-  def filter(p: ROW => Boolean): SqlAction[ROW] =
-    copy(
-      runner =
-        (db, sql) =>
-          self.runner(db, sql).filter(p)
-    )
 
 }

@@ -30,7 +30,8 @@ object TestUtil {
         try
           f(db)
         finally
-          postTestCleanUp(db)
+        //          postTestCleanUp(db)
+          ()
 
       case Failure(exception) =>
         db.close()

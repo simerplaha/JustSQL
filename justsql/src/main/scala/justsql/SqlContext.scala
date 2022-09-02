@@ -16,28 +16,8 @@
 
 package justsql
 
-import scala.collection.mutable.ListBuffer
-import scala.reflect.ClassTag
+import java.sql.Connection
+import scala.util.Using
 
-object Sql {
-
-  def apply(f: Params => String): Sql = {
-    val params = Params(ListBuffer.empty)
-    val sql = f(params)
-    new Sql(sql, params)
-  }
-
-  @inline def apply(sql: String): Sql =
-    new Sql(sql, Params.empty)
-
-}
-
-case class Sql(sql: String, params: Params) { self =>
-
-  def select[ROW: ClassTag]()(implicit rowReader: RowReader[ROW]): SqlAction[Array[ROW]] =
-    SqlAction(_.select(this)(_))
-
-  def update(): SqlAction[Int] =
-    SqlAction(_.update(this)(_))
-
-}
+case class SqlContext(connection: Connection,
+                      manager: Using.Manager)

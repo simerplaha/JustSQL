@@ -25,7 +25,6 @@ trait SQLConnector extends AutoCloseable {
 
 }
 
-
 object SQLConnector {
   def apply[D <: DataSource with AutoCloseable](datasource: D): SQLConnector =
     new SQLConnector {
