@@ -73,14 +73,14 @@ sealed trait Sql[+ROW] { self =>
 
 }
 
-sealed trait EmbeddableSQL[+ROW] extends Sql[ROW] { self =>
+sealed trait TrackedSQL[+ROW] extends Sql[ROW] { self =>
   def rawSQL: RawSQL
 
-  private def combine[B >: ROW](operator: String, other: EmbeddableSQL[B]): EmbeddableSQL[B] =
-    new EmbeddableSQL[ROW] {
+  private def combine[B >: ROW](operator: String, other: TrackedSQL[B]): TrackedSQL[B] =
+    new TrackedSQL[ROW] {
       override def rawSQL: RawSQL = {
         RawSQL(
-          sql = self.rawSQL.sql + s";\n$operator\n" + other.rawSQL.sql,
+          sql = s"""${self.rawSQL.sql}\n$operator\n${other.rawSQL.sql}""",
           params = self.rawSQL.sql.params ++ other.rawSQL.sql.params
         )
       }
@@ -89,16 +89,16 @@ sealed trait EmbeddableSQL[+ROW] extends Sql[ROW] { self =>
         self.executeIO(db, context)
     }
 
-  def union[B >: ROW](other: EmbeddableSQL[B]): EmbeddableSQL[B] =
+  def union[B >: ROW](other: TrackedSQL[B]): TrackedSQL[B] =
     combine("UNION", other)
 
-  def unionAll[B >: ROW](other: EmbeddableSQL[B]): EmbeddableSQL[B] =
+  def unionAll[B >: ROW](other: TrackedSQL[B]): TrackedSQL[B] =
     combine("UNION ALL", other)
 
-  def transactional[B >: ROW](): EmbeddableSQL[B] =
-    new EmbeddableSQL[B] {
+  def transactional[B >: ROW](): TrackedSQL[B] =
+    new TrackedSQL[B] {
       override def rawSQL: RawSQL =
-        self.rawSQL.sql.copy(sql = "BEGIN;\n" + self.rawSQL.sql.sql + ";\nCOMMIT;")
+        self.rawSQL.sql.copy(sql = s""""BEGIN;\n${self.rawSQL.sql.sql};\nCOMMIT;"""")
 
       override protected def executeIO(db: JustSQL, context: SqlContext): B =
         self.executeIO(db, context)
@@ -120,18 +120,20 @@ object Sql {
 
 case class RawSQL(sql: String, params: Params) {
 
-  def select[ROW: ClassTag]()(implicit rowReader: RowReader[ROW]): SelectSQL[ROW] =
+  def select[ROW]()(implicit rowReader: RowReader[ROW],
+                    classTag: ClassTag[ROW]): SelectSQL[ROW] =
     SelectSQL(this)
 
   def unsafeSelect[ROW](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW] =
-    SelectSQL(this)(classTag, rowParser(_))
+    SelectSQL(this)(rowParser(_), classTag)
 
   def update(): UpdateSQL =
     UpdateSQL(this)
 
 }
 
-case class SelectSQL[ROW: ClassTag](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW]) extends EmbeddableSQL[Array[ROW]] { self =>
+case class SelectSQL[ROW](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW],
+                                          classTag: ClassTag[ROW]) extends TrackedSQL[Array[ROW]] { self =>
 
   def head(): Sql[ROW] =
     new Sql[ROW] {
@@ -145,16 +147,17 @@ case class SelectSQL[ROW: ClassTag](rawSQL: RawSQL)(implicit rowReader: RowReade
         self.executeIO(db, context).headOption
     }
 
-  def last(): Sql[ROW] =
+  def headOrFail(): Sql[ROW] =
     new Sql[ROW] {
-      override protected def executeIO(db: JustSQL, context: SqlContext) =
-        self.executeIO(db, context).last
-    }
-
-  def lastOption(): Sql[Option[ROW]] =
-    new Sql[Option[ROW]] {
-      override protected def executeIO(db: JustSQL, context: SqlContext) =
-        self.executeIO(db, context).lastOption
+      override protected def executeIO(db: JustSQL, context: SqlContext): ROW = {
+        val result = self.executeIO(db, context)
+        if (result.length == 0) {
+          result.head
+        } else {
+          val rowOrRows = if (result.length > 1) "rows" else "row"
+          throw new IllegalCallerException(s"Expected 1 row. Actual ${result.length} $rowOrRows.")
+        }
+      }
     }
 
   def map[B: ClassTag](f: ROW => B): SelectSQL[B] = {
@@ -169,9 +172,9 @@ case class SelectSQL[ROW: ClassTag](rawSQL: RawSQL)(implicit rowReader: RowReade
     db.select[ROW](rawSQL)(context)
 }
 
-
-case class UpdateSQL(rawSQL: RawSQL) extends EmbeddableSQL[Int] { self =>
+case class UpdateSQL(rawSQL: RawSQL) extends TrackedSQL[Int] { self =>
 
   override protected def executeIO(db: JustSQL, context: SqlContext): Int =
     db.update(rawSQL)(context)
+
 }

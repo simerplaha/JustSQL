@@ -28,12 +28,6 @@ object JustSQL {
   @inline def apply[D <: SQLConnector](datasource: D): JustSQL =
     new JustSQL(datasource)
 
-  @inline def oneOrNone[T](rows: Array[T]): Option[T] =
-    if (rows.length == 1)
-      Some(rows(0))
-    else
-      None
-
   @inline def setParams(params: Params, statement: PreparedStatement): Unit = {
     val positionedStatements = PositionedPreparedStatement(statement)
     params foreach (_.set(positionedStatements))
