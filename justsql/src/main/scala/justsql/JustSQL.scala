@@ -36,22 +36,20 @@ object JustSQL {
 
 class JustSQL(connector: SQLConnector) extends Closeable {
 
-  def run[ROW](f: (Connection, Using.Manager) => ROW): Try[ROW] =
+  def connectAndRun[ROW](f: (Connection, Using.Manager) => ROW): Try[ROW] =
     Using.Manager {
       manager =>
         val connection = manager(connector.getConnection())
         f(connection, manager)
     }
 
-  def update(sql: RawSQL)(context: SqlContext): Int = {
-    import context._
+  def update(sql: RawSQL)(connection: Connection, manager: Using.Manager): Int = {
     val statement = manager(connection.prepareStatement(sql.sql))
     setParams(sql.params, statement)
     statement.executeUpdate()
   }
 
-  def select[ROW: ClassTag](sql: RawSQL)(context: SqlContext)(implicit rowReader: RowReader[ROW]): Array[ROW] = {
-    import context._
+  def select[ROW: ClassTag](sql: RawSQL)(connection: Connection, manager: Using.Manager)(implicit rowReader: RowReader[ROW]): Array[ROW] = {
     val statement = manager(connection.prepareStatement(sql.sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
     setParams(sql.params, statement)
 

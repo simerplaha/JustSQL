@@ -16,24 +16,24 @@
 
 package justsql
 
-import java.sql.ResultSet
+import java.sql.{Connection, ResultSet}
 import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
-import scala.util.Try
+import scala.util.{Try, Using}
 
 sealed trait Sql[+ROW] { self =>
-  protected def executeIO(db: JustSQL, context: SqlContext): ROW
+  protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): ROW
 
   def run()(implicit db: JustSQL): Try[ROW] =
-    db.run {
+    db connectAndRun {
       (connection, manager) =>
-        executeIO(db, SqlContext(connection, manager))
+        runIO(db, connection, manager)
     }
 
   def map[B](f: ROW => B): Sql[B] =
     new Sql[B] {
-      override protected def executeIO(db: JustSQL, context: SqlContext): B =
-        f(self.executeIO(db, context))
+      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): B =
+        f(self.runIO(db, connection, manager))
     }
 
   /**
@@ -42,33 +42,33 @@ sealed trait Sql[+ROW] { self =>
    * Eg: Calling flatMap twice will execute 2 queries in sequence */
   def flatMap[B](f: ROW => Sql[B]): Sql[B] =
     new Sql[B] {
-      override protected def executeIO(db: JustSQL, context: SqlContext): B =
-        f(self.executeIO(db, context))
-          .executeIO(db, context)
+      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): B =
+        f(self.runIO(db, connection, manager))
+          .runIO(db, connection, manager)
     }
 
   def recoverWith[B >: ROW](pf: PartialFunction[Throwable, Try[B]]): Sql[B] =
     new Sql[B] {
-      override protected def executeIO(db: JustSQL, context: SqlContext): B =
-        Try(self.executeIO(db, context)).recoverWith(pf).get
+      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): B =
+        Try(self.runIO(db, connection, manager)).recoverWith(pf).get
     }
 
   def recover[B >: ROW](pf: PartialFunction[Throwable, B]): Sql[B] =
     new Sql[B] {
-      override protected def executeIO(db: JustSQL, context: SqlContext): B =
-        Try(self.executeIO(db, context)).recover(pf).get
+      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): B =
+        Try(self.runIO(db, connection, manager)).recover(pf).get
     }
 
   def failed(): Sql[Throwable] =
     new Sql[Throwable] {
-      override protected def executeIO(db: JustSQL, context: SqlContext): Throwable =
-        Try(self.executeIO(db, context)).failed.get
+      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): Throwable =
+        Try(self.runIO(db, connection, manager)).failed.get
     }
 
   def filter(p: ROW => Boolean): Sql[ROW] =
     new Sql[ROW] {
-      override protected def executeIO(db: JustSQL, context: SqlContext): ROW =
-        Try(self.executeIO(db, context)).filter(p).get
+      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): ROW =
+        Try(self.runIO(db, connection, manager)).filter(p).get
     }
 
 }
@@ -85,8 +85,8 @@ sealed trait TrackedSQL[+ROW] extends Sql[ROW] { self =>
         )
       }
 
-      override protected def executeIO(db: JustSQL, context: SqlContext): ROW =
-        self.executeIO(db, context)
+      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): ROW =
+        self.runIO(db, connection, manager)
     }
 
   def union[B >: ROW](other: TrackedSQL[B]): TrackedSQL[B] =
@@ -100,8 +100,8 @@ sealed trait TrackedSQL[+ROW] extends Sql[ROW] { self =>
       override def rawSQL: RawSQL =
         self.rawSQL.sql.copy(sql = s""""BEGIN;\n${self.rawSQL.sql.sql};\nCOMMIT;"""")
 
-      override protected def executeIO(db: JustSQL, context: SqlContext): B =
-        self.executeIO(db, context)
+      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): B =
+        self.runIO(db, connection, manager)
     }
 }
 
@@ -137,20 +137,20 @@ case class SelectSQL[ROW](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW],
 
   def head(): Sql[ROW] =
     new Sql[ROW] {
-      override protected def executeIO(db: JustSQL, context: SqlContext): ROW =
-        self.executeIO(db, context).head
+      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): ROW =
+        self.runIO(db, connection, manager).head
     }
 
   def headOption(): Sql[Option[ROW]] =
     new Sql[Option[ROW]] {
-      override protected def executeIO(db: JustSQL, context: SqlContext) =
-        self.executeIO(db, context).headOption
+      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager) =
+        self.runIO(db, connection, manager).headOption
     }
 
   def headOrFail(): Sql[ROW] =
     new Sql[ROW] {
-      override protected def executeIO(db: JustSQL, context: SqlContext): ROW = {
-        val result = self.executeIO(db, context)
+      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): ROW = {
+        val result = self.runIO(db, connection, manager)
         if (result.length == 0) {
           result.head
         } else {
@@ -168,13 +168,13 @@ case class SelectSQL[ROW](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW],
     SelectSQL[B](rawSQL)
   }
 
-  override protected def executeIO(db: JustSQL, context: SqlContext): Array[ROW] =
-    db.select[ROW](rawSQL)(context)
+  override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): Array[ROW] =
+    db.select[ROW](rawSQL)(connection, manager)
 }
 
 case class UpdateSQL(rawSQL: RawSQL) extends TrackedSQL[Int] { self =>
 
-  override protected def executeIO(db: JustSQL, context: SqlContext): Int =
-    db.update(rawSQL)(context)
+  override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): Int =
+    db.update(rawSQL)(connection, manager)
 
 }
