@@ -16,7 +16,7 @@
 
 package object justsql {
 
-  @inline implicit def convertStringToSQL(sql: String): Sql =
+  @inline implicit def convertStringToSQL(sql: String): RawSQL =
     Sql(sql)
 
   implicit class ParamImplicits[P](val param: P) extends AnyVal {
@@ -31,9 +31,9 @@ package object justsql {
       builder ? param
   }
 
-//  implicit class EmbedSqlActionImplicits[ROW](val sql: SqlAction[ROW]) extends AnyVal {
-//    def embed(implicit builder: Params): String =
-//      builder embed sql.sql
-//  }
+  //  implicit class EmbedSqlActionImplicits[ROW](val sql: SqlAction[ROW]) extends AnyVal {
+  //    def embed(implicit builder: Params): String =
+  //      builder embed sql.sql
+  //  }
 
 }

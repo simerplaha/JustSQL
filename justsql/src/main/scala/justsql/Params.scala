@@ -60,9 +60,9 @@ case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]]) extend
         apply(param)(sqlParam)
     }
 
-  @inline def embed(query: Sql): String = {
-    paramsMut addAll query.params.paramsMut
-    query.sql
+  @inline def embed(sql: EmbeddableSQL): String = {
+    paramsMut addAll sql.rawSQL.params.paramsMut
+    sql.rawSQL.sql
   }
 
   def foreach[T](f: ParamValueWriter[_] => T): Unit =

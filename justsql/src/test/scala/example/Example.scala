@@ -30,7 +30,7 @@ object Example extends App {
   val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().run() //insert rows
 
   /** For-comprehension */
-  val action: SqlAction[(Int, Int)] =
+  val action: Sql[(Int, Int)] =
     for {
       create <- "CREATE TABLE USERS (id INT, name VARCHAR)".update()
       insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()

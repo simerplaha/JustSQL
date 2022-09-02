@@ -44,14 +44,14 @@ class JustSQL(connector: SQLConnector) extends Closeable {
   def getConnection(): Connection =
     connector.getConnection()
 
-  def update(sql: Sql)(context: SqlContext): Int = {
+  def update(sql: RawSQL)(context: SqlContext): Int = {
     import context._
     val statement = manager(connection.prepareStatement(sql.sql))
     setParams(sql.params, statement)
     statement.executeUpdate()
   }
 
-  def select[ROW: ClassTag](sql: Sql)(context: SqlContext)(implicit rowReader: RowReader[ROW]): Array[ROW] = {
+  def select[ROW: ClassTag](sql: RawSQL)(context: SqlContext)(implicit rowReader: RowReader[ROW]): Array[ROW] = {
     import context._
     val statement = manager(connection.prepareStatement(sql.sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
     setParams(sql.params, statement)
