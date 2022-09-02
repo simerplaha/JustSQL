@@ -34,10 +34,10 @@ object Sql {
 
 case class Sql(sql: String, params: Params) { self =>
 
-  def select[ROW: ClassTag]()(implicit rowReader: RowReader[ROW]): SqlAction[Array[ROW]] =
-    SqlAction(_.select(this)(_))
+  def select[ROW: ClassTag]()(implicit rowReader: RowReader[ROW]): SelectSQL[ROW] =
+    SelectSQL(this)
 
-  def update(): SqlAction[Int] =
-    SqlAction(_.update(this)(_))
+  def update(): UpdateSQL =
+    UpdateSQL(this)
 
 }

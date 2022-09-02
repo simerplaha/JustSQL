@@ -16,9 +16,11 @@
 
 package justsql
 
+import scala.reflect.ClassTag
 import scala.util.{Try, Using}
 
-case class SqlAction[ROW](private val executeIO: (JustSQL, SqlContext) => ROW) { self =>
+sealed trait SqlAction[ROW] { self =>
+  protected def executeIO(db: JustSQL, context: SqlContext): ROW
 
   def run()(implicit db: JustSQL): Try[ROW] =
     Using.Manager {
@@ -28,35 +30,44 @@ case class SqlAction[ROW](private val executeIO: (JustSQL, SqlContext) => ROW) {
     }
 
   def map[B](f: ROW => B): SqlAction[B] =
-    SqlAction(
-      (db, context) =>
+    new SqlAction[B] {
+      override protected def executeIO(db: JustSQL, context: SqlContext): B =
         f(self.executeIO(db, context))
-    )
+    }
 
   /**
    * Runs each [[SqlAction]] one after another.
    *
    * Eg: Calling flatMap twice will execute 2 queries in sequence */
   def flatMap[B](f: ROW => SqlAction[B]): SqlAction[B] =
-    SqlAction(
-      (db, context) =>
+    new SqlAction[B] {
+      override protected def executeIO(db: JustSQL, context: SqlContext): B =
         f(self.executeIO(db, context))
           .executeIO(db, context)
-    )
+    }
 
-  //  def recoverWith[B >: ROW](pf: PartialFunction[Throwable, Try[B]]): SqlAction[B] =
-  //    copy(
-  //      executeIO =
-  //        (db, context) =>
-  //          Try(self.executeIO(db, context)).recoverWith(pf).get
-  //    )
-  //
-  //  def recover[B >: ROW](pf: PartialFunction[Throwable, B]): SqlAction[B] =
-  //    copy(
-  //      executeIO =
-  //        (db, context) =>
-  //          Try(self.executeIO(db, context)).recover(pf).get
-  //    )
+  def recoverWith[B >: ROW](pf: PartialFunction[Throwable, Try[B]]): SqlAction[B] =
+    new SqlAction[B] {
+      override protected def executeIO(db: JustSQL, context: SqlContext): B =
+        Try(self.executeIO(db, context)).recoverWith(pf).get
+    }
+
+  def recover[B >: ROW](pf: PartialFunction[Throwable, B]): SqlAction[B] =
+    new SqlAction[B] {
+      override protected def executeIO(db: JustSQL, context: SqlContext): B =
+        Try(self.executeIO(db, context)).recover(pf).get
+    }
+}
+
+case class SelectSQL[ROW: ClassTag](sql: Sql)(implicit rowReader: RowReader[ROW]) extends SqlAction[Array[ROW]] { self =>
+
+  override protected def executeIO(db: JustSQL, context: SqlContext): Array[ROW] =
+    db.select[ROW](sql)(context)
+}
 
 
+case class UpdateSQL(sql: Sql) extends SqlAction[Int] { self =>
+
+  override protected def executeIO(db: JustSQL, context: SqlContext): Int =
+    db.update(sql)(context)
 }
