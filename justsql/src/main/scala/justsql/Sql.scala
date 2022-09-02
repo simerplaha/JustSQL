@@ -120,15 +120,15 @@ object Sql {
 
 case class RawSQL(sql: String, params: Params) {
 
+  def update(): UpdateSQL =
+    UpdateSQL(this)
+
   def select[ROW]()(implicit rowReader: RowReader[ROW],
                     classTag: ClassTag[ROW]): SelectSQL[ROW] =
     SelectSQL(this)
 
   def unsafeSelect[ROW](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW] =
     SelectSQL(this)(rowParser(_), classTag)
-
-  def update(): UpdateSQL =
-    UpdateSQL(this)
 
 }
 
