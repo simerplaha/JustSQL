@@ -83,27 +83,6 @@ sealed trait Sql[+ROW] { self =>
 
 }
 
-sealed trait TrackedSQL[ROW] extends Sql[ROW] { self =>
-
-  type Self = TrackedSQL[ROW]
-
-  def rawSQL: RawSQL
-
-  def copyRawSQL(rawSQL: RawSQL): Self
-
-  def merge[B >: ROW](separator: String, other: TrackedSQL[B]): Self =
-    copyRawSQL(
-      RawSQL(
-        sql = s"""${self.rawSQL.sql}\n$separator\n${other.rawSQL.sql}""",
-        params = self.rawSQL.sql.params ++ other.rawSQL.sql.params
-      )
-    )
-
-  def wrap(start: String, end: String): Self =
-    copyRawSQL(self.rawSQL.copy(sql = s""""$start\n${self.rawSQL.sql}\n$end""""))
-
-}
-
 object Sql {
 
   def apply(f: Params => String): RawSQL = {
@@ -115,6 +94,26 @@ object Sql {
   @inline def apply(sql: String): RawSQL =
     RawSQL(sql, Params())
 
+}
+
+sealed trait TypedRawSQL[ROW] extends Sql[ROW] { self =>
+
+  type Self = TypedRawSQL[ROW]
+
+  def rawSQL: RawSQL
+
+  def copyRawSQL(rawSQL: RawSQL): Self
+
+  def combine[B >: ROW](separator: String, other: TypedRawSQL[B]): Self =
+    copyRawSQL(
+      RawSQL(
+        sql = s"""${self.rawSQL.sql}$separator${other.rawSQL.sql}""",
+        params = self.rawSQL.sql.params ++ other.rawSQL.sql.params
+      )
+    )
+
+  def wrap(start: String, end: String): Self =
+    copyRawSQL(self.rawSQL.copy(sql = s""""$start${self.rawSQL.sql}$end""""))
 }
 
 case class RawSQL(sql: String, params: Params) {
@@ -132,7 +131,7 @@ case class RawSQL(sql: String, params: Params) {
 }
 
 case class SelectSQL[ROW](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW],
-                                          classTag: ClassTag[ROW]) extends TrackedSQL[Array[ROW]] { self =>
+                                          classTag: ClassTag[ROW]) extends TypedRawSQL[Array[ROW]] { self =>
 
   override def copyRawSQL(rawSQL: RawSQL): SelectSQL[ROW] =
     self.copy(rawSQL = rawSQL)
@@ -176,7 +175,7 @@ case class SelectSQL[ROW](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW],
 
 }
 
-case class UpdateSQL(rawSQL: RawSQL) extends TrackedSQL[Int] { self =>
+case class UpdateSQL(rawSQL: RawSQL) extends TypedRawSQL[Int] { self =>
 
   override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): Int =
     db.update(rawSQL)(connection, manager)
