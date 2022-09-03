@@ -38,7 +38,8 @@ sealed trait Sql[+ROW] { self =>
   /**
    * Runs each [[Sql]] one after another.
    *
-   * Eg: Calling flatMap twice will execute 2 queries in sequence */
+   * Eg: Calling flatMap twice will execute 2 queries in sequence within the same connection.
+   * */
   def flatMap[B](f: ROW => Sql[B]): Sql[B] =
     new Sql[B] {
       override protected def runIO(connection: Connection, manager: Using.Manager): B =
