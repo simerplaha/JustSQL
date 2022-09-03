@@ -34,8 +34,8 @@ object Params {
 case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]]) extends AnyVal { self =>
 
   /** Immutable params */
-  def params(): List[ParamValueWriter[_]] =
-    paramsMut.toList
+  def params(): Array[ParamValueWriter[_]] =
+    paramsMut.toArray
 
   @inline def ?[P](param: P)(implicit sqlParam: ParamWriter[P]): String =
     apply(param).mkString(", ")

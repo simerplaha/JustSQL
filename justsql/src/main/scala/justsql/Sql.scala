@@ -83,27 +83,25 @@ sealed trait Sql[+ROW] { self =>
 
 }
 
-sealed trait TrackedSQL[+ROW] extends Sql[ROW] { self =>
+sealed trait TrackedSQL[ROW] extends Sql[ROW] { self =>
+
+  type Self = TrackedSQL[ROW]
+
   def rawSQL: RawSQL
 
-  private def combine[B >: ROW](operator: String, other: TrackedSQL[B]): TrackedSQL[B] =
-    new TrackedSQL[ROW] {
-      override def rawSQL: RawSQL = {
-        RawSQL(
-          sql = s"""${self.rawSQL.sql}\n$operator\n${other.rawSQL.sql}""",
-          params = self.rawSQL.sql.params ++ other.rawSQL.sql.params
-        )
-      }
+  def copyRawSQL(rawSQL: RawSQL): Self
 
-      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): ROW =
-        self.runIO(db, connection, manager)
-    }
+  def merge[B >: ROW](separator: String, other: TrackedSQL[B]): Self =
+    copyRawSQL(
+      RawSQL(
+        sql = s"""${self.rawSQL.sql}\n$separator\n${other.rawSQL.sql}""",
+        params = self.rawSQL.sql.params ++ other.rawSQL.sql.params
+      )
+    )
 
-  def union[B >: ROW](other: TrackedSQL[B]): TrackedSQL[B] =
-    combine("UNION", other)
+  def wrap(start: String, end: String): Self =
+    copyRawSQL(self.rawSQL.copy(sql = s""""$start\n${self.rawSQL.sql};\n$end;""""))
 
-  def unionAll[B >: ROW](other: TrackedSQL[B]): TrackedSQL[B] =
-    combine("UNION ALL", other)
 }
 
 object Sql {
@@ -136,6 +134,17 @@ case class RawSQL(sql: String, params: Params) {
 case class SelectSQL[ROW](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW],
                                           classTag: ClassTag[ROW]) extends TrackedSQL[Array[ROW]] { self =>
 
+  override def copyRawSQL(rawSQL: RawSQL): SelectSQL[ROW] =
+    self.copy(rawSQL = rawSQL)
+
+  def map[B: ClassTag](f: ROW => B): SelectSQL[B] = {
+    implicit val rowReader: RowReader[B] =
+      (resultSet: ResultSet) =>
+        f(self.rowReader(resultSet))
+
+    SelectSQL[B](rawSQL)
+  }
+
   def head(): Sql[ROW] =
     new Sql[ROW] {
       override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): ROW =
@@ -161,24 +170,17 @@ case class SelectSQL[ROW](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW],
       }
     }
 
-  def map[B: ClassTag](f: ROW => B): SelectSQL[B] = {
-    implicit val rowReader: RowReader[B] =
-      (resultSet: ResultSet) =>
-        f(self.rowReader(resultSet))
-
-    SelectSQL[B](rawSQL)
-  }
 
   override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): Array[ROW] =
     db.select[ROW](rawSQL)(connection, manager)
+
 }
 
 case class UpdateSQL(rawSQL: RawSQL) extends TrackedSQL[Int] { self =>
 
-  def transactional(): UpdateSQL =
-    UpdateSQL(rawSQL.copy(sql = s""""BEGIN;\n${self.rawSQL.sql.sql};\nCOMMIT;""""))
-
   override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): Int =
     db.update(rawSQL)(connection, manager)
 
+  override def copyRawSQL(rawSQL: RawSQL): UpdateSQL =
+    self.copy(rawSQL = rawSQL)
 }
