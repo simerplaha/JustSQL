@@ -16,8 +16,6 @@
 
 package justsql
 
-import justsql.JustSQL._
-
 import java.io.Closeable
 import java.sql.{Connection, PreparedStatement, ResultSet}
 import scala.reflect.ClassTag
@@ -32,26 +30,16 @@ object JustSQL {
     val positionedStatements = PositionedPreparedStatement(statement)
     params foreach (_.set(positionedStatements))
   }
-}
 
-class JustSQL(connector: SQLConnector) extends Closeable {
-
-  def connectAndRun[ROW](f: (Connection, Using.Manager) => ROW): Try[ROW] =
-    Using.Manager {
-      manager =>
-        val connection = manager(connector.getConnection())
-        f(connection, manager)
-    }
-
-  def update(sql: RawSQL)(connection: Connection, manager: Using.Manager): Int = {
-    val statement = manager(connection.prepareStatement(sql.sql))
-    setParams(sql.params, statement)
+  @inline def update(rawSQL: RawSQL)(connection: Connection, manager: Using.Manager): Int = {
+    val statement = manager(connection.prepareStatement(rawSQL.sql))
+    setParams(rawSQL.params, statement)
     statement.executeUpdate()
   }
 
-  def select[ROW: ClassTag](sql: RawSQL)(connection: Connection, manager: Using.Manager)(implicit rowReader: RowReader[ROW]): Array[ROW] = {
-    val statement = manager(connection.prepareStatement(sql.sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
-    setParams(sql.params, statement)
+  def select[ROW: ClassTag](rawSQL: RawSQL)(connection: Connection, manager: Using.Manager)(implicit rowReader: RowReader[ROW]): Array[ROW] = {
+    val statement = manager(connection.prepareStatement(rawSQL.sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
+    setParams(rawSQL.params, statement)
 
     val resultSet = manager(statement.executeQuery())
 
@@ -70,6 +58,16 @@ class JustSQL(connector: SQLConnector) extends Closeable {
       Array.empty[ROW]
     }
   }
+}
+
+class JustSQL(connector: SQLConnector) extends Closeable {
+
+  def connectAndRun[ROW](f: (Connection, Using.Manager) => ROW): Try[ROW] =
+    Using.Manager {
+      manager =>
+        val connection = manager(connector.getConnection())
+        f(connection, manager)
+    }
 
   override def close(): Unit =
     connector.close()

@@ -21,18 +21,18 @@ import scala.reflect.ClassTag
 import scala.util.{Try, Using}
 
 sealed trait Sql[+ROW] { self =>
-  protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): ROW
+  protected def runIO(connection: Connection, manager: Using.Manager): ROW
 
   def run()(implicit db: JustSQL): Try[ROW] =
     db connectAndRun {
       (connection, manager) =>
-        runIO(db, connection, manager)
+        runIO(connection, manager)
     }
 
   def map[B](f: ROW => B): Sql[B] =
     new Sql[B] {
-      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): B =
-        f(self.runIO(db, connection, manager))
+      override protected def runIO(connection: Connection, manager: Using.Manager): B =
+        f(self.runIO(connection, manager))
     }
 
   /**
@@ -41,36 +41,36 @@ sealed trait Sql[+ROW] { self =>
    * Eg: Calling flatMap twice will execute 2 queries in sequence */
   def flatMap[B](f: ROW => Sql[B]): Sql[B] =
     new Sql[B] {
-      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): B =
-        f(self.runIO(db, connection, manager))
-          .runIO(db, connection, manager)
+      override protected def runIO(connection: Connection, manager: Using.Manager): B =
+        f(self.runIO(connection, manager))
+          .runIO(connection, manager)
     }
 
   def recoverWith[B >: ROW](pf: PartialFunction[Throwable, Sql[B]]): Sql[B] =
     new Sql[B] {
-      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): B =
+      override protected def runIO(connection: Connection, manager: Using.Manager): B =
         try
-          self.runIO(db, connection, manager)
+          self.runIO(connection, manager)
         catch {
           case throwable: Throwable =>
-            pf(throwable).runIO(db, connection, manager)
+            pf(throwable).runIO(connection, manager)
         }
     }
 
   def recover[B >: ROW](pf: PartialFunction[Throwable, B]): Sql[B] =
     new Sql[B] {
-      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): B =
+      override protected def runIO(connection: Connection, manager: Using.Manager): B =
         try
-          self.runIO(db, connection, manager)
+          self.runIO(connection, manager)
         catch
           pf
     }
 
   def failed(): Sql[Throwable] =
     new Sql[Throwable] {
-      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): Throwable =
+      override protected def runIO(connection: Connection, manager: Using.Manager): Throwable =
         try {
-          val result = self.runIO(db, connection, manager)
+          val result = self.runIO(connection, manager)
           new IllegalStateException(s"Expected failure. Actual: ${result.getClass.getSimpleName}")
         } catch {
           case throwable: Throwable =>
@@ -152,20 +152,20 @@ case class SelectSQL[ROW](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW],
 
   def head(): Sql[ROW] =
     new Sql[ROW] {
-      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): ROW =
-        self.runIO(db, connection, manager).head
+      override protected def runIO(connection: Connection, manager: Using.Manager): ROW =
+        self.runIO(connection, manager).head
     }
 
   def headOption(): Sql[Option[ROW]] =
     new Sql[Option[ROW]] {
-      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager) =
-        self.runIO(db, connection, manager).headOption
+      override protected def runIO(connection: Connection, manager: Using.Manager) =
+        self.runIO(connection, manager).headOption
     }
 
   def headOrFail(): Sql[ROW] =
     new Sql[ROW] {
-      override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): ROW = {
-        val result = self.runIO(db, connection, manager)
+      override protected def runIO(connection: Connection, manager: Using.Manager): ROW = {
+        val result = self.runIO(connection, manager)
         if (result.length == 0) {
           result.head
         } else {
@@ -176,15 +176,15 @@ case class SelectSQL[ROW](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW],
     }
 
 
-  override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): Array[ROW] =
-    db.select[ROW](rawSQL)(connection, manager)
+  override protected def runIO(connection: Connection, manager: Using.Manager): Array[ROW] =
+    JustSQL.select[ROW](rawSQL)(connection, manager)
 
 }
 
 case class UpdateSQL(rawSQL: RawSQL) extends TypedRawSQL[Int] { self =>
 
-  override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): Int =
-    db.update(rawSQL)(connection, manager)
+  override protected def runIO(connection: Connection, manager: Using.Manager): Int =
+    JustSQL.update(rawSQL)(connection, manager)
 
   override def copyRawSQL(rawSQL: RawSQL): UpdateSQL =
     self.copy(rawSQL = rawSQL)
