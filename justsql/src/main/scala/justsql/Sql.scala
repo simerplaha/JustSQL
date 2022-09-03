@@ -83,7 +83,7 @@ sealed trait Sql[+ROW] { self =>
 
 object Sql {
 
-  def apply(f: Params => String): RawSQL = {
+  @inline def apply(f: Params => String): RawSQL = {
     val params = Params()
     val sql = f(params)
     RawSQL(sql, params)
