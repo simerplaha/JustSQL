@@ -100,20 +100,20 @@ sealed trait TrackedSQL[ROW] extends Sql[ROW] { self =>
     )
 
   def wrap(start: String, end: String): Self =
-    copyRawSQL(self.rawSQL.copy(sql = s""""$start\n${self.rawSQL.sql};\n$end;""""))
+    copyRawSQL(self.rawSQL.copy(sql = s""""$start\n${self.rawSQL.sql}\n$end""""))
 
 }
 
 object Sql {
 
   def apply(f: Params => String): RawSQL = {
-    val params = Params(ListBuffer.empty)
+    val params = Params()
     val sql = f(params)
     RawSQL(sql, params)
   }
 
   @inline def apply(sql: String): RawSQL =
-    RawSQL(sql, Params.empty)
+    RawSQL(sql, Params())
 
 }
 

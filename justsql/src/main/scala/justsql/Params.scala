@@ -23,15 +23,12 @@ import scala.collection.mutable.ListBuffer
 object Params {
   final val placeholder: String =
     "?"
-
-  final val empty: Params =
-    Params(ListBuffer.empty)
 }
 
 /**
  * `?` indicates each parameter is comma seperated ?, ?, ?, ?
  * */
-case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]]) extends AnyVal { self =>
+case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]] = ListBuffer.empty) extends AnyVal { self =>
 
   /** Immutable params */
   def params(): Array[ParamValueWriter[_]] =
