@@ -17,7 +17,6 @@
 package justsql
 
 import java.sql.{Connection, ResultSet}
-import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
 import scala.util.{Try, Using}
 
@@ -63,10 +62,8 @@ sealed trait Sql[+ROW] { self =>
       override protected def runIO(db: JustSQL, connection: Connection, manager: Using.Manager): B =
         try
           self.runIO(db, connection, manager)
-        catch {
-          case throwable: Throwable =>
-            pf(throwable)
-        }
+        catch
+          pf
     }
 
   def failed(): Sql[Throwable] =
@@ -104,6 +101,12 @@ sealed trait TypedRawSQL[ROW] extends Sql[ROW] { self =>
 
   def copyRawSQL(rawSQL: RawSQL): Self
 
+  def wrap(start: String, end: String): Self =
+    copyRawSQL(self.rawSQL.copy(sql = s""""$start${self.rawSQL.sql}$end""""))
+
+  def wrapBeginCommit(): Self =
+    wrap("BEGIN;\n", "COMMIT;\n")
+
   def combine[B >: ROW](separator: String, other: TypedRawSQL[B]): Self =
     copyRawSQL(
       RawSQL(
@@ -112,8 +115,11 @@ sealed trait TypedRawSQL[ROW] extends Sql[ROW] { self =>
       )
     )
 
-  def wrap(start: String, end: String): Self =
-    copyRawSQL(self.rawSQL.copy(sql = s""""$start${self.rawSQL.sql}$end""""))
+  def combineUnion[B >: ROW](other: TypedRawSQL[B]): Self =
+    combine("\nUNION\n", other)
+
+  def combineUnionAll[B >: ROW](other: TypedRawSQL[B]): Self =
+    combine("\nUNION ALL\n", other)
 }
 
 case class RawSQL(sql: String, params: Params) {
