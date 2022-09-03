@@ -127,14 +127,6 @@ Read all `User`s
 val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]().run()
 ```
 
-# selectOne()
-
-Expects `1` row else returns `None`
-
-```scala
-val count: Try[Option[Int]] = "SELECT count(*) FROM USERS".selectOne[Int]().run()
-```
-
 # Transactionally
 
 Being just SQL, transactions are written with the usual `BEGIN;` and `COMMIT;` statements.
@@ -240,11 +232,5 @@ Unsafe APIs give direct access to low level `java.sql.ResultSet` type.
 ```scala
 //read the names of all Users
 val names: Try[Array[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name")).run()
-```
-
-## unsafeSelectOne()
-
-```scala
-val unsafeCount: Try[Int] = "SELECT count(*) as count FROM USERS".unsafeSelectOne(_.getInt("count")).run()
 ```
 
