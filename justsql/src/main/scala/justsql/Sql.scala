@@ -103,10 +103,10 @@ sealed trait TypedRawSQL[ROW] extends Sql[ROW] { self =>
   def copyRawSQL(rawSQL: RawSQL): Self
 
   def wrap(start: String, end: String): Self =
-    copyRawSQL(self.rawSQL.copy(sql = s""""$start${self.rawSQL.sql}$end""""))
+    copyRawSQL(self.rawSQL.copy(sql = s"""$start${self.rawSQL.sql}$end"""))
 
   def wrapBeginCommit(): Self =
-    wrap("BEGIN;\n", "COMMIT;\n")
+    wrap("\nBEGIN;\n", "\nCOMMIT;\n")
 
   def combine[B >: ROW](separator: String, other: TypedRawSQL[B]): Self =
     copyRawSQL(
