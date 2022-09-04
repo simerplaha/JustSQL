@@ -113,9 +113,20 @@ object SelectSQL {
                                       classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] =
     SelectSQL[ROW, ArraySeq](sql, Params())
 
+  @inline def apply[ROW, C[+A] <: IterableOnce[A]](sql: String)(implicit rowReader: RowReader[ROW],
+                                                                classTag: ClassTag[ROW],
+                                                                factory: Factory[ROW, C[ROW]]): SelectSQL[ROW, C] =
+    SelectSQL[ROW, C](sql, Params())
+
   @inline def unsafe[ROW](sql: String)(rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] = {
     implicit val parser: RowReader[ROW] = rowParser(_)
     SelectSQL(sql, Params())
+  }
+
+  @inline def unsafeC[ROW, C[+A] <: IterableOnce[A]](sql: String)(rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW],
+                                                                                               factory: Factory[ROW, C[ROW]]): SelectSQL[ROW, C] = {
+    implicit val parser: RowReader[ROW] = rowParser(_)
+    SelectSQL[ROW, C](sql, Params())
   }
 }
 
