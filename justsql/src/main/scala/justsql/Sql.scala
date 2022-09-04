@@ -34,8 +34,8 @@ abstract class Sql[+A, C[+ROW] <: IterableOnce[ROW]] { self =>
   def map[B](f: A => B)(implicit factory: Factory[B, C[B]]): Sql[B, C] =
     (connection: Connection, manager: Using.Manager) =>
       self.runIO(connection, manager).iterator.foldLeft(factory.newBuilder) {
-        case (builder, item) =>
-          builder addOne f(item)
+        case (builder, elem) =>
+          builder addOne f(elem)
       }.result()
 
   /**
@@ -47,8 +47,9 @@ abstract class Sql[+A, C[+ROW] <: IterableOnce[ROW]] { self =>
   def flatMap[B](f: A => Sql[B, C])(implicit factory: Factory[B, C[B]]): Sql[B, C] =
     (connection: Connection, manager: Using.Manager) =>
       self.runIO(connection, manager).iterator.foldLeft(factory.newBuilder) {
-        case (builder, item) =>
-          builder.addAll(f(item).runIO(connection, manager))
+        case (builder, elem) =>
+          val items = f(elem).runIO(connection, manager)
+          builder addAll items
       }.result()
 
   def recoverWith[B >: A](pf: PartialFunction[Throwable, Sql[B, C]]): Sql[B, C] =
