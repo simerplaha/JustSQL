@@ -35,19 +35,29 @@ for full-featured open-source licences to their awesome development tools!
   </tr>
 </table>
 
-### _NOTE: The following documentation and release is WIP_
+# _NOTE: The following documentation and release is WIP_
 
-# Setup
+[//]: # (# Setup)
 
-```scala
-libraryDependencies ++= Seq(
-  "com.github.simerplaha" %% "justsql" % "0.1.0",
-  //Optional: For Slick interop
-  "com.github.simerplaha" %% "justsql-slick" % "0.1.0",
-  //Optional: For hikariCP interop
-  "com.github.simerplaha" %% "justsql-hikari" % "0.1.0"
-)
-```
+[//]: # ()
+
+[//]: # (```scala)
+
+[//]: # (libraryDependencies ++= Seq&#40;)
+
+[//]: # (  "com.github.simerplaha" %% "justsql" % "0.1.0",)
+
+[//]: # (  //Optional: For Slick interop)
+
+[//]: # (  "com.github.simerplaha" %% "justsql-slick" % "0.1.0",)
+
+[//]: # (  //Optional: For hikariCP interop)
+
+[//]: # (  "com.github.simerplaha" %% "justsql-hikari" % "0.1.0")
+
+[//]: # (&#41;)
+
+[//]: # (```)
 
 # Quick start
 
