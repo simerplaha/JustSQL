@@ -26,18 +26,21 @@ object JustSQL {
   @inline def apply[D <: SQLConnector](datasource: D): JustSQL =
     new JustSQL(datasource)
 
-  @inline def setParams(params: Params, statement: PreparedStatement): Unit = {
+  @inline def setParams(params: Params,
+                        statement: PreparedStatement): Unit = {
     val positionedStatements = PositionedPreparedStatement(statement)
     params foreach (_.set(positionedStatements))
   }
 
-  @inline def update(rawSQL: RawSQL)(connection: Connection, manager: Using.Manager): Int = {
+  @inline def update(rawSQL: RawSQL)(connection: Connection,
+                                     manager: Using.Manager): Int = {
     val statement = manager(connection.prepareStatement(rawSQL.sql))
     setParams(rawSQL.params, statement)
     statement.executeUpdate()
   }
 
-  def select[ROW: ClassTag](rawSQL: RawSQL)(connection: Connection, manager: Using.Manager)(implicit rowReader: RowReader[ROW]): Array[ROW] = {
+  def select[ROW: ClassTag](rawSQL: RawSQL)(connection: Connection,
+                                            manager: Using.Manager)(implicit rowReader: RowReader[ROW]): Array[ROW] = {
     val statement = manager(connection.prepareStatement(rawSQL.sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
     setParams(rawSQL.params, statement)
 

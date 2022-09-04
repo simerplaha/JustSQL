@@ -123,9 +123,6 @@ sealed trait TypedRawSQL[ROW] extends Sql[ROW] { self =>
     combine("\nUNION ALL\n", other)
 }
 
-case class RawSQL(sql: String, params: Params)
-
-
 object SelectSQL {
   @inline def apply[ROW](f: Params => String)(implicit rowReader: RowReader[ROW],
                                               classTag: ClassTag[ROW]): SelectSQL[ROW] = {
