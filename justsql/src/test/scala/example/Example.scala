@@ -78,6 +78,8 @@ object Example extends App {
 
   //Select all users
   val users: Try[ArraySeq[User]] = "SELECT * FROM USERS".select[User]().run()
+
+  val usersCollected: Try[List[User]] = "SELECT * FROM USERS".select[User, List]().run()
   //Select using parameters
   val usersParametric: SelectSQL[String, ArraySeq] =
     SelectSQL[String] {
@@ -100,6 +102,7 @@ object Example extends App {
   val query1: SelectSQL[Int, ArraySeq] =
     "SELECT max(id) from USERS".select[Int]()
 
+  //This query embeds query1 by calling `query1.embed`
   val query2: Try[ArraySeq[String]] =
     SelectSQL[String] {
       implicit params: Params =>

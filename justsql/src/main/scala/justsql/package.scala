@@ -29,8 +29,17 @@ package object justsql {
                       classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] =
       SelectSQL(sql, Params())
 
+    def select[ROW, C[+A] <: IterableOnce[A]]()(implicit rowReader: RowReader[ROW],
+                                                classTag: ClassTag[ROW],
+                                                factory: Factory[ROW, C[ROW]]): SelectSQL[ROW, C] =
+      SelectSQL[ROW, C](sql, Params())
+
     def unsafeSelect[ROW](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] =
       SelectSQL.unsafe(sql)(rowParser(_))
+
+    def unsafeSelectC[ROW, C[+A] <: IterableOnce[A]](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW],
+                                                                                  factory: Factory[ROW, C[ROW]]): SelectSQL[ROW, C] =
+      SelectSQL.unsafeC[ROW, C](sql)(rowParser(_))
   }
 
   implicit class ParamImplicits[P](val param: P) extends AnyVal {

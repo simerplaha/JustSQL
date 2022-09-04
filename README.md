@@ -83,23 +83,25 @@ Queries that mutate like `CREATE, INSERT OR UPDATE` queries are executed via `up
 
 Let's create our example `USERS` table
 
+`update()` returns an `Option` which is `None` if the query returns count `0`, else it's `Some(count)`.
+
 ```scala
 //create table
-val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().run()
+val create: Try[Option[Int]] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().run()
 //insert rows
-val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().run()
+val insert: Try[Option[Int]] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().run()
 ```
 
 ## Using for-comprehension
 
 ```scala
-val createAndInsert: Sql[(Int, Int)] =
+val createAndInsert: Sql[(Int, Int), Option] =
   for {
     create <- "CREATE TABLE USERS (id INT, name VARCHAR)".update()
     insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
   } yield (create, insert)
 
-val result: Try[(Int, Int)] = createAndInsert.run()
+val result: Try[Option[(Int, Int)]] = createAndInsert.run()
 ```
 
 # Query parameters
@@ -110,7 +112,7 @@ The above `INSERT` query can be written with parameters as following
 
 ```scala
 //Or insert using parameters
-val insertParametric: Try[Int] =
+val insertParametric: Try[Option[Int]] =
   UpdateSQL {
     implicit params =>
       s"""
@@ -126,7 +128,7 @@ val insertParametric: Try[Int] =
 Being just SQL, transactions are written with the usual `BEGIN;` and `COMMIT;` statements.
 
 ```scala
-val transaction: Try[Int] =
+val transaction: Try[Option[Int]] =
   UpdateSQL {
     implicit params =>
       s"""
@@ -160,13 +162,19 @@ implicit val userReader = RowReader(User.tupled)
 Read all `User`s
 
 ```scala
-val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]().run()
+val users: Try[ArraySeq[User]] = "SELECT * FROM USERS".select[User]().run()
 ```
 
-## Or using with Parameters
+## Or if you want a `List` or any other collection, provide it as a type argument.
 
 ```scala
-val usersParametric: SelectSQL[String] =
+val usersCollected: Try[List[User]] = "SELECT * FROM USERS".select[User, List]().run()
+```
+
+##  Or using with Parameters
+
+```scala
+val usersParametric: SelectSQL[String, ArraySeq] =
   SelectSQL[String] {
     implicit params: Params =>
       s"""
@@ -180,11 +188,11 @@ val usersParametric: SelectSQL[String] =
 Embed queries using `embed` function.
 
 ```scala
-val query1: SelectSQL[Int] =
+val query1: SelectSQL[Int, ArraySeq] =
   "SELECT max(id) from USERS".select[Int]()
 
 //This query embeds query1 by calling `query1.embed`
-val query2: Try[Array[String]] =
+val query2: Try[ArraySeq[String]] =
   SelectSQL[String] {
     implicit params: Params =>
       s"""
