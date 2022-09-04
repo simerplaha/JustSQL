@@ -1,5 +1,6 @@
 import java.sql.ResultSet
 import scala.collection.{mutable, Factory}
+import scala.collection.immutable.ArraySeq
 import scala.reflect.ClassTag
 
 /*
@@ -25,10 +26,10 @@ package object justsql {
       UpdateSQL(sql)
 
     def select[ROW]()(implicit rowReader: RowReader[ROW],
-                      classTag: ClassTag[ROW]): SelectSQL[ROW] =
+                      classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] =
       SelectSQL(sql, Params())
 
-    def unsafeSelect[ROW](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW] =
+    def unsafeSelect[ROW](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] =
       SelectSQL.unsafe(sql)(rowParser(_))
   }
 
@@ -49,21 +50,22 @@ package object justsql {
       builder embed sql
   }
 
-  implicit def optionFactory[T]: Factory[T, Option[T]] =
-    new Factory[T, Option[T]] {
-      override def fromSpecific(it: IterableOnce[T]): Option[T] =
+  implicit def optionFactory[A]: Factory[A, Option[A]] =
+    new Factory[A, Option[A]] {
+      override def fromSpecific(it: IterableOnce[A]): Option[A] =
         it.iterator.nextOption()
 
-      override def newBuilder: mutable.Builder[T, Option[T]] =
-        new mutable.Builder[T, Option[T]] {
-          var item: T = _
-          override def clear(): Unit =
-            item = null.asInstanceOf[T]
+      override def newBuilder: mutable.Builder[A, Option[A]] =
+        new mutable.Builder[A, Option[A]] {
+          private var item: A = _
 
-          override def result(): Option[T] =
+          override def clear(): Unit =
+            item = null.asInstanceOf[A]
+
+          override def result(): Option[A] =
             Option(item)
 
-          override def addOne(elem: T): this.type = {
+          override def addOne(elem: A): this.type = {
             item = elem
             this
           }

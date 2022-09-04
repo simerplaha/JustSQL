@@ -22,6 +22,8 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.OptionValues.convertOptionToValuable
 import org.scalatest.TryValues._
 
+import scala.collection.immutable.ArraySeq
+
 /**
  * Common test-cases for any [[SQLConnector]].
  *
@@ -230,7 +232,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
                |""".stripMargin
         }.run().success.value.value shouldBe 3
 
-        val maxIntQuery: SelectSQL[Int] =
+        val maxIntQuery: SelectSQL[Int, ArraySeq] =
           SelectSQL[Int] {
             implicit params: Params =>
               s"""

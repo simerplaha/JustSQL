@@ -95,22 +95,33 @@ sealed trait TrackedSQL[+RESULT, C[+ROW] <: IterableOnce[ROW]] extends Sql[RESUL
 
 object SelectSQL {
   @inline def apply[ROW](f: Params => String)(implicit rowReader: RowReader[ROW],
-                                              classTag: ClassTag[ROW]): SelectSQL[ROW] = {
+                                              classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] = {
     val params = Params()
     val sql = f(params)
-    SelectSQL[ROW](sql, params)
+    SelectSQL[ROW, ArraySeq](sql, params)
+  }
+
+  @inline def apply[ROW, C[+A] <: IterableOnce[A]](f: Params => String)(implicit rowReader: RowReader[ROW],
+                                                                        classTag: ClassTag[ROW],
+                                                                        factory: Factory[ROW, C[ROW]]): SelectSQL[ROW, C] = {
+    val params = Params()
+    val sql = f(params)
+    SelectSQL[ROW, C](sql, params)
   }
 
   @inline def apply[ROW](sql: String)(implicit rowReader: RowReader[ROW],
-                                      classTag: ClassTag[ROW]): SelectSQL[ROW] =
-    SelectSQL[ROW](sql, Params())
+                                      classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] =
+    SelectSQL[ROW, ArraySeq](sql, Params())
 
-  @inline def unsafe[ROW](sql: String)(rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW] =
-    SelectSQL(sql, Params())(rowParser(_), classTag)
+  @inline def unsafe[ROW](sql: String)(rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] = {
+    implicit val parser: RowReader[ROW] = rowParser(_)
+    SelectSQL(sql, Params())
+  }
 }
 
-case class SelectSQL[ROW](sql: String, params: Params)(implicit rowReader: RowReader[ROW],
-                                                       classTag: ClassTag[ROW]) extends TrackedSQL[ROW, ArraySeq] { self =>
+case class SelectSQL[ROW, C[+A] <: IterableOnce[A]](sql: String, params: Params)(implicit rowReader: RowReader[ROW],
+                                                                                 classTag: ClassTag[ROW],
+                                                                                 factory: Factory[ROW, C[ROW]]) extends TrackedSQL[ROW, C] { self =>
 
   def headOption(): TrackedSQL[ROW, Option] =
     new TrackedSQL[ROW, Option] {
@@ -121,11 +132,11 @@ case class SelectSQL[ROW](sql: String, params: Params)(implicit rowReader: RowRe
         self.params
 
       override protected def runIO(connection: Connection, manager: Using.Manager): Option[ROW] =
-        self.runIO(connection, manager).headOption
+        self.runIO(connection, manager).iterator.nextOption()
     }
 
-  override protected def runIO(connection: Connection, manager: Using.Manager): ArraySeq[ROW] =
-    JustSQL.select[ROW, ArraySeq[ROW]](sql, params)(connection, manager)
+  override protected def runIO(connection: Connection, manager: Using.Manager): C[ROW] =
+    JustSQL.select[ROW, C[ROW]](sql, params)(connection, manager)
 
 }
 

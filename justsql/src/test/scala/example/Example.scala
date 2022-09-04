@@ -79,7 +79,7 @@ object Example extends App {
   //Select all users
   val users: Try[ArraySeq[User]] = "SELECT * FROM USERS".select[User]().run()
   //Select using parameters
-  val usersParametric: SelectSQL[String] =
+  val usersParametric: SelectSQL[String, ArraySeq] =
     SelectSQL[String] {
       implicit params: Params =>
         s"""
@@ -97,7 +97,7 @@ object Example extends App {
 
   /** Embed queries */
 
-  val query1: SelectSQL[Int] =
+  val query1: SelectSQL[Int, ArraySeq] =
     "SELECT max(id) from USERS".select[Int]()
 
   val query2: Try[ArraySeq[String]] =
