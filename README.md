@@ -82,13 +82,13 @@ val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'A
 ## Using for-comprehension
 
 ```scala
-val action: SqlAction[(Int, Int)] =
+val createAndInsert: Sql[(Int, Int)] =
   for {
     create <- "CREATE TABLE USERS (id INT, name VARCHAR)".update()
     insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
   } yield (create, insert)
 
-val result: Try[(Int, Int)] = action.run()
+val result: Try[(Int, Int)] = createAndInsert.run()
 ```
 
 # Query parameters
@@ -100,14 +100,39 @@ The above `INSERT` query can be written with parameters as following
 ```scala
 //Or insert using parameters
 val insertParametric: Try[Int] =
-  Sql {
+  UpdateSQL {
     implicit params =>
       s"""
          |INSERT INTO USERS (id, name)
          |     VALUES (${1.?}, ${"Harry".?}),
          |            (${2.?}, ${"Ayman".?})
          |""".stripMargin
-  }.update().run()
+  }.run()
+```
+
+# Transactionally
+
+Being just SQL, transactions are written with the usual `BEGIN;` and `COMMIT;` statements.
+
+```scala
+val transaction: Try[Int] =
+  UpdateSQL {
+    implicit params =>
+      s"""
+         |BEGIN;
+         |
+         |CREATE TABLE USERS (id INT, name VARCHAR);
+         |INSERT INTO USERS   (id, name)
+         |            VALUES  (${1.?}, ${"Harry".?}),
+         |                    (${2.?}, ${"Ayman".?});
+         |
+         |COMMIT;
+         |"""
+        .stripMargin
+  }.recoverWith {
+    _ =>
+      "ROLLBACK".update() //if there was an error rollback
+  }.run()
 ```
 
 # select()
@@ -127,39 +152,59 @@ Read all `User`s
 val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]().run()
 ```
 
-# Transactionally
-
-Being just SQL, transactions are written with the usual `BEGIN;` and `COMMIT;` statements.
+## Or using with Parameters
 
 ```scala
-val transaction: Try[Int] =
-  Sql {
-    implicit params =>
+val usersParametric: SelectSQL[String] =
+  SelectSQL[String] {
+    implicit params: Params =>
       s"""
-         |BEGIN;
-         |
-         |CREATE TABLE USERS (id INT, name VARCHAR);
-         |INSERT INTO USERS   (id, name)
-         |            VALUES  (${1.?}, ${"Harry".?}),
-         |                    (${2.?}, ${"Ayman".?});
-         |
-         |COMMIT;
-         |"""
-              .stripMargin
-  }.update()
-   .recoverWith {
-     _ =>
-       "ROLLBACK".update() //if there was an error rollback
-   }.run()
+         |SELECT name from USERS where id = ${1.?}
+         |""".stripMargin
+  }
+```
+
+# Embed/Compose queries
+
+Embed queries using `embed` function.
+
+```scala
+val query1: SelectSQL[Int] =
+  "SELECT max(id) from USERS".select[Int]()
+
+//This query embeds query1 by calling `query1.embed`
+val query2: Try[Array[String]] =
+  SelectSQL[String] {
+    implicit params: Params =>
+      s"""
+         |SELECT name from USERS
+         | WHERE id = (${query1.embed})
+         |""".stripMargin
+  }.run()
 ```
 
 # `union()` & `unionAll()`
 
-TODO
+Use the `combine` or `wrap` functions.
 
-# Embed/Compose queries
+These functions don't get any special treatment to keep the API simple.
+They are just basic `String` manipulators which can also be done manually.
 
-TODO (See tests)
+```scala
+val myCombinedQuery =
+  "My first query"
+    .select[User]()
+    .combineUnion("Another query".select[User]())
+```
+
+Or manually
+
+```scala
+val manuallyCombined =
+  "My first query"
+    .select[User]()
+    .combine("UNION ALL", "You another query".select[User]())
+```
 
 # Custom `ParamWriter`
 

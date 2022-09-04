@@ -77,6 +77,14 @@ object Example extends App {
 
   //Select all users
   val users: Try[Array[User]] = "SELECT * FROM USERS".select[User]().run()
+  //Select using parameters
+  val usersParametric: SelectSQL[String] =
+    SelectSQL[String] {
+      implicit params: Params =>
+        s"""
+           |SELECT name from USERS where id = ${1.?}
+           |""".stripMargin
+    }
   //Select first row
   val head: Try[Option[Int]] = "SELECT count(*) FROM USERS".select[Int]().headOption().run()
   //Select all and then map to names
@@ -85,5 +93,29 @@ object Example extends App {
   val unsafeNames: Try[Array[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name")).run()
   //Unsafe select head
   val unsafeCount: Try[Option[Int]] = "SELECT count(*) as count FROM USERS".unsafeSelect(_.getInt("count")).headOption().run()
+
+  /** Embed queries */
+
+  val query1: SelectSQL[Int] =
+    "SELECT max(id) from USERS".select[Int]()
+
+  val query2: Try[Array[String]] =
+    SelectSQL[String] {
+      implicit params: Params =>
+        s"""
+           |SELECT name from USERS
+           | WHERE id = (${query1.embed})
+           |""".stripMargin
+    }.run()
+
+  val myCombinedQuery =
+    "My first query"
+      .select[User]()
+      .combineUnion("You another query".select[User]())
+
+  val manuallyCombined =
+    "My first query"
+      .select[User]()
+      .combine("UNION ALL", "You another query".select[User]())
 
 }

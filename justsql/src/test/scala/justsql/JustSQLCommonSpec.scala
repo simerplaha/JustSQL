@@ -229,7 +229,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
                |""".stripMargin
         }.run().success.value shouldBe 3
 
-        def maxIntQuery(): SelectSQL[Int] =
+        val maxIntQuery: SelectSQL[Int] =
           SelectSQL[Int] {
             implicit params: Params =>
               s"""
@@ -242,7 +242,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
             implicit params: Params =>
               s"""
                  |SELECT int from TEST_TABLE
-                 | WHERE int = (${maxIntQuery().embed})
+                 | WHERE int = (${maxIntQuery.embed})
                  |""".stripMargin
           }.headOption()
 
