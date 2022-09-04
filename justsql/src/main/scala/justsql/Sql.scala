@@ -19,17 +19,22 @@ package justsql
 import java.sql.{Connection, ResultSet}
 import scala.collection.Factory
 import scala.collection.immutable.ArraySeq
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.{Try, Using}
 
 abstract class Sql[+A, C[+ROW] <: IterableOnce[ROW]] { self =>
   protected def runIO(connection: Connection, manager: Using.Manager): C[A]
 
-  def run()(implicit db: JustSQL): Try[C[A]] =
+  def runSync()(implicit db: JustSQL): Try[C[A]] =
     db connectAndRun {
       (connection, manager) =>
         runIO(connection, manager)
     }
+
+  def runAsync()(implicit db: JustSQL,
+                 ec: ExecutionContext): Future[C[A]] =
+    Future.delegate(Future.fromTry(runSync()))
 
   def map[B](f: A => B)(implicit factory: Factory[B, C[B]]): Sql[B, C] =
     (connection: Connection, manager: Using.Manager) =>

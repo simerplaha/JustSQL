@@ -68,8 +68,10 @@ See quick-start [Example.scala](/justsql/src/test/scala/example/Example.scala).
 I'm using Postgres and the default `JavaSQLConnector` here, but you should a high-performance
 JDBC connection pool library. See [Slick Interop](#slick-interop) or [HikariCP Interop](#hikaricp-interop).
 
-A `JustSQL` instance is only required when executing a query i.e. invoking `run()`. Everywhere else
-queries are declarative, so you only define your queries without executing them and are therefore composable.
+A `JustSQL` instance is only required when executing a query i.e. when invoking `runSync()` or `runAsync()`.
+
+Everywhere else queries are declarative, so you define your queries without executing them and so they can
+be [composed/embed](#embedcompose-queries) in other queries.
 
 ```scala
 import justsql._ //single import
@@ -87,9 +89,14 @@ Let's create our example `USERS` table
 
 ```scala
 //create table
-val create: Try[Option[Int]] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().run()
+val create: Try[Option[Int]] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().runSync()
 //insert rows
-val insert: Try[Option[Int]] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().run()
+val insert: Try[Option[Int]] =
+  """
+    |INSERT INTO USERS (id, name)
+    |VALUES (1, 'Harry'),
+    |       (2, 'Ayman')
+    |""".stripMargin.update().runSync() //insert rows
 ```
 
 ## Using for-comprehension
@@ -101,7 +108,7 @@ val createAndInsert: Sql[(Int, Int), Option] =
     insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
   } yield (create, insert)
 
-val result: Try[Option[(Int, Int)]] = createAndInsert.run()
+val result: Try[Option[(Int, Int)]] = createAndInsert.runSync()
 ```
 
 # Query parameters
@@ -120,7 +127,7 @@ val insertParametric: Try[Option[Int]] =
          |     VALUES (${1.?}, ${"Harry".?}),
          |            (${2.?}, ${"Ayman".?})
          |""".stripMargin
-  }.run()
+  }.runSync()
 ```
 
 # Transactionally
@@ -145,7 +152,7 @@ val transaction: Try[Option[Int]] =
   }.recoverWith {
     _ =>
       "ROLLBACK".update() //if there was an error rollback
-  }.run()
+  }.runSync()
 ```
 
 # select()
@@ -162,16 +169,16 @@ implicit val userReader = RowReader(User.tupled)
 Read all `User`s
 
 ```scala
-val users: Try[ArraySeq[User]] = "SELECT * FROM USERS".select[User]().run()
+val users: Try[ArraySeq[User]] = "SELECT * FROM USERS".select[User]().runSync()
 ```
 
 ## Or if you want a `List` or any other collection, provide it as a type argument.
 
 ```scala
-val usersCollected: Try[List[User]] = "SELECT * FROM USERS".select[User, List]().run()
+val usersCollected: Try[List[User]] = "SELECT * FROM USERS".select[User, List]().runSync()
 ```
 
-##  Or using with Parameters
+## Or using with Parameters
 
 ```scala
 val usersParametric: SelectSQL[String, ArraySeq] =
@@ -199,7 +206,7 @@ val query2: Try[ArraySeq[String]] =
          |SELECT name from USERS
          | WHERE id = (${query1.embed})
          |""".stripMargin
-  }.run()
+  }.runSync()
 ```
 
 # Custom `ParamWriter`
@@ -272,6 +279,6 @@ Unsafe APIs give direct access to low level `java.sql.ResultSet` type.
 
 ```scala
 //read the names of all Users
-val names: Try[Array[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name")).run()
+val names: Try[Array[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name")).runSync()
 ```
 

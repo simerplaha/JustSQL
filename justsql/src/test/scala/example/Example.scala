@@ -27,8 +27,8 @@ object Example extends App {
 
 
   /** WRITING */
-  val create: Try[Option[Int]] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().run() //create table
-  val insert: Try[Option[Int]] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().run() //insert rows
+  val create: Try[Option[Int]] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().runSync() //create table
+  val insert: Try[Option[Int]] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().runSync() //insert rows
 
   /** For-comprehension */
   val createAndInsert: Sql[(Int, Int), Option] =
@@ -37,7 +37,7 @@ object Example extends App {
       insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
     } yield (create, insert)
 
-  val result: Try[Option[(Int, Int)]] = createAndInsert.run()
+  val result: Try[Option[(Int, Int)]] = createAndInsert.runSync()
 
   val insertParametric: Try[Option[Int]] =
     UpdateSQL {
@@ -47,7 +47,7 @@ object Example extends App {
            |     VALUES (${1.?}, ${"Harry".?}),
            |            (${2.?}, ${"Ayman".?})
            |""".stripMargin
-    }.run()
+    }.runSync()
 
   //  Or Transactionally
   val transaction: Try[Option[Int]] =
@@ -67,7 +67,7 @@ object Example extends App {
     }.recoverWith {
       _ =>
         "ROLLBACK".update() //if there was an error rollback
-    }.run()
+    }.runSync()
 
 
   /** READING */
@@ -77,9 +77,9 @@ object Example extends App {
   implicit val userReader = RowReader(User.tupled)
 
   //Select all users
-  val users: Try[ArraySeq[User]] = "SELECT * FROM USERS".select[User]().run()
+  val users: Try[ArraySeq[User]] = "SELECT * FROM USERS".select[User]().runSync()
 
-  val usersCollected: Try[List[User]] = "SELECT * FROM USERS".select[User, List]().run()
+  val usersCollected: Try[List[User]] = "SELECT * FROM USERS".select[User, List]().runSync()
   //Select using parameters
   val usersParametric: SelectSQL[String, ArraySeq] =
     SelectSQL[String] {
@@ -89,13 +89,13 @@ object Example extends App {
            |""".stripMargin
     }
   //Select first row
-  val head: Try[Option[Int]] = "SELECT count(*) FROM USERS".select[Int]().headOption().run()
+  val head: Try[Option[Int]] = "SELECT count(*) FROM USERS".select[Int]().headOption().runSync()
   //Select all and then map to names
-  val userNamesMap: Try[ArraySeq[String]] = "SELECT * FROM USERS".select[User]().map(_.name).run()
+  val userNamesMap: Try[ArraySeq[String]] = "SELECT * FROM USERS".select[User]().map(_.name).runSync()
   //Unsafe select
-  val unsafeNames: Try[ArraySeq[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name")).run()
+  val unsafeNames: Try[ArraySeq[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name")).runSync()
   //Unsafe select head
-  val unsafeCount: Try[Option[Int]] = "SELECT count(*) as count FROM USERS".unsafeSelect(_.getInt("count")).headOption().run()
+  val unsafeCount: Try[Option[Int]] = "SELECT count(*) as count FROM USERS".unsafeSelect(_.getInt("count")).headOption().runSync()
 
   /** Embed queries */
 
@@ -110,6 +110,6 @@ object Example extends App {
            |SELECT name from USERS
            | WHERE id = (${query1.embed})
            |""".stripMargin
-    }.run()
+    }.runSync()
 
 }
