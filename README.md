@@ -181,8 +181,8 @@ val usersCollected: Try[List[User]] = "SELECT * FROM USERS".select[User, List]()
 ## Or using with Parameters
 
 ```scala
-val usersParametric: SelectSQL[String, ArraySeq] =
-  SelectSQL[String] {
+val usersParametric: SelectSQL[String, List] =
+  SelectSQL[String, List] {
     implicit params: Params =>
       s"""
          |SELECT name from USERS where id = ${1.?}
