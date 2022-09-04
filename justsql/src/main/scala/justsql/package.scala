@@ -29,7 +29,7 @@ package object justsql {
                       classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] =
       SelectSQL(sql, Params())
 
-    def select[ROW, C[+A] <: IterableOnce[A]]()(implicit rowReader: RowReader[ROW],
+    def select[ROW, C[+R] <: IterableOnce[R]]()(implicit rowReader: RowReader[ROW],
                                                 classTag: ClassTag[ROW],
                                                 factory: Factory[ROW, C[ROW]]): SelectSQL[ROW, C] =
       SelectSQL[ROW, C](sql, Params())
@@ -37,7 +37,7 @@ package object justsql {
     def unsafeSelect[ROW](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] =
       SelectSQL.unsafe(sql)(rowParser(_))
 
-    def unsafeSelectC[ROW, C[+A] <: IterableOnce[A]](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW],
+    def unsafeSelectC[ROW, C[+R] <: IterableOnce[R]](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW],
                                                                                   factory: Factory[ROW, C[ROW]]): SelectSQL[ROW, C] =
       SelectSQL.unsafeC[ROW, C](sql)(rowParser(_))
   }
@@ -54,7 +54,7 @@ package object justsql {
       builder ? param
   }
 
-  implicit class EmbedSqlActionImplicits[+ROW, C[+A] <: Iterable[A]](val sql: TrackedSQL[ROW, C]) extends AnyVal {
+  implicit class EmbedSqlActionImplicits[+ROW, C[+R] <: Iterable[R]](val sql: TrackedSQL[ROW, C]) extends AnyVal {
     def embed(implicit builder: Params): String =
       builder embed sql
   }
