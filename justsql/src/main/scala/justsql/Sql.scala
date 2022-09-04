@@ -17,7 +17,7 @@
 package justsql
 
 import java.sql.{Connection, ResultSet}
-import scala.collection.{mutable, Factory}
+import scala.collection.Factory
 import scala.collection.immutable.ArraySeq
 import scala.reflect.ClassTag
 import scala.util.{Try, Using}
