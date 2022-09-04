@@ -4,6 +4,8 @@ Just write SQL as `String` and parse results into types.
 
 JustSQL is a thin facade over `java.sql` types that adds type-safety to query results & parameters.
 
+A simple library, easy to understand, lean with no bloated types.
+
 Can be used in parallel with other libraries. Interop for Slick and HikariCP is provided.
 
 Small: 407KB jar file. No external core dependency.
@@ -12,10 +14,11 @@ Small: 407KB jar file. No external core dependency.
 
 - ORMs and custom string interpolation solutions are nice, but most are incomplete and restrictive, specially
   when writing complex SQL queries.
-- Debugging performance issues by ORM generated queries, translating back and forth, is time-consuming.
+- Debugging performance issues by ORM generated queries, translating back and forth between SQL and ORM types is
+  time-consuming.
 - Many ORMs do not have any support for `EXPLAIN ANALYZE`.
-- IDEs have plugins and support for plain SQL queries and default Scala `s` string interpolation VS custom `sql`
-  string interpolation.
+- IDEs have much better support/plugins for plain SQL queries and default Scala `s` string interpolation
+  VS custom `sql` string interpolation and DSLs.
 
 Performance critical applications that want to write unrestricted SQL with type-safety added
 to query results & parameters would find JustSQL much easy to work with.
