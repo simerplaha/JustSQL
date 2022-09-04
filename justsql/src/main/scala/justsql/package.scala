@@ -25,7 +25,7 @@ package object justsql {
 
     def select[ROW]()(implicit rowReader: RowReader[ROW],
                       classTag: ClassTag[ROW]): SelectSQL[ROW] =
-      SelectSQL(RawSQL(sql, Params()))
+      SelectSQL(sql, Params())
 
     def unsafeSelect[ROW](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW] =
       SelectSQL.unsafe(sql)(rowParser(_))
@@ -45,7 +45,7 @@ package object justsql {
 
   implicit class EmbedSqlActionImplicits[ROW](val sql: TypedRawSQL[ROW]) extends AnyVal {
     def embed(implicit builder: Params): String =
-      builder embed sql.sql
+      builder embed sql
   }
 
 }

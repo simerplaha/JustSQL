@@ -4,8 +4,6 @@ Just write SQL as `String` and parse results into types.
 
 JustSQL is a thin facade over `java.sql` types that adds type-safety to query results & parameters.
 
-A simple library, easy to understand, lean with no bloated types.
-
 Can be used in parallel with other libraries. Interop for Slick and HikariCP is provided.
 
 Small: 407KB jar file. No external core dependency.
