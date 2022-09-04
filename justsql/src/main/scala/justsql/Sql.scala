@@ -27,10 +27,7 @@ abstract class Sql[+A, C[+ROW] <: IterableOnce[ROW]] { self =>
   protected def runIO(connection: Connection, manager: Using.Manager): C[A]
 
   def runSync()(implicit db: JustSQL): Try[C[A]] =
-    db connectAndRun {
-      (connection, manager) =>
-        runIO(connection, manager)
-    }
+    db connectAndRun runIO
 
   def runAsync()(implicit db: JustSQL,
                  ec: ExecutionContext): Future[C[A]] =
@@ -38,10 +35,11 @@ abstract class Sql[+A, C[+ROW] <: IterableOnce[ROW]] { self =>
 
   def map[B](f: A => B)(implicit factory: Factory[B, C[B]]): Sql[B, C] =
     (connection: Connection, manager: Using.Manager) =>
-      self.runIO(connection, manager).iterator.foldLeft(factory.newBuilder) {
-        case (builder, elem) =>
-          builder addOne f(elem)
-      }.result()
+      self
+        .runIO(connection, manager)
+        .iterator
+        .foldLeft(factory.newBuilder)(_ addOne f(_))
+        .result()
 
   /**
    * Runs each [[Sql]] one after another.
@@ -51,11 +49,11 @@ abstract class Sql[+A, C[+ROW] <: IterableOnce[ROW]] { self =>
 
   def flatMap[B](f: A => Sql[B, C])(implicit factory: Factory[B, C[B]]): Sql[B, C] =
     (connection: Connection, manager: Using.Manager) =>
-      self.runIO(connection, manager).iterator.foldLeft(factory.newBuilder) {
-        case (builder, elem) =>
-          val items = f(elem).runIO(connection, manager)
-          builder addAll items
-      }.result()
+      self
+        .runIO(connection, manager)
+        .iterator
+        .foldLeft(factory.newBuilder)(_ addAll f(_).runIO(connection, manager))
+        .result()
 
   def recoverWith[B >: A](pf: PartialFunction[Throwable, Sql[B, C]]): Sql[B, C] =
     (connection: Connection, manager: Using.Manager) =>

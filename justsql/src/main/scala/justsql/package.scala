@@ -1,8 +1,3 @@
-import java.sql.ResultSet
-import scala.collection.{mutable, Factory}
-import scala.collection.immutable.ArraySeq
-import scala.reflect.ClassTag
-
 /*
  * Copyright 2022 Simer JS Plaha (simer.j@gmail.com - @simerplaha)
  *
@@ -18,6 +13,11 @@ import scala.reflect.ClassTag
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+
+import java.sql.ResultSet
+import scala.collection.{mutable, Factory}
+import scala.collection.immutable.ArraySeq
+import scala.reflect.ClassTag
 
 package object justsql {
 
