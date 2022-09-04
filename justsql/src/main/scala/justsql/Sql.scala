@@ -20,16 +20,16 @@ import java.sql.{Connection, ResultSet}
 import scala.reflect.ClassTag
 import scala.util.{Try, Using}
 
-sealed trait Sql[+ROW] { self =>
-  protected def runIO(connection: Connection, manager: Using.Manager): ROW
+sealed trait Sql[+DATA] { self =>
+  protected def runIO(connection: Connection, manager: Using.Manager): DATA
 
-  def run()(implicit db: JustSQL): Try[ROW] =
+  def run()(implicit db: JustSQL): Try[DATA] =
     db connectAndRun {
       (connection, manager) =>
         runIO(connection, manager)
     }
 
-  def map[B](f: ROW => B): Sql[B] =
+  def map[B](f: DATA => B): Sql[B] =
     new Sql[B] {
       override protected def runIO(connection: Connection, manager: Using.Manager): B =
         f(self.runIO(connection, manager))
@@ -40,14 +40,14 @@ sealed trait Sql[+ROW] { self =>
    *
    * Eg: Calling flatMap twice will execute 2 queries in sequence within the same connection.
    * */
-  def flatMap[B](f: ROW => Sql[B]): Sql[B] =
+  def flatMap[B](f: DATA => Sql[B]): Sql[B] =
     new Sql[B] {
       override protected def runIO(connection: Connection, manager: Using.Manager): B =
         f(self.runIO(connection, manager))
           .runIO(connection, manager)
     }
 
-  def recoverWith[B >: ROW](pf: PartialFunction[Throwable, Sql[B]]): Sql[B] =
+  def recoverWith[B >: DATA](pf: PartialFunction[Throwable, Sql[B]]): Sql[B] =
     new Sql[B] {
       override protected def runIO(connection: Connection, manager: Using.Manager): B =
         try
@@ -58,7 +58,7 @@ sealed trait Sql[+ROW] { self =>
         }
     }
 
-  def recover[B >: ROW](pf: PartialFunction[Throwable, B]): Sql[B] =
+  def recover[B >: DATA](pf: PartialFunction[Throwable, B]): Sql[B] =
     new Sql[B] {
       override protected def runIO(connection: Connection, manager: Using.Manager): B =
         try
@@ -80,12 +80,56 @@ sealed trait Sql[+ROW] { self =>
     }
 }
 
-sealed trait TypedSQL[ROW] extends Sql[ROW] { self =>
+sealed trait TrackedSQL[ROW] extends Sql[ROW] { self =>
 
   def sql: String
 
   def params: Params
 
+  override def map[B](f: ROW => B): TrackedSQL[B] =
+    new TrackedSQL[B] {
+      override def sql: String =
+        self.sql
+
+      override def params: Params =
+        self.params
+
+      override protected def runIO(connection: Connection, manager: Using.Manager): B =
+        f(self.runIO(connection, manager))
+    }
+
+  override def recover[B >: ROW](pf: PartialFunction[Throwable, B]): Sql[B] =
+    new TrackedSQL[B] {
+      override def sql: String =
+        self.sql
+
+      override def params: Params =
+        self.params
+
+      override protected def runIO(connection: Connection, manager: Using.Manager): B =
+        try
+          self.runIO(connection, manager)
+        catch
+          pf
+    }
+
+  override def failed(): Sql[Throwable] =
+    new TrackedSQL[Throwable] {
+      override def sql: String =
+        self.sql
+
+      override def params: Params =
+        self.params
+
+      override protected def runIO(connection: Connection, manager: Using.Manager): Throwable =
+        try {
+          val result = self.runIO(connection, manager)
+          new IllegalStateException(s"Expected failure. Actual: ${result.getClass.getSimpleName}")
+        } catch {
+          case throwable: Throwable =>
+            throwable
+        }
+    }
 }
 
 object SelectSQL {
@@ -105,18 +149,10 @@ object SelectSQL {
 }
 
 case class SelectSQL[ROW](sql: String, params: Params)(implicit rowReader: RowReader[ROW],
-                                                       classTag: ClassTag[ROW]) extends TypedSQL[Array[ROW]] { self =>
+                                                       classTag: ClassTag[ROW]) extends TrackedSQL[Array[ROW]] { self =>
 
-  def map[B: ClassTag](f: ROW => B): SelectSQL[B] = {
-    implicit val rowReader: RowReader[B] =
-      (resultSet: ResultSet) =>
-        f(self.rowReader(resultSet))
-
-    SelectSQL[B](sql, params)
-  }
-
-  def head(): Sql[ROW] =
-    new TypedSQL[ROW] {
+  def head(): TrackedSQL[ROW] =
+    new TrackedSQL[ROW] {
       override def sql: String =
         self.sql
 
@@ -127,8 +163,8 @@ case class SelectSQL[ROW](sql: String, params: Params)(implicit rowReader: RowRe
         self.runIO(connection, manager).head
     }
 
-  def headOption(): Sql[Option[ROW]] =
-    new TypedSQL[Option[ROW]] {
+  def headOption(): TrackedSQL[Option[ROW]] =
+    new TrackedSQL[Option[ROW]] {
       override def sql: String =
         self.sql
 
@@ -139,8 +175,8 @@ case class SelectSQL[ROW](sql: String, params: Params)(implicit rowReader: RowRe
         self.runIO(connection, manager).headOption
     }
 
-  def headOrFail(): Sql[ROW] =
-    new TypedSQL[ROW] {
+  def headOrFail(): TrackedSQL[ROW] =
+    new TrackedSQL[ROW] {
       override def sql: String =
         self.sql
 
@@ -175,7 +211,7 @@ object UpdateSQL {
 
 }
 
-case class UpdateSQL(sql: String, params: Params) extends TypedSQL[Int] { self =>
+case class UpdateSQL(sql: String, params: Params) extends TrackedSQL[Int] { self =>
 
   override protected def runIO(connection: Connection, manager: Using.Manager): Int =
     JustSQL.update(sql, params)(connection, manager)

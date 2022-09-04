@@ -19,8 +19,12 @@ package justsql
 
 import java.sql.ResultSet
 
-trait RowReader[ROW] extends Function[ResultSet, ROW] {
+trait RowReader[ROW] extends Function[ResultSet, ROW] { self =>
   def apply(resultSet: ResultSet): ROW
+
+  def map[B](f: ROW => B): RowReader[B] =
+    (resultSet: ResultSet) =>
+      f(self(resultSet))
 }
 
 object RowReader {

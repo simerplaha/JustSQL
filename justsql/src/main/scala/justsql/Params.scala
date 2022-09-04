@@ -57,7 +57,7 @@ case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]] = ListB
         apply(param)(sqlParam)
     }
 
-  @inline def embed(typedSQL: TypedSQL[_]): String = {
+  @inline def embed(typedSQL: TrackedSQL[_]): String = {
     paramsMut addAll typedSQL.params.paramsMut
     typedSQL.sql
   }
