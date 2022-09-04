@@ -20,16 +20,16 @@ import java.sql.{Connection, ResultSet}
 import scala.reflect.ClassTag
 import scala.util.{Try, Using}
 
-sealed trait Sql[+DATA] { self =>
-  protected def runIO(connection: Connection, manager: Using.Manager): DATA
+sealed trait Sql[+RESULT] { self =>
+  protected def runIO(connection: Connection, manager: Using.Manager): RESULT
 
-  def run()(implicit db: JustSQL): Try[DATA] =
+  def run()(implicit db: JustSQL): Try[RESULT] =
     db connectAndRun {
       (connection, manager) =>
         runIO(connection, manager)
     }
 
-  def map[B](f: DATA => B): Sql[B] =
+  def map[B](f: RESULT => B): Sql[B] =
     new Sql[B] {
       override protected def runIO(connection: Connection, manager: Using.Manager): B =
         f(self.runIO(connection, manager))
@@ -40,14 +40,13 @@ sealed trait Sql[+DATA] { self =>
    *
    * Eg: Calling flatMap twice will execute 2 queries in sequence within the same connection.
    * */
-  def flatMap[B](f: DATA => Sql[B]): Sql[B] =
+  def flatMap[B](f: RESULT => Sql[B]): Sql[B] =
     new Sql[B] {
       override protected def runIO(connection: Connection, manager: Using.Manager): B =
-        f(self.runIO(connection, manager))
-          .runIO(connection, manager)
+        f(self.runIO(connection, manager)).runIO(connection, manager)
     }
 
-  def recoverWith[B >: DATA](pf: PartialFunction[Throwable, Sql[B]]): Sql[B] =
+  def recoverWith[B >: RESULT](pf: PartialFunction[Throwable, Sql[B]]): Sql[B] =
     new Sql[B] {
       override protected def runIO(connection: Connection, manager: Using.Manager): B =
         try
@@ -58,7 +57,7 @@ sealed trait Sql[+DATA] { self =>
         }
     }
 
-  def recover[B >: DATA](pf: PartialFunction[Throwable, B]): Sql[B] =
+  def recover[B >: RESULT](pf: PartialFunction[Throwable, B]): Sql[B] =
     new Sql[B] {
       override protected def runIO(connection: Connection, manager: Using.Manager): B =
         try
@@ -78,58 +77,34 @@ sealed trait Sql[+DATA] { self =>
             throwable
         }
     }
+
+  def toTracked[B >: RESULT](trackedSQL: String, trackedParams: Params): TrackedSQL[B] =
+    new TrackedSQL[B] {
+      override def sql: String =
+        trackedSQL
+
+      override def params: Params =
+        trackedParams
+
+      override protected def runIO(connection: Connection, manager: Using.Manager): B =
+        self.runIO(connection, manager)
+    }
 }
 
-sealed trait TrackedSQL[ROW] extends Sql[ROW] { self =>
+sealed trait TrackedSQL[RESULT] extends Sql[RESULT] { self =>
 
   def sql: String
 
   def params: Params
 
-  override def map[B](f: ROW => B): TrackedSQL[B] =
-    new TrackedSQL[B] {
-      override def sql: String =
-        self.sql
+  override def map[B](f: RESULT => B): TrackedSQL[B] =
+    super.map(f).toTracked(sql, params)
 
-      override def params: Params =
-        self.params
-
-      override protected def runIO(connection: Connection, manager: Using.Manager): B =
-        f(self.runIO(connection, manager))
-    }
-
-  override def recover[B >: ROW](pf: PartialFunction[Throwable, B]): Sql[B] =
-    new TrackedSQL[B] {
-      override def sql: String =
-        self.sql
-
-      override def params: Params =
-        self.params
-
-      override protected def runIO(connection: Connection, manager: Using.Manager): B =
-        try
-          self.runIO(connection, manager)
-        catch
-          pf
-    }
+  override def recover[B >: RESULT](pf: PartialFunction[Throwable, B]): Sql[B] =
+    super.recover(pf).toTracked(sql, params)
 
   override def failed(): Sql[Throwable] =
-    new TrackedSQL[Throwable] {
-      override def sql: String =
-        self.sql
-
-      override def params: Params =
-        self.params
-
-      override protected def runIO(connection: Connection, manager: Using.Manager): Throwable =
-        try {
-          val result = self.runIO(connection, manager)
-          new IllegalStateException(s"Expected failure. Actual: ${result.getClass.getSimpleName}")
-        } catch {
-          case throwable: Throwable =>
-            throwable
-        }
-    }
+    super.failed().toTracked(sql, params)
 }
 
 object SelectSQL {
