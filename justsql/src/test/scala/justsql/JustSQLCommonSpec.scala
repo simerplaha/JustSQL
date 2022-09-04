@@ -19,6 +19,7 @@ package justsql
 import justsql.TestUtil._
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.OptionValues.convertOptionToValuable
 import org.scalatest.TryValues._
 
 /**
@@ -34,7 +35,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
     "create and insert" when {
       "not transactional" in {
         withDB(connector()) { implicit db =>
-          "CREATE TABLE TEST_TABLE (value varchar)".update().run().success.value.value shouldBe 0
+          "CREATE TABLE TEST_TABLE (value varchar)".update().run().success.value should be(empty)
           "INSERT INTO TEST_TABLE values ('value1')".update().run().success.value.value shouldBe 1
 
           UpdateSQL {
@@ -58,7 +59,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
                    |
                    |COMMIT;
                    |""".stripMargin
-            }.run().success.value.value shouldBe 0
+            }.run().success.value should be(empty)
 
             "SELECT * from TEST_TABLE".select[Int]().run().success.value shouldBe (1 to 4)
           }
@@ -75,7 +76,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
               |COMMIT;
               |"""
               .stripMargin
-              .update().run().success.value.value shouldBe 0
+              .update().run().success.value should be(empty)
 
             "SELECT * from TEST_TABLE".select[Int]().run().success.value shouldBe (1 to 3)
           }
@@ -84,7 +85,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
       "insert tuple" in {
         withDB(connector()) { implicit db =>
-          "CREATE TABLE TEST_TABLE (value varchar, int INT)".update().run().success.value.value shouldBe 0
+          "CREATE TABLE TEST_TABLE (value varchar, int INT)".update().run().success.value should be(empty)
 
           UpdateSQL {
             implicit param =>
@@ -102,7 +103,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
     withDB(connector()) { implicit db =>
       "CREATE TABLE TEST_TABLE(key varchar)".update()
 
-      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value.value shouldBe 0
+      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value should be(empty)
 
       "SELECT * FROM TEST_TABLE".select[String]().headOption().run().success.value shouldBe empty
 
@@ -120,7 +121,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
   "return non-empty select on non-empty table" in {
     withDB(connector()) { implicit db =>
-      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value.value shouldBe 0
+      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value should be(empty)
       "INSERT INTO TEST_TABLE values ('1'), ('2'), ('3')".update().run().success.value.value shouldBe 3
 
       /** SELECT */
@@ -137,7 +138,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
   "return zero for count query when table shouldBe empty" in {
     withDB(connector()) { implicit db =>
-      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value.value shouldBe 0
+      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value should be(empty)
 
       /** COUNT */
       //Count using typed API
@@ -151,7 +152,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
   "return row count when table shouldBe non-empty" in {
     withDB(connector()) { implicit db =>
-      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value.value shouldBe 0
+      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value should be(empty)
       "INSERT INTO TEST_TABLE values ('one'), ('two'), ('three')".update().run().success.value.value shouldBe 3
 
       /** COUNT */
@@ -182,7 +183,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
         |       (2, 'string3', 'true');
         |
         |COMMIT;
-        |""".stripMargin.update().run().success.value.value shouldBe 0
+        |""".stripMargin.update().run().success.value should be(empty)
 
       case class Row(int: Int, string: String, bool: Boolean)
 
@@ -217,7 +218,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
   "embed queries" in {
     withDB(connector()) {
       implicit db =>
-        "CREATE TABLE TEST_TABLE(int int, bool boolean, string varchar)".update().run().success.value.value shouldBe 0
+        "CREATE TABLE TEST_TABLE(int int, bool boolean, string varchar)".update().run().success.value should be(empty)
 
         UpdateSQL {
           implicit params =>

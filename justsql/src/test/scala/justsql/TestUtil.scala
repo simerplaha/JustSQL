@@ -52,7 +52,7 @@ object TestUtil {
         db.close()
     }
 
-  def dropPublicTables()(implicit db: JustSQL): Try[Some[Int]] =
+  def dropPublicTables()(implicit db: JustSQL): Try[Option[Int]] =
     getPublicTables() flatMap dropTables
 
   def getPublicTables()(implicit db: JustSQL): Try[ArraySeq[String]] =
@@ -62,7 +62,7 @@ object TestUtil {
       |where table_schema = 'public';
       |""".stripMargin.select[String]().run()
 
-  def dropTables(tableNames: ArraySeq[String])(implicit db: JustSQL): Try[Some[Int]] = {
+  def dropTables(tableNames: ArraySeq[String])(implicit db: JustSQL): Try[Option[Int]] = {
     val drops =
       tableNames
         .map(name => s"drop table $name;")

@@ -27,19 +27,19 @@ object Example extends App {
 
 
   /** WRITING */
-  val create: Try[Some[Int]] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().run() //create table
-  val insert: Try[Some[Int]] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().run() //insert rows
+  val create: Try[Option[Int]] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().run() //create table
+  val insert: Try[Option[Int]] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().run() //insert rows
 
   /** For-comprehension */
-//  val createAndInsert: Sql[(Int, Int), Some] =
-//    for {
-//      create <- "CREATE TABLE USERS (id INT, name VARCHAR)".update()
-//      insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
-//    } yield (create, insert)
+  val createAndInsert: Sql[(Int, Int), Option] =
+    for {
+      create <- "CREATE TABLE USERS (id INT, name VARCHAR)".update()
+      insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
+    } yield (create, insert)
 
-//  val result: Try[Some[(Int, Int)]] = createAndInsert.run()
+  val result: Try[Option[(Int, Int)]] = createAndInsert.run()
 
-  val insertParametric: Try[Some[Int]] =
+  val insertParametric: Try[Option[Int]] =
     UpdateSQL {
       implicit params =>
         s"""
@@ -50,7 +50,7 @@ object Example extends App {
     }.run()
 
   //  Or Transactionally
-  val transaction: Try[Some[Int]] =
+  val transaction: Try[Option[Int]] =
     UpdateSQL {
       implicit params =>
         s"""

@@ -1,4 +1,5 @@
 import java.sql.ResultSet
+import scala.collection.{mutable, Factory}
 import scala.reflect.ClassTag
 
 /*
@@ -47,5 +48,26 @@ package object justsql {
     def embed(implicit builder: Params): String =
       builder embed sql
   }
+
+  implicit def optionFactory[T]: Factory[T, Option[T]] =
+    new Factory[T, Option[T]] {
+      override def fromSpecific(it: IterableOnce[T]): Option[T] =
+        it.iterator.nextOption()
+
+      override def newBuilder: mutable.Builder[T, Option[T]] =
+        new mutable.Builder[T, Option[T]] {
+          var item: T = _
+          override def clear(): Unit =
+            item = null.asInstanceOf[T]
+
+          override def result(): Option[T] =
+            Option(item)
+
+          override def addOne(elem: T): this.type = {
+            item = elem
+            this
+          }
+        }
+    }
 
 }
