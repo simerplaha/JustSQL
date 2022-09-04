@@ -108,14 +108,4 @@ object Example extends App {
            |""".stripMargin
     }.run()
 
-  val myCombinedQuery =
-    "My first query"
-      .select[User]()
-      .combineUnion("You another query".select[User]())
-
-  val manuallyCombined =
-    "My first query"
-      .select[User]()
-      .combine("UNION ALL", "You another query".select[User]())
-
 }

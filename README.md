@@ -184,29 +184,6 @@ val query2: Try[Array[String]] =
   }.run()
 ```
 
-# `union()` & `unionAll()`
-
-Use the `combine` or `wrap` functions.
-
-These functions don't get any special treatment to keep the API simple.
-They are just basic `String` manipulators which can also be done manually.
-
-```scala
-val myCombinedQuery =
-  "My first query"
-    .select[User]()
-    .combineUnion("Another query".select[User]())
-```
-
-Or manually
-
-```scala
-val manuallyCombined =
-  "My first query"
-    .select[User]()
-    .combine("UNION ALL", "You another query".select[User]())
-```
-
 # Custom `ParamWriter`
 
 ## `ParamWriter` - Data types with single or multiple JDBC parameters

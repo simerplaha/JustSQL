@@ -80,33 +80,12 @@ sealed trait Sql[+ROW] { self =>
     }
 }
 
-sealed trait TypedRawSQL[ROW] extends Sql[ROW] { self =>
-
-  type Self = TypedRawSQL[ROW]
+sealed trait TypedSQL[ROW] extends Sql[ROW] { self =>
 
   def sql: String
 
   def params: Params
 
-  def copyRawSQL(sql: String, params: Params): Self
-
-  def wrap(start: String, end: String): Self =
-    copyRawSQL(s"""$start${self.sql}$end""", params)
-
-  def wrapBeginCommit(): Self =
-    wrap("\nBEGIN;\n", "\nCOMMIT;\n")
-
-  def combine[B >: ROW](separator: String, other: TypedRawSQL[B]): Self =
-    copyRawSQL(
-      sql = s"""${self.sql}$separator${other.sql}""",
-      params = self.params ++ other.params
-    )
-
-  def combineUnion[B >: ROW](other: TypedRawSQL[B]): Self =
-    combine("\nUNION\n", other)
-
-  def combineUnionAll[B >: ROW](other: TypedRawSQL[B]): Self =
-    combine("\nUNION ALL\n", other)
 }
 
 object SelectSQL {
@@ -126,10 +105,7 @@ object SelectSQL {
 }
 
 case class SelectSQL[ROW](sql: String, params: Params)(implicit rowReader: RowReader[ROW],
-                                                       classTag: ClassTag[ROW]) extends TypedRawSQL[Array[ROW]] { self =>
-
-  override def copyRawSQL(sql: String, params: Params): SelectSQL[ROW] =
-    self.copy(sql, params)
+                                                       classTag: ClassTag[ROW]) extends TypedSQL[Array[ROW]] { self =>
 
   def map[B: ClassTag](f: ROW => B): SelectSQL[B] = {
     implicit val rowReader: RowReader[B] =
@@ -140,19 +116,37 @@ case class SelectSQL[ROW](sql: String, params: Params)(implicit rowReader: RowRe
   }
 
   def head(): Sql[ROW] =
-    new Sql[ROW] {
+    new TypedSQL[ROW] {
+      override def sql: String =
+        self.sql
+
+      override def params: Params =
+        self.params
+
       override protected def runIO(connection: Connection, manager: Using.Manager): ROW =
         self.runIO(connection, manager).head
     }
 
   def headOption(): Sql[Option[ROW]] =
-    new Sql[Option[ROW]] {
-      override protected def runIO(connection: Connection, manager: Using.Manager) =
+    new TypedSQL[Option[ROW]] {
+      override def sql: String =
+        self.sql
+
+      override def params: Params =
+        self.params
+
+      override protected def runIO(connection: Connection, manager: Using.Manager): Option[ROW] =
         self.runIO(connection, manager).headOption
     }
 
   def headOrFail(): Sql[ROW] =
-    new Sql[ROW] {
+    new TypedSQL[ROW] {
+      override def sql: String =
+        self.sql
+
+      override def params: Params =
+        self.params
+
       override protected def runIO(connection: Connection, manager: Using.Manager): ROW = {
         val result = self.runIO(connection, manager)
         if (result.length == 0) {
@@ -163,7 +157,6 @@ case class SelectSQL[ROW](sql: String, params: Params)(implicit rowReader: RowRe
         }
       }
     }
-
 
   override protected def runIO(connection: Connection, manager: Using.Manager): Array[ROW] =
     JustSQL.select[ROW](sql, params)(connection, manager)
@@ -182,11 +175,8 @@ object UpdateSQL {
 
 }
 
-case class UpdateSQL(sql: String, params: Params) extends TypedRawSQL[Int] { self =>
+case class UpdateSQL(sql: String, params: Params) extends TypedSQL[Int] { self =>
 
   override protected def runIO(connection: Connection, manager: Using.Manager): Int =
     JustSQL.update(sql, params)(connection, manager)
-
-  override def copyRawSQL(sql: String, params: Params): UpdateSQL =
-    self.copy(sql, params)
 }
