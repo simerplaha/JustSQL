@@ -150,25 +150,6 @@ case class SelectSQL[ROW](sql: String, params: Params)(implicit rowReader: RowRe
         self.runIO(connection, manager).headOption
     }
 
-  def headOrFail(): TrackedSQL[ROW] =
-    new TrackedSQL[ROW] {
-      override def sql: String =
-        self.sql
-
-      override def params: Params =
-        self.params
-
-      override protected def runIO(connection: Connection, manager: Using.Manager): ROW = {
-        val result = self.runIO(connection, manager)
-        if (result.length == 0) {
-          result.head
-        } else {
-          val rowOrRows = if (result.length > 1) "rows" else "row"
-          throw new IllegalCallerException(s"Expected 1 row. Actual ${result.length} $rowOrRows.")
-        }
-      }
-    }
-
   override protected def runIO(connection: Connection, manager: Using.Manager): Array[ROW] =
     JustSQL.select[ROW](sql, params)(connection, manager)
 
