@@ -59,7 +59,9 @@ object JustSQL {
       }
       builder.result()
     } else {
-      factory.newBuilder.result()
+      val builder = factory.newBuilder
+      builder.sizeHint(0)
+      builder.result()
     }
   }
 }
