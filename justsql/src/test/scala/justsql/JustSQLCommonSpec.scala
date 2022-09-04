@@ -34,13 +34,13 @@ trait JustSQLCommonSpec extends AnyWordSpec {
     "create and insert" when {
       "not transactional" in {
         withDB(connector()) { implicit db =>
-          "CREATE TABLE TEST_TABLE (value varchar)".update().run().success.value shouldBe 0
-          "INSERT INTO TEST_TABLE values ('value1')".update().run().success.value shouldBe 1
+          "CREATE TABLE TEST_TABLE (value varchar)".update().run().success.value.value shouldBe 0
+          "INSERT INTO TEST_TABLE values ('value1')".update().run().success.value.value shouldBe 1
 
           UpdateSQL {
             implicit param =>
               s"INSERT INTO TEST_TABLE values (${"value2".?})"
-          }.run().success.value shouldBe 1
+          }.run().success.value.value shouldBe 1
         }
       }
 
@@ -58,7 +58,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
                    |
                    |COMMIT;
                    |""".stripMargin
-            }.run().success.value shouldBe 0
+            }.run().success.value.value shouldBe 0
 
             "SELECT * from TEST_TABLE".select[Int]().run().success.value shouldBe (1 to 4)
           }
@@ -75,7 +75,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
               |COMMIT;
               |"""
               .stripMargin
-              .update().run().success.value shouldBe 0
+              .update().run().success.value.value shouldBe 0
 
             "SELECT * from TEST_TABLE".select[Int]().run().success.value shouldBe (1 to 3)
           }
@@ -84,12 +84,12 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
       "insert tuple" in {
         withDB(connector()) { implicit db =>
-          "CREATE TABLE TEST_TABLE (value varchar, int INT)".update().run().success.value shouldBe 0
+          "CREATE TABLE TEST_TABLE (value varchar, int INT)".update().run().success.value.value shouldBe 0
 
           UpdateSQL {
             implicit param =>
               s"INSERT INTO TEST_TABLE values (${"String" ?}, ${1 ?})"
-          }.run().success.value shouldBe 1
+          }.run().success.value.value shouldBe 1
 
           "SELECT * from TEST_TABLE".select[(String, Int)]().run().success.value should contain only (("String", 1))
         }
@@ -102,9 +102,9 @@ trait JustSQLCommonSpec extends AnyWordSpec {
     withDB(connector()) { implicit db =>
       "CREATE TABLE TEST_TABLE(key varchar)".update()
 
-      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value shouldBe 0
+      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value.value shouldBe 0
 
-      "SELECT * FROM TEST_TABLE".select[String]().head()
+      "SELECT * FROM TEST_TABLE".select[String]().headOption().run().success.value shouldBe empty
 
       /** SELECT */
       //Select using typed API
@@ -120,8 +120,8 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
   "return non-empty select on non-empty table" in {
     withDB(connector()) { implicit db =>
-      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value shouldBe 0
-      "INSERT INTO TEST_TABLE values ('1'), ('2'), ('3')".update().run().success.value shouldBe 3
+      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value.value shouldBe 0
+      "INSERT INTO TEST_TABLE values ('1'), ('2'), ('3')".update().run().success.value.value shouldBe 3
 
       /** SELECT */
       //Select using typed API
@@ -137,7 +137,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
   "return zero for count query when table shouldBe empty" in {
     withDB(connector()) { implicit db =>
-      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value shouldBe 0
+      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value.value shouldBe 0
 
       /** COUNT */
       //Count using typed API
@@ -151,8 +151,8 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
   "return row count when table shouldBe non-empty" in {
     withDB(connector()) { implicit db =>
-      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value shouldBe 0
-      "INSERT INTO TEST_TABLE values ('one'), ('two'), ('three')".update().run().success.value shouldBe 3
+      "CREATE TABLE TEST_TABLE(key varchar)".update().run().success.value.value shouldBe 0
+      "INSERT INTO TEST_TABLE values ('one'), ('two'), ('three')".update().run().success.value.value shouldBe 3
 
       /** COUNT */
       //Count using typed API
@@ -182,7 +182,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
         |       (2, 'string3', 'true');
         |
         |COMMIT;
-        |""".stripMargin.update().run().success.value shouldBe 0
+        |""".stripMargin.update().run().success.value.value shouldBe 0
 
       case class Row(int: Int, string: String, bool: Boolean)
 
@@ -217,7 +217,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
   "embed queries" in {
     withDB(connector()) {
       implicit db =>
-        "CREATE TABLE TEST_TABLE(int int, bool boolean, string varchar)".update().run().success.value shouldBe 0
+        "CREATE TABLE TEST_TABLE(int int, bool boolean, string varchar)".update().run().success.value.value shouldBe 0
 
         UpdateSQL {
           implicit params =>
@@ -227,7 +227,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
                |                              (${3.?}, ${false.?}, ${"three".?})
                |
                |""".stripMargin
-        }.run().success.value shouldBe 3
+        }.run().success.value.value shouldBe 3
 
         val maxIntQuery: SelectSQL[Int] =
           SelectSQL[Int] {
@@ -237,7 +237,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
                  |""".stripMargin
           }
 
-        val finalQuery: Sql[Option[Int]] =
+        val finalQuery: TrackedSQL[Int, Option] =
           SelectSQL[Int] {
             implicit params: Params =>
               s"""

@@ -16,6 +16,7 @@
 
 package justsql
 
+import scala.collection.immutable.ArraySeq
 import scala.util.{Failure, Success, Try}
 
 object TestUtil {
@@ -51,17 +52,17 @@ object TestUtil {
         db.close()
     }
 
-  def dropPublicTables()(implicit db: JustSQL): Try[Int] =
+  def dropPublicTables()(implicit db: JustSQL): Try[Some[Int]] =
     getPublicTables() flatMap dropTables
 
-  def getPublicTables()(implicit db: JustSQL): Try[Array[String]] =
+  def getPublicTables()(implicit db: JustSQL): Try[ArraySeq[String]] =
     """
       |select table_name
       |from information_schema.tables
       |where table_schema = 'public';
       |""".stripMargin.select[String]().run()
 
-  def dropTables(tableNames: Array[String])(implicit db: JustSQL): Try[Int] = {
+  def dropTables(tableNames: ArraySeq[String])(implicit db: JustSQL): Try[Some[Int]] = {
     val drops =
       tableNames
         .map(name => s"drop table $name;")

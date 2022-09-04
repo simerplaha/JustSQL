@@ -18,6 +18,7 @@ package justsql
 
 import java.io.Closeable
 import java.sql.{Connection, PreparedStatement, ResultSet}
+import scala.collection.{mutable, Factory}
 import scala.reflect.ClassTag
 import scala.util.{Try, Using}
 
@@ -39,26 +40,26 @@ object JustSQL {
     statement.executeUpdate()
   }
 
-  def select[ROW: ClassTag](sql: String, params: Params)(connection: Connection,
-                                                         manager: Using.Manager)(implicit rowReader: RowReader[ROW]): Array[ROW] = {
+  def select[ROW: ClassTag, C](sql: String, params: Params)(connection: Connection,
+                                                            manager: Using.Manager)(implicit rowReader: RowReader[ROW],
+                                                                                    factory: Factory[ROW, C]): C = {
     val statement = manager(connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
     setParams(params, statement)
 
     val resultSet = manager(statement.executeQuery())
 
     if (resultSet.last()) {
-      val array = new Array[ROW](resultSet.getRow)
+      val builder = factory.newBuilder
+      builder.sizeHint(resultSet.getRow)
 
       resultSet.beforeFirst()
 
-      var i = 0
       while (resultSet.next()) {
-        array(i) = rowReader(resultSet)
-        i += 1
+        builder addOne rowReader(resultSet)
       }
-      array
+      builder.result()
     } else {
-      Array.empty[ROW]
+      factory.newBuilder.result()
     }
   }
 }
