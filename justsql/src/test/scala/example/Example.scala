@@ -81,8 +81,8 @@ object Example extends App {
 
   val usersCollected: Try[List[User]] = "SELECT * FROM USERS".select[User, List]().runSync()
   //Select using parameters
-  val usersParametric: SelectSQL[String, List] =
-    SelectSQL[String, List] {
+  val usersParametric: SelectSQL[String, ArraySeq] =
+    SelectSQL[String] {
       implicit params: Params =>
         s"""
            |SELECT name from USERS where id = ${1.?}
