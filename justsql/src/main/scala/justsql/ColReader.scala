@@ -60,4 +60,7 @@ object ColReader {
   implicit val binaryStreamColReader: ColReader[java.io.InputStream] = _.getBinaryStream(_)
   implicit val urlColReader: ColReader[java.net.URL] = _.getURL(_)
 
+  implicit def toOption[A](implicit colReader: ColReader[A]): ColReader[Option[A]] =
+    (resultSet: ResultSet, index: Int) =>
+      Option(colReader(resultSet, index))
 }

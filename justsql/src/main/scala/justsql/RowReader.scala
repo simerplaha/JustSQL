@@ -57,6 +57,10 @@ object RowReader {
   implicit val ioInputStreamRowReader: RowReader[java.io.InputStream] = tuple1[java.io.InputStream]
   implicit val urlRowReader: RowReader[java.net.URL] = tuple1[java.net.URL]
 
+  implicit def toOption[A](implicit rowReader: RowReader[A]): RowReader[Option[A]] =
+    (resultSet: ResultSet) =>
+      Option(rowReader(resultSet))
+
   implicit def tuple1[T1](implicit t1: ColReader[T1]): RowReader[T1] =
     new RowReader[T1] {
       def apply(resultSet: ResultSet): T1 =
