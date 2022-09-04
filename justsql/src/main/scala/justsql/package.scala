@@ -1,3 +1,6 @@
+import java.sql.ResultSet
+import scala.reflect.ClassTag
+
 /*
  * Copyright 2022 Simer JS Plaha (simer.j@gmail.com - @simerplaha)
  *
@@ -16,8 +19,17 @@
 
 package object justsql {
 
-  @inline implicit def convertStringToSQL(sql: String): RawSQL =
-    Sql(sql)
+  implicit class StringImplicits(val sql: String) extends AnyVal {
+    def update(): UpdateSQL =
+      UpdateSQL(sql)
+
+    def select[ROW]()(implicit rowReader: RowReader[ROW],
+                      classTag: ClassTag[ROW]): SelectSQL[ROW] =
+      SelectSQL(RawSQL(sql, Params()))
+
+    def unsafeSelect[ROW](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW] =
+      SelectSQL.unsafe(sql)(rowParser(_))
+  }
 
   implicit class ParamImplicits[P](val param: P) extends AnyVal {
     def ?(implicit sqlParam: ParamWriter[P],

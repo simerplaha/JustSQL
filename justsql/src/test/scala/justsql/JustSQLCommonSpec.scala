@@ -37,17 +37,17 @@ trait JustSQLCommonSpec extends AnyWordSpec {
           "CREATE TABLE TEST_TABLE (value varchar)".update().run().success.value shouldBe 0
           "INSERT INTO TEST_TABLE values ('value1')".update().run().success.value shouldBe 1
 
-          Sql {
+          UpdateSQL {
             implicit param =>
               s"INSERT INTO TEST_TABLE values (${"value2".?})"
-          }.update().run().success.value shouldBe 1
+          }.run().success.value shouldBe 1
         }
       }
 
       "transactional" when {
         "parametrised" in {
           withDB(connector()) { implicit db =>
-            Sql {
+            UpdateSQL {
               implicit param =>
                 s"""
                    |BEGIN;
@@ -58,7 +58,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
                    |
                    |COMMIT;
                    |""".stripMargin
-            }.update().run().success.value shouldBe 0
+            }.run().success.value shouldBe 0
 
             "SELECT * from TEST_TABLE".select[Int]().run().success.value shouldBe (1 to 4)
           }
@@ -86,10 +86,10 @@ trait JustSQLCommonSpec extends AnyWordSpec {
         withDB(connector()) { implicit db =>
           "CREATE TABLE TEST_TABLE (value varchar, int INT)".update().run().success.value shouldBe 0
 
-          Sql {
+          UpdateSQL {
             implicit param =>
               s"INSERT INTO TEST_TABLE values (${"String" ?}, ${1 ?})"
-          }.update().run().success.value shouldBe 1
+          }.run().success.value shouldBe 1
 
           "SELECT * from TEST_TABLE".select[(String, Int)]().run().success.value should contain only (("String", 1))
         }
@@ -219,7 +219,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
       implicit db =>
         "CREATE TABLE TEST_TABLE(int int, bool boolean, string varchar)".update().run().success.value shouldBe 0
 
-        Sql {
+        UpdateSQL {
           implicit params =>
             s"""
                |INSERT INTO TEST_TABLE values (${1.?}, ${false.?}, ${"one".?}),
@@ -227,26 +227,26 @@ trait JustSQLCommonSpec extends AnyWordSpec {
                |                              (${3.?}, ${false.?}, ${"three".?})
                |
                |""".stripMargin
-        }.update().run().success.value shouldBe 3
+        }.run().success.value shouldBe 3
 
         def maxIntQuery(): SelectSQL[Int] =
-          Sql {
-            implicit params =>
+          SelectSQL[Int] {
+            implicit params: Params =>
               s"""
                  |SELECT max(int) from TEST_TABLE where bool = ${true.?}
                  |""".stripMargin
-          }.select[Int]()
+          }
 
-        val finalQuery =
-          Sql {
-            implicit params =>
+        val finalQuery: Sql[Option[Int]] =
+          SelectSQL[Int] {
+            implicit params: Params =>
               s"""
                  |SELECT int from TEST_TABLE
                  | WHERE int = (${maxIntQuery().embed})
                  |""".stripMargin
-          }
+          }.headOption()
 
-        finalQuery.select[Int]().headOption().run().success.value should contain(2)
+        finalQuery.run().success.value should contain(2)
     }
 
   }

@@ -39,18 +39,18 @@ object Example extends App {
   val result: Try[(Int, Int)] = action.run()
 
   val insertParametric: Try[Int] =
-    Sql {
+    UpdateSQL {
       implicit params =>
         s"""
            |INSERT INTO USERS (id, name)
            |     VALUES (${1.?}, ${"Harry".?}),
            |            (${2.?}, ${"Ayman".?})
            |""".stripMargin
-    }.update().run()
+    }.run()
 
   //  Or Transactionally
   val transaction: Try[Int] =
-    Sql {
+    UpdateSQL {
       implicit params =>
         s"""
            |BEGIN;
@@ -63,11 +63,10 @@ object Example extends App {
            |COMMIT;
            |"""
           .stripMargin
-    }.update()
-      .recoverWith {
-        _ =>
-          "ROLLBACK".update() //if there was an error rollback
-      }.run()
+    }.recoverWith {
+      _ =>
+        "ROLLBACK".update() //if there was an error rollback
+    }.run()
 
 
   /** READING */

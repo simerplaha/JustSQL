@@ -112,7 +112,7 @@ sealed trait TypedRawSQL[ROW] extends Sql[ROW] { self =>
     copyRawSQL(
       RawSQL(
         sql = s"""${self.rawSQL.sql}$separator${other.rawSQL.sql}""",
-        params = self.rawSQL.sql.params ++ other.rawSQL.sql.params
+        params = self.rawSQL.params ++ other.rawSQL.params
       )
     )
 
@@ -123,18 +123,23 @@ sealed trait TypedRawSQL[ROW] extends Sql[ROW] { self =>
     combine("\nUNION ALL\n", other)
 }
 
-case class RawSQL(sql: String, params: Params) {
+case class RawSQL(sql: String, params: Params)
 
-  def update(): UpdateSQL =
-    UpdateSQL(this)
 
-  def select[ROW]()(implicit rowReader: RowReader[ROW],
-                    classTag: ClassTag[ROW]): SelectSQL[ROW] =
-    SelectSQL(this)
+object SelectSQL {
+  @inline def apply[ROW](f: Params => String)(implicit rowReader: RowReader[ROW],
+                                              classTag: ClassTag[ROW]): SelectSQL[ROW] = {
+    val params = Params()
+    val sql = f(params)
+    SelectSQL[ROW](RawSQL(sql, params))
+  }
 
-  def unsafeSelect[ROW](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW] =
-    SelectSQL(this)(rowParser(_), classTag)
+  @inline def apply[ROW](sql: String)(implicit rowReader: RowReader[ROW],
+                                      classTag: ClassTag[ROW]): SelectSQL[ROW] =
+    SelectSQL[ROW](RawSQL(sql, Params()))
 
+  @inline def unsafe[ROW](sql: String)(rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW] =
+    SelectSQL(RawSQL(sql, Params()))(rowParser(_), classTag)
 }
 
 case class SelectSQL[ROW](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW],
@@ -179,6 +184,18 @@ case class SelectSQL[ROW](rawSQL: RawSQL)(implicit rowReader: RowReader[ROW],
 
   override protected def runIO(connection: Connection, manager: Using.Manager): Array[ROW] =
     JustSQL.select[ROW](rawSQL)(connection, manager)
+
+}
+
+object UpdateSQL {
+  @inline def apply(f: Params => String): UpdateSQL = {
+    val params = Params()
+    val sql = f(params)
+    UpdateSQL(RawSQL(sql, params))
+  }
+
+  @inline def apply(sql: String): UpdateSQL =
+    UpdateSQL(RawSQL(sql, Params()))
 
 }
 
