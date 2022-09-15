@@ -10,7 +10,7 @@ Interop for [Slick](#slick-interop) or [HikariCP](#hikaricp-interop) is provided
 
 Small: 407KB jar file. No external core dependency.
 
-## Why another SQL library/facade?
+## Why another SQL library?
 
 - ORMs, DSLs and custom string interpolation solutions are nice, but most are incomplete and restrictive, specially
   when writing complex SQL queries.

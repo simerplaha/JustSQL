@@ -31,27 +31,27 @@ case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]] = ListB
   def parameters(): Array[ParamValueWriter[_]] =
     paramsMut.toArray
 
-  @inline def ?[P](param: P)(implicit sqlParam: ParamWriter[P]): String =
+  @inline def ?[P](param: P)(implicit writer: ParamWriter[P]): String =
     apply(param).mkString(", ")
 
-  def ?[P](params: Iterable[P])(implicit sqlParam: ParamWriter[P]): String =
+  def ?[P](params: Iterable[P])(implicit writer: ParamWriter[P]): String =
     params.map {
       param =>
         self ? param
     }.mkString(", ")
 
-  def apply[P](param: P)(implicit sqlParam: ParamWriter[P]): Array[String] = {
-    paramsMut addOne ParamValueWriter(param, sqlParam)
-    Array.fill(sqlParam.paramCount())(placeholder)
+  def apply[P](param: P)(implicit writer: ParamWriter[P]): Array[String] = {
+    paramsMut addOne ParamValueWriter(param, writer)
+    Array.fill(writer.paramCount())(placeholder)
   }
 
-  @inline def apply[P](params: P*)(implicit sqlParam: ParamWriter[P]): Iterable[String] =
+  @inline def apply[P](params: P*)(implicit writer: ParamWriter[P]): Iterable[String] =
     apply(params)
 
-  def apply[P](params: Iterable[P])(implicit sqlParam: ParamWriter[P]): Iterable[String] =
+  def apply[P](params: Iterable[P])(implicit writer: ParamWriter[P]): Iterable[String] =
     params flatMap {
       param =>
-        apply(param)(sqlParam)
+        apply(param)(writer)
     }
 
   @inline def embed[A](typedSQL: TrackedSQL[A]): String = {
@@ -61,8 +61,5 @@ case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]] = ListB
 
   def foreach[T](f: ParamValueWriter[_] => T): Unit =
     paramsMut foreach f
-
-  def ++(right: Params): Params =
-    Params(self.paramsMut ++ right.paramsMut)
 
 }
