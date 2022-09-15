@@ -179,6 +179,21 @@ case class SelectSQL[+ROW, C[+R] <: Iterable[R]](sql: String,
           .nextOption()
     }
 
+  def head(): TrackedSQL[ROW] =
+    new TrackedSQL[ROW] {
+      override def sql: String =
+        select.sql
+
+      override def params: Params =
+        select.params
+
+      override def runIO(connection: Connection, manager: Using.Manager): ROW =
+        select
+          .runIO(connection, manager)
+          .iterator
+          .next()
+    }
+
   /**
    * For queries that always expect at most one row.
    *
