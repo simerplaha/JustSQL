@@ -16,6 +16,8 @@
 
 package justsql
 
+import justsql.util.CollectionUtil
+
 import java.sql.{Connection, ResultSet}
 import scala.collection.Factory
 import scala.collection.immutable.ArraySeq
@@ -59,6 +61,23 @@ abstract class Sql[+RESULT] { self =>
   def foreach[B](f: RESULT => B): Sql[Unit] =
     (connection: Connection, manager: Using.Manager) =>
       f(self.runIO(connection, manager))
+
+  def headOption[A]()(implicit evd: RESULT <:< Iterable[A]): Sql[Option[A]] =
+    (connection: Connection, manager: Using.Manager) =>
+      self.runIO(connection, manager).headOption
+
+  def head[A]()(implicit evd: RESULT <:< Iterable[A]): Sql[A] =
+    (connection: Connection, manager: Using.Manager) =>
+      self.runIO(connection, manager).head
+
+  /**
+   * For queries that always expect at most one row.
+   *
+   * Eg: `SELECT count(*) ...`
+   * */
+  def exactlyOne[A]()(implicit evd: RESULT <:< Iterable[A]): Sql[A] =
+    (connection: Connection, manager: Using.Manager) =>
+      CollectionUtil.exactlyOne(self.runIO(connection, manager))
 
   def recoverWith[B >: RESULT](pf: PartialFunction[Throwable, Sql[B]]): Sql[B] =
     (connection: Connection, manager: Using.Manager) =>
@@ -162,60 +181,16 @@ object SelectSQL {
 
 case class SelectSQL[+ROW, C[+R] <: Iterable[R]](sql: String,
                                                  params: Params)(implicit rowReader: RowReader[ROW],
-                                                                 factory: Factory[ROW, C[ROW]]) extends TrackedSQL[C[ROW]] { select =>
+                                                                 factory: Factory[ROW, C[ROW]]) extends TrackedSQL[C[ROW]] {
 
   def headOption(): TrackedSQL[Option[ROW]] =
-    new TrackedSQL[Option[ROW]] {
-      override def sql: String =
-        select.sql
-
-      override def params: Params =
-        select.params
-
-      override def runIO(connection: Connection, manager: Using.Manager): Option[ROW] =
-        select
-          .runIO(connection, manager)
-          .iterator
-          .nextOption()
-    }
+    super.headOption().toTracked(sql, params)
 
   def head(): TrackedSQL[ROW] =
-    new TrackedSQL[ROW] {
-      override def sql: String =
-        select.sql
+    super.head().toTracked(sql, params)
 
-      override def params: Params =
-        select.params
-
-      override def runIO(connection: Connection, manager: Using.Manager): ROW =
-        select
-          .runIO(connection, manager)
-          .iterator
-          .next()
-    }
-
-  /**
-   * For queries that always expect at most one row.
-   *
-   * Eg: `SELECT count(*) ...`
-   * */
   def exactlyOne(): TrackedSQL[ROW] =
-    new TrackedSQL[ROW] {
-      override def sql: String =
-        select.sql
-
-      override def params: Params =
-        select.params
-
-      override def runIO(connection: Connection, manager: Using.Manager): ROW = {
-        val result = select.runIO(connection, manager)
-        val resultSize = result.size
-        if (resultSize != 0)
-          throw new Exception(s"Expect 1 row. Actual $resultSize")
-        else
-          result.head
-      }
-    }
+    super.exactlyOne().toTracked(sql, params)
 
   override def runIO(connection: Connection, manager: Using.Manager): C[ROW] =
     JustSQL.select[ROW, C[ROW]](sql, params)(connection, manager)
