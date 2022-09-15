@@ -26,8 +26,8 @@ import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try, Using}
 
 abstract class Sql[+RESULT] { self =>
-  def runIO(connection: Connection,
-            manager: Using.Manager): RESULT
+  protected def runIO(connection: Connection,
+                      manager: Using.Manager): RESULT
 
   def runSync()(implicit db: JustSQL): Try[RESULT] =
     db connectAndRun runIO
