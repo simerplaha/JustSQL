@@ -64,13 +64,11 @@ sealed trait Sql[+RESULT] { self =>
         }
     }
 
-
   def foreach[B](f: RESULT => B): Sql[Unit] =
     new Sql[Unit] {
       override protected def runIO(connection: Connection, manager: Using.Manager): Unit =
         f(self.runIO(connection, manager))
     }
-
 
   def headOption[A]()(implicit evd: RESULT <:< Iterable[A]): Sql[Option[A]] =
     new Sql[Option[A]] {
@@ -78,13 +76,11 @@ sealed trait Sql[+RESULT] { self =>
         self.runIO(connection, manager).headOption
     }
 
-
   def head[A]()(implicit evd: RESULT <:< Iterable[A]): Sql[A] =
     new Sql[A] {
       override protected def runIO(connection: Connection, manager: Using.Manager): A =
         self.runIO(connection, manager).head
     }
-
 
   /**
    * For queries that always expect at most one row.
@@ -97,7 +93,6 @@ sealed trait Sql[+RESULT] { self =>
         CollectionUtil.exactlyOne(self.runIO(connection, manager))
     }
 
-
   def recoverWith[B >: RESULT](pf: PartialFunction[Throwable, Sql[B]]): Sql[B] =
     new Sql[B] {
       override protected def runIO(connection: Connection, manager: Using.Manager): B =
@@ -109,7 +104,6 @@ sealed trait Sql[+RESULT] { self =>
         }
     }
 
-
   def recover[B >: RESULT](pf: PartialFunction[Throwable, B]): Sql[B] =
     new Sql[B] {
       override protected def runIO(connection: Connection, manager: Using.Manager): B =
@@ -117,7 +111,6 @@ sealed trait Sql[+RESULT] { self =>
           self.runIO(connection, manager)
         catch pf
     }
-
 
   private[justsql] def toTracked[B >: RESULT](trackedSQL: String, trackedParams: Params): TrackedSQL[B] =
     new TrackedSQL[B] {
@@ -150,7 +143,7 @@ sealed trait TrackedSQL[+RESULT] extends Sql[RESULT] { self =>
   override def recover[B >: RESULT](pf: PartialFunction[Throwable, B]): TrackedSQL[B] =
     super.recover(pf).toTracked(sql, params)
 
-  private def withPrefix[C[+R] <: Iterable[R]](prefix: String)(implicit factory: Factory[String, C[String]]): Sql[C[String]] =
+  private def withPrefix[C[+R] <: Iterable[R]](prefix: String)(implicit factory: Factory[String, C[String]]): TrackedSQL[C[String]] =
     new TrackedSQL[C[String]] {
       override def sql: String =
         prefix + self.sql
@@ -162,10 +155,10 @@ sealed trait TrackedSQL[+RESULT] extends Sql[RESULT] { self =>
         JustSQL.select[String, C[String]](sql, params)(connection, manager)
     }
 
-  def explain[C2[+R] <: Iterable[R]]()(implicit factory: Factory[String, C2[String]]): Sql[C2[String]] =
+  def explain[C2[+R] <: Iterable[R]]()(implicit factory: Factory[String, C2[String]]): TrackedSQL[C2[String]] =
     withPrefix("EXPLAIN\n")
 
-  def explainAnalyze[C2[+R] <: Iterable[R]]()(implicit factory: Factory[String, C2[String]]): Sql[C2[String]] =
+  def explainAnalyze[C2[+R] <: Iterable[R]]()(implicit factory: Factory[String, C2[String]]): TrackedSQL[C2[String]] =
     withPrefix("EXPLAIN ANALYZE\n")
 }
 
