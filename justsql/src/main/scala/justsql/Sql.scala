@@ -169,6 +169,29 @@ case class SelectSQL[ROW, C[R] <: Iterable[R]](sql: String,
           .nextOption()
     }
 
+  /**
+   * For queries that always expect at most one row.
+   *
+   * Eg: `SELECT count(*) ...`
+   * */
+  def exactlyOne(): TrackedSQL[ROW] =
+    new TrackedSQL[ROW] {
+      override def sql: String =
+        select.sql
+
+      override def params: Params =
+        select.params
+
+      override def runIO(connection: Connection, manager: Using.Manager): ROW = {
+        val result = select.runIO(connection, manager)
+        val resultSize = result.size
+        if (resultSize != 0)
+          throw new Exception(s"Expect 1 row. Actual $resultSize")
+        else
+          result.head
+      }
+    }
+
   override def runIO(connection: Connection, manager: Using.Manager): C[ROW] =
     JustSQL.select[ROW, C[ROW]](sql, params)(connection, manager)
 }
