@@ -160,9 +160,9 @@ object SelectSQL {
   }
 }
 
-case class SelectSQL[ROW, C[R] <: Iterable[R]](sql: String,
-                                               params: Params)(implicit rowReader: RowReader[ROW],
-                                                               factory: Factory[ROW, C[ROW]]) extends TrackedSQL[C[ROW]] { select =>
+case class SelectSQL[+ROW, C[+R] <: Iterable[R]](sql: String,
+                                                 params: Params)(implicit rowReader: RowReader[ROW],
+                                                                 factory: Factory[ROW, C[ROW]]) extends TrackedSQL[C[ROW]] { select =>
 
   def headOption(): TrackedSQL[Option[ROW]] =
     new TrackedSQL[Option[ROW]] {
