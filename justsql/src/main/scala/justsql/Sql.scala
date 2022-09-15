@@ -21,7 +21,7 @@ import scala.collection.Factory
 import scala.collection.immutable.ArraySeq
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
-import scala.util.{Try, Using}
+import scala.util.{Failure, Success, Try, Using}
 
 abstract class Sql[+RESULT] { self =>
   def runIO(connection: Connection,
@@ -48,6 +48,13 @@ abstract class Sql[+RESULT] { self =>
     (connection: Connection, manager: Using.Manager) =>
       f(self.runIO(connection, manager))
         .runIO(connection, manager)
+
+  def flatMapTry[B](f: RESULT => Try[B]): Sql[B] =
+    (connection: Connection, manager: Using.Manager) =>
+      f(self.runIO(connection, manager)) match {
+        case Success(result)    => result
+        case Failure(exception) => throw exception
+      }
 
   def foreach[B](f: RESULT => B): Sql[Unit] =
     (connection: Connection, manager: Using.Manager) =>
@@ -92,6 +99,9 @@ sealed trait TrackedSQL[+RESULT] extends Sql[RESULT] { self =>
 
   override def foreach[B](f: RESULT => B): TrackedSQL[Unit] =
     super.foreach(f).toTracked(sql, params)
+
+  override def flatMapTry[B](f: RESULT => Try[B]): TrackedSQL[B] =
+    super.flatMapTry(f).toTracked(sql, params)
 
   override def recover[B >: RESULT](pf: PartialFunction[Throwable, B]): TrackedSQL[B] =
     super.recover(pf).toTracked(sql, params)
