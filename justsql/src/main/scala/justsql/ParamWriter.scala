@@ -32,7 +32,7 @@ trait ParamWriter[PARAM] extends ((PositionedPreparedStatement, PARAM) => Unit) 
 /** A [[ParamWriter]] with only one parameter to set */
 trait OneParamWriter[P] extends ParamWriter[P] {
 
-  final val paramCount: Int = 1
+  final def paramCount(): Int = 1
 
 }
 

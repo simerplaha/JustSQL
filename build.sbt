@@ -2,6 +2,7 @@ import sbtrelease.ReleasePlugin.autoImport.ReleaseTransformations._
 import xerial.sbt.Sonatype._
 
 val scala213 = "2.13.8"
+val scala3 = "3.2.0"
 
 val scalaOptions =
   Seq(
@@ -59,10 +60,10 @@ val publishSettings = Seq[Setting[_]](
 
 lazy val testDeps =
   Seq(
-    "ch.qos.logback" % "logback-classic" % "1.2.11" % Test,
+    "ch.qos.logback" % "logback-classic" % "1.4.0" % Test,
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" % Test,
     "org.scalatest" %% "scalatest" % "3.2.12" % Test,
-    "org.postgresql" % "postgresql" % "42.4.2"
+    "org.postgresql" % "postgresql" % "42.5.0" % Test
   )
 
 val commonSettings =

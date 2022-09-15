@@ -23,7 +23,8 @@ import scala.util.Try
 
 object Example extends App {
 
-  implicit val db = JustSQL(datasource = JavaSQLConnector())
+  implicit val db: JustSQL =
+    JustSQL(datasource = JavaSQLConnector())
 
   /** WRITING */
   val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().runSync() //create table
@@ -77,7 +78,8 @@ object Example extends App {
   //  case class that represents a table row
   case class User(id: Int, name: String)
   //Build a row reader for User
-  implicit val userReader = RowReader(User.tupled)
+  implicit val userReader: RowReader[User] =
+    RowReader(User.tupled)
 
   //Select all users
   val users: Try[ArraySeq[User]] = "SELECT * FROM USERS".select[User]().runSync()

@@ -127,9 +127,9 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
       /** SELECT */
       //Select using typed API
-      "SELECT * FROM TEST_TABLE".select[String]().runSync().success.value shouldBe Array("1", "2", "3")
+      "SELECT * FROM TEST_TABLE".select[String]().runSync().success.value shouldBe ArraySeq("1", "2", "3")
       //Select using Java ResultSet
-      "SELECT * FROM TEST_TABLE".unsafeSelect[String](_.getString("key")).runSync().success.value shouldBe Array("1", "2", "3")
+      "SELECT * FROM TEST_TABLE".unsafeSelect[String](_.getString("key")).runSync().success.value shouldBe ArraySeq("1", "2", "3")
 
       /** COUNT */
       //Count using typed API
@@ -192,7 +192,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
       /** SELECT USING A CASE CLASS */
       "SELECT * FROM TEST_TABLE".select[Row]().runSync().success.value shouldBe
-        Array(
+        ArraySeq(
           Row(int = 0, string = "string1", bool = true),
           Row(int = 1, string = "string2", bool = false),
           Row(int = 2, string = "string3", bool = true)
@@ -200,7 +200,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
       /** SELECT USING A TUPLE */
       "SELECT * FROM TEST_TABLE".select[(Int, String, Boolean)]().runSync().success.value shouldBe
-        Array(
+        ArraySeq(
           (0, "string1", true),
           (1, "string2", false),
           (2, "string3", true)
