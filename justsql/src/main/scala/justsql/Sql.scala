@@ -25,7 +25,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try, Using}
 
-abstract class Sql[+RESULT] { self =>
+sealed trait Sql[+RESULT] { self =>
   protected def runIO(connection: Connection,
                       manager: Using.Manager): RESULT
 
@@ -37,8 +37,10 @@ abstract class Sql[+RESULT] { self =>
     Future.delegate(Future.fromTry(runSync()))
 
   def map[B](f: RESULT => B): Sql[B] =
-    (connection: Connection, manager: Using.Manager) =>
-      f(self.runIO(connection, manager))
+    new Sql[B] {
+      override protected def runIO(connection: Connection, manager: Using.Manager): B =
+        f(self.runIO(connection, manager))
+    }
 
   /**
    * Runs each [[Sql]] one after another.
@@ -47,28 +49,42 @@ abstract class Sql[+RESULT] { self =>
    * */
 
   def flatMap[B](f: RESULT => Sql[B]): Sql[B] =
-    (connection: Connection, manager: Using.Manager) =>
-      f(self.runIO(connection, manager))
-        .runIO(connection, manager)
+    new Sql[B] {
+      override protected def runIO(connection: Connection, manager: Using.Manager): B =
+        f(self.runIO(connection, manager))
+          .runIO(connection, manager)
+    }
 
   def flatMapTry[B](f: RESULT => Try[B]): Sql[B] =
-    (connection: Connection, manager: Using.Manager) =>
-      f(self.runIO(connection, manager)) match {
-        case Success(result)    => result
-        case Failure(exception) => throw exception
-      }
+    new Sql[B] {
+      override protected def runIO(connection: Connection, manager: Using.Manager): B =
+        f(self.runIO(connection, manager)) match {
+          case Success(result)    => result
+          case Failure(exception) => throw exception
+        }
+    }
+
 
   def foreach[B](f: RESULT => B): Sql[Unit] =
-    (connection: Connection, manager: Using.Manager) =>
-      f(self.runIO(connection, manager))
+    new Sql[Unit] {
+      override protected def runIO(connection: Connection, manager: Using.Manager): Unit =
+        f(self.runIO(connection, manager))
+    }
+
 
   def headOption[A]()(implicit evd: RESULT <:< Iterable[A]): Sql[Option[A]] =
-    (connection: Connection, manager: Using.Manager) =>
-      self.runIO(connection, manager).headOption
+    new Sql[Option[A]] {
+      override protected def runIO(connection: Connection, manager: Using.Manager): Option[A] =
+        self.runIO(connection, manager).headOption
+    }
+
 
   def head[A]()(implicit evd: RESULT <:< Iterable[A]): Sql[A] =
-    (connection: Connection, manager: Using.Manager) =>
-      self.runIO(connection, manager).head
+    new Sql[A] {
+      override protected def runIO(connection: Connection, manager: Using.Manager): A =
+        self.runIO(connection, manager).head
+    }
+
 
   /**
    * For queries that always expect at most one row.
@@ -76,23 +92,32 @@ abstract class Sql[+RESULT] { self =>
    * Eg: `SELECT count(*) ...`
    * */
   def exactlyOne[A]()(implicit evd: RESULT <:< Iterable[A]): Sql[A] =
-    (connection: Connection, manager: Using.Manager) =>
-      CollectionUtil.exactlyOne(self.runIO(connection, manager))
+    new Sql[A] {
+      override protected def runIO(connection: Connection, manager: Using.Manager): A =
+        CollectionUtil.exactlyOne(self.runIO(connection, manager))
+    }
+
 
   def recoverWith[B >: RESULT](pf: PartialFunction[Throwable, Sql[B]]): Sql[B] =
-    (connection: Connection, manager: Using.Manager) =>
-      try
-        self.runIO(connection, manager)
-      catch {
-        case throwable: Throwable =>
-          pf(throwable).runIO(connection, manager)
-      }
+    new Sql[B] {
+      override protected def runIO(connection: Connection, manager: Using.Manager): B =
+        try
+          self.runIO(connection, manager)
+        catch {
+          case throwable: Throwable =>
+            pf(throwable).runIO(connection, manager)
+        }
+    }
+
 
   def recover[B >: RESULT](pf: PartialFunction[Throwable, B]): Sql[B] =
-    (connection: Connection, manager: Using.Manager) =>
-      try
-        self.runIO(connection, manager)
-      catch pf
+    new Sql[B] {
+      override protected def runIO(connection: Connection, manager: Using.Manager): B =
+        try
+          self.runIO(connection, manager)
+        catch pf
+    }
+
 
   private[justsql] def toTracked[B >: RESULT](trackedSQL: String, trackedParams: Params): TrackedSQL[B] =
     new TrackedSQL[B] {
