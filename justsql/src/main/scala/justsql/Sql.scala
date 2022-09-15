@@ -155,10 +155,10 @@ sealed trait TrackedSQL[+RESULT] extends Sql[RESULT] { self =>
         JustSQL.select[String, C[String]](sql, params)(connection, manager)
     }
 
-  def explain[C2[+R] <: Iterable[R]]()(implicit factory: Factory[String, C2[String]]): TrackedSQL[C2[String]] =
+  def explain[C[+R] <: Iterable[R]]()(implicit factory: Factory[String, C[String]]): TrackedSQL[C[String]] =
     withPrefix("EXPLAIN\n")
 
-  def explainAnalyze[C2[+R] <: Iterable[R]]()(implicit factory: Factory[String, C2[String]]): TrackedSQL[C2[String]] =
+  def explainAnalyze[C[+R] <: Iterable[R]]()(implicit factory: Factory[String, C[String]]): TrackedSQL[C[String]] =
     withPrefix("EXPLAIN ANALYZE\n")
 }
 
