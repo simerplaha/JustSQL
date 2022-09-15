@@ -27,7 +27,12 @@ object Example extends App {
 
   /** WRITING */
   val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().runSync() //create table
-  val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().runSync() //insert rows
+  val insert: Try[Int] =
+    """
+      INSERT INTO USERS (id, name)
+      |          VALUES (1, 'Harry'),
+      |                 (2, 'Ayman')
+      |""".stripMargin.update().runSync() //insert rows
 
   /** For-comprehension */
   val createAndInsert: Sql[(Int, ArraySeq[Int])] =
@@ -61,8 +66,7 @@ object Example extends App {
            |                    (${2.?}, ${"Ayman".?});
            |
            |COMMIT;
-           |"""
-          .stripMargin
+           |""".stripMargin
     }.recoverWith {
       _ =>
         "ROLLBACK".update() //if there was an error rollback
@@ -101,7 +105,7 @@ object Example extends App {
   val query1: SelectSQL[Int, ArraySeq] =
     "SELECT max(id) from USERS".select[Int]()
 
-  //  This query embeds query1 by calling `query1.embed`
+  //This query embeds query1 by calling `query1.embed`
   val query2: Try[ArraySeq[String]] =
     SelectSQL[String] {
       implicit params: Params =>

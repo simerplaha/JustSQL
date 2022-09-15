@@ -2,7 +2,8 @@
 
 Just write SQL as `String` and parse results into types.
 
-JustSQL is a thin facade over `java.sql` types that adds type-safety to query results & parameters.
+JustSQL is a lightweight library that adds type-safety to query results & parameters,
+allowing unrestricted plain SQL queries.
 
 Can be used in parallel with other libraries.
 Interop for [Slick](#slick-interop) or [HikariCP](#hikaricp-interop) is provided.
@@ -11,16 +12,15 @@ Small: 407KB jar file. No external core dependency.
 
 ## Why another SQL library/facade?
 
-- ORMs and custom string interpolation solutions are nice, but most are incomplete and restrictive, specially
+- ORMs, DSLs and custom string interpolation solutions are nice, but most are incomplete and restrictive, specially
   when writing complex SQL queries.
 - Debugging performance issues by ORM generated queries, translating back and forth between SQL and ORM types is
   time-consuming.
-- Many ORMs do not have any support for `EXPLAIN ANALYZE`.
-- IDEs have much better support/plugins for plain SQL queries and default Scala `s` string interpolation
-  VS custom `sql` string interpolation and DSLs.
+- Many ORMs do not have any support for `EXPLAIN ANALYZE` statements.
+- IDEs have much better support/plugins for executing and analysing plain SQL queries versus custom DSLs.
 
 Performance critical applications that want to write unrestricted SQL with type-safety added
-to query results & parameters would find JustSQL much easy to work with.
+to query results & parameters would find JustSQL easy to work with.
 
 # Sponsors
 
@@ -67,7 +67,7 @@ See quick-start [Example.scala](/justsql/src/test/scala/example/Example.scala).
 # Create JustSQL
 
 I'm using Postgres and the default `JavaSQLConnector` here, but you should a high-performance
-JDBC connection pool library. See [Slick Interop](#slick-interop) or [HikariCP Interop](#hikaricp-interop).
+JDBC connection pool library. See interop for [Slick](#slick-interop) or [HikariCP](#hikaricp-interop).
 
 A `JustSQL` instance is only required when executing a query i.e. when invoking `runSync()` or `runAsync()`.
 
@@ -84,32 +84,30 @@ implicit val db = JustSQL(datasource = JavaSQLConnector()) //create database ins
 
 Queries that mutate like `CREATE, INSERT OR UPDATE` queries are executed via `update()` function.
 
-Let's create our example `USERS` table
-
-`update()` returns an `Option` which is `None` if the query returns count `0`, else it's `Some(count)`.
+Let's create our example `USERS` table.
 
 ```scala
 //create table
-val create: Try[Option[Int]] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().runSync()
+val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().runSync()
 //insert rows
-val insert: Try[Option[Int]] =
+val insert: Try[Int] =
   """
-    |INSERT INTO USERS (id, name)
-    |VALUES (1, 'Harry'),
-    |       (2, 'Ayman')
-    |""".stripMargin.update().runSync() //insert rows
+    INSERT INTO USERS (id, name)
+    |          VALUES (1, 'Harry'),
+    |                 (2, 'Ayman')
+    |""".stripMargin.update().runSync()
 ```
 
 ## Using for-comprehension
 
 ```scala
-val createAndInsert: Sql[(Int, Int), Option] =
+val createAndInsert: Sql[(Int, ArraySeq[Int])] =
   for {
+    insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".select[Int]()
     create <- "CREATE TABLE USERS (id INT, name VARCHAR)".update()
-    insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
   } yield (create, insert)
 
-val result: Try[Option[(Int, Int)]] = createAndInsert.runSync()
+val result: Try[(Int, ArraySeq[Int])] = createAndInsert.runSync()
 ```
 
 # Query parameters
@@ -120,7 +118,7 @@ The above `INSERT` query can be written with parameters as following
 
 ```scala
 //Or insert using parameters
-val insertParametric: Try[Option[Int]] =
+val insertParametric: Try[Int] =
   UpdateSQL {
     implicit params =>
       s"""
@@ -136,7 +134,7 @@ val insertParametric: Try[Option[Int]] =
 Being just SQL, transactions are written with the usual `BEGIN;` and `COMMIT;` statements.
 
 ```scala
-val transaction: Try[Option[Int]] =
+val transaction: Try[Int] =
   UpdateSQL {
     implicit params =>
       s"""
@@ -148,8 +146,7 @@ val transaction: Try[Option[Int]] =
          |                    (${2.?}, ${"Ayman".?});
          |
          |COMMIT;
-         |"""
-        .stripMargin
+         |""".stripMargin
   }.recoverWith {
     _ =>
       "ROLLBACK".update() //if there was an error rollback
