@@ -30,27 +30,27 @@ object Example extends App {
   val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().runSync() //create table
   val insert: Try[Int] =
     """
-      INSERT INTO USERS (id, name)
-      |          VALUES (1, 'Harry'),
-      |                 (2, 'Ayman')
+      |INSERT INTO USERS (id, name)
+      |           VALUES (1, 'Harry'),
+      |                  (2, 'Ayman')
       |""".stripMargin.update().runSync() //insert rows
 
   /** For-comprehension */
-  val createAndInsert: Sql[(Int, ArraySeq[Int])] =
+  val createAndInsert: Sql[(Int, Int)] =
     for {
-      insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".select[Int]()
       create <- "CREATE TABLE USERS (id INT, name VARCHAR)".update()
+      insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
     } yield (create, insert)
 
-  val result: Try[(Int, ArraySeq[Int])] = createAndInsert.runSync()
+  val result: Try[(Int, Int)] = createAndInsert.runSync()
 
   val insertParametric: Try[Int] =
     UpdateSQL {
       implicit params =>
         s"""
-           |INSERT INTO USERS (id, name)
-           |     VALUES (${1.?}, ${"Harry".?}),
-           |            (${2.?}, ${"Ayman".?})
+           |INSERT INTO USERS  (id, name)
+           |            VALUES (${1.?}, ${"Harry".?}),
+           |                   (${2.?}, ${"Ayman".?})
            |""".stripMargin
     }.runSync()
 
@@ -61,9 +61,10 @@ object Example extends App {
         s"""
            |BEGIN;
            |
-           |CREATE TABLE USERS (id INT, name VARCHAR);
-           |INSERT INTO USERS   (id, name)
-           |            VALUES  (${1.?}, ${"Harry".?}),
+           |CREATE TABLE USERS  (id INT, name VARCHAR);
+           |
+           |INSERT INTO  USERS  (id, name)
+           |             VALUES (${1.?}, ${"Harry".?}),
            |                    (${2.?}, ${"Ayman".?});
            |
            |COMMIT;

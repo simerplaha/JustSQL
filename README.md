@@ -14,13 +14,10 @@ Small: 407KB jar file. No external core dependency.
 
 - ORMs, DSLs and custom string interpolation solutions are nice, but most are incomplete and restrictive, specially
   when writing complex SQL queries.
-- Debugging performance issues by ORM generated queries, translating back and forth between SQL and ORM types is
+- Debugging performance issues in ORM generated queries, translating back and forth between SQL and ORM types is
   time-consuming.
 - Many ORMs do not have any support for `EXPLAIN ANALYZE` statements.
 - IDEs have much better support/plugins for executing and analysing plain SQL queries versus custom DSLs.
-
-Performance critical applications that want to write unrestricted SQL with type-safety added
-to query results & parameters would find JustSQL easy to work with.
 
 # Sponsors
 
@@ -66,13 +63,13 @@ See quick-start [Example.scala](/justsql/src/test/scala/example/Example.scala).
 
 # Create JustSQL
 
-I'm using Postgres and the default `JavaSQLConnector` here, but you should a high-performance
+I'm using Postgres and the default `JavaSQLConnector` here, but you should use a high-performance
 JDBC connection pool library. See interop for [Slick](#slick-interop) or [HikariCP](#hikaricp-interop).
 
 A `JustSQL` instance is only required when executing a query i.e. when invoking `runSync()` or `runAsync()`.
 
-Everywhere else queries are declarative, so you define your queries without executing them and so they can
-be [composed/embed](#embedcompose-queries) in other queries.
+Everywhere else queries are declarative, so you define your queries without executing them so they can be
+[embedded](#embed-queries) and [composed](#compose-queries).
 
 ```scala
 import justsql._ //single import
@@ -92,22 +89,22 @@ val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().runS
 //insert rows
 val insert: Try[Int] =
   """
-    INSERT INTO USERS (id, name)
-    |          VALUES (1, 'Harry'),
-    |                 (2, 'Ayman')
+    |INSERT INTO USERS (id, name)
+    |           VALUES (1, 'Harry'),
+    |                  (2, 'Ayman')
     |""".stripMargin.update().runSync()
 ```
 
 ## Using for-comprehension
 
 ```scala
-val createAndInsert: Sql[(Int, ArraySeq[Int])] =
+val createAndInsert: Sql[(Int, Int)] =
   for {
-    insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".select[Int]()
     create <- "CREATE TABLE USERS (id INT, name VARCHAR)".update()
+    insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
   } yield (create, insert)
 
-val result: Try[(Int, ArraySeq[Int])] = createAndInsert.runSync()
+val result: Try[(Int, Int)] = createAndInsert.runSync()
 ```
 
 # Query parameters
@@ -123,8 +120,8 @@ val insertParametric: Try[Int] =
     implicit params =>
       s"""
          |INSERT INTO USERS (id, name)
-         |     VALUES (${1.?}, ${"Harry".?}),
-         |            (${2.?}, ${"Ayman".?})
+         |           VALUES (${1.?}, ${"Harry".?}),
+         |                  (${2.?}, ${"Ayman".?})
          |""".stripMargin
   }.runSync()
 ```
@@ -141,9 +138,10 @@ val transaction: Try[Int] =
          |BEGIN;
          |
          |CREATE TABLE USERS (id INT, name VARCHAR);
-         |INSERT INTO USERS   (id, name)
-         |            VALUES  (${1.?}, ${"Harry".?}),
-         |                    (${2.?}, ${"Ayman".?});
+         |
+         |INSERT INTO USERS (id, name)
+         |           VALUES (${1.?}, ${"Harry".?}),
+         |                  (${2.?}, ${"Ayman".?});
          |
          |COMMIT;
          |""".stripMargin
@@ -170,7 +168,7 @@ Read all `User`s
 val users: Try[ArraySeq[User]] = "SELECT * FROM USERS".select[User]().runSync()
 ```
 
-## Or if you want a `List` or any other collection, provide it as a type argument.
+## Or if you want a `List`, provide it as a type argument
 
 ```scala
 val usersCollected: Try[List[User]] = "SELECT * FROM USERS".select[User, List]().runSync()
@@ -188,7 +186,7 @@ val usersParametric: SelectSQL[String, ArraySeq] =
   }
 ```
 
-# Embed/Compose queries
+# Embed queries
 
 Embed queries using `embed` function.
 
@@ -206,6 +204,10 @@ val query2: Try[ArraySeq[String]] =
          |""".stripMargin
   }.runSync()
 ```
+
+# Compose queries
+
+TODO
 
 # Custom `ParamWriter`
 
