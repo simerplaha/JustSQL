@@ -16,12 +16,20 @@
 
 package justsql
 
-case class ParamValueWriter[V](value: V, writer: ParamWriter[V]) {
+import org.scalatest.matchers.should.Matchers._
+import org.scalatest.wordspec.AnyWordSpec
 
-  def set(statement: PositionedPreparedStatement): Unit =
-    writer(
-      statement = statement,
-      paramValue = value
-    )
+class ParamsSpec extends AnyWordSpec {
+
+  "params" should {
+    "dsds" in {
+      implicit val params: Params = Params()
+      params ? 1
+      params ? 2
+
+      params.parameters().map(_.value) shouldBe Array(1, 2)
+
+    }
+  }
 
 }

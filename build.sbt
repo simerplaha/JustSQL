@@ -13,6 +13,15 @@ val scalaOptions =
     "-unchecked",
     "-language:higherKinds",
     "-language:implicitConversions",
+    "-Xfatal-warnings",
+    "-Ywarn-dead-code",
+    "-Ywarn-extra-implicit",
+    "-Ywarn-unused:implicits",
+    "-Ywarn-unused:imports",
+    "-Ywarn-unused:locals",
+    "-Ywarn-unused:params",
+    "-Ywarn-unused:patvars",
+    "-Ywarn-unused:privates",
     "-Xlint"
   )
 

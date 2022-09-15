@@ -25,21 +25,20 @@ object Example extends App {
 
   implicit val db = JustSQL(datasource = JavaSQLConnector())
 
-
   /** WRITING */
-  val create: Try[Option[Int]] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().runSync() //create table
-  val insert: Try[Option[Int]] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().runSync() //insert rows
+  val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().runSync() //create table
+  val insert: Try[Int] = "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update().runSync() //insert rows
 
   /** For-comprehension */
-  val createAndInsert: Sql[(Int, Int), Option] =
+  val createAndInsert: Sql[(Int, ArraySeq[Int])] =
     for {
+      insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".select[Int]()
       create <- "CREATE TABLE USERS (id INT, name VARCHAR)".update()
-      insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()
     } yield (create, insert)
 
-  val result: Try[Option[(Int, Int)]] = createAndInsert.runSync()
+  val result: Try[(Int, ArraySeq[Int])] = createAndInsert.runSync()
 
-  val insertParametric: Try[Option[Int]] =
+  val insertParametric: Try[Int] =
     UpdateSQL {
       implicit params =>
         s"""
@@ -50,7 +49,7 @@ object Example extends App {
     }.runSync()
 
   //  Or Transactionally
-  val transaction: Try[Option[Int]] =
+  val transaction: Try[Int] =
     UpdateSQL {
       implicit params =>
         s"""
@@ -91,7 +90,7 @@ object Example extends App {
   //Select first row
   val head: Try[Option[Int]] = "SELECT count(*) FROM USERS".select[Int]().headOption().runSync()
   //Select all and then map to names
-  val userNamesMap: Try[ArraySeq[String]] = "SELECT * FROM USERS".select[User]().map(_.name).runSync()
+  //  val userNamesMap: Try[ArraySeq[String]] = "SELECT * FROM USERS".select[User]().map(_.name).runSync()
   //Unsafe select
   val unsafeNames: Try[ArraySeq[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name")).runSync()
   //Unsafe select head
@@ -102,7 +101,7 @@ object Example extends App {
   val query1: SelectSQL[Int, ArraySeq] =
     "SELECT max(id) from USERS".select[Int]()
 
-  //This query embeds query1 by calling `query1.embed`
+  //  This query embeds query1 by calling `query1.embed`
   val query2: Try[ArraySeq[String]] =
     SelectSQL[String] {
       implicit params: Params =>

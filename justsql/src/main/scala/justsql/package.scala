@@ -29,16 +29,20 @@ package object justsql {
                       classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] =
       SelectSQL(sql, Params())
 
-    def select[ROW, C[+R] <: IterableOnce[R]]()(implicit rowReader: RowReader[ROW],
-                                                classTag: ClassTag[ROW],
-                                                factory: Factory[ROW, C[ROW]]): SelectSQL[ROW, C] =
+    def select[ROW, C[+R] <: Iterable[R]]()(implicit rowReader: RowReader[ROW],
+                                            factory: Factory[ROW, C[ROW]]): SelectSQL[ROW, C] =
       SelectSQL[ROW, C](sql, Params())
+
+    def explain[C[+R] <: Iterable[R]]()(implicit factory: Factory[String, C[String]]): Sql[C[String]] =
+      SelectSQL[String, C](sql, Params()).explain()
+
+    def explainAnalyze[C[+R] <: Iterable[R]]()(implicit factory: Factory[String, C[String]]): Sql[C[String]] =
+      SelectSQL[String, C](sql, Params()).explainAnalyze()
 
     def unsafeSelect[ROW](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] =
       SelectSQL.unsafe(sql)(rowParser(_))
 
-    def unsafeSelectC[ROW, C[+R] <: IterableOnce[R]](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW],
-                                                                                  factory: Factory[ROW, C[ROW]]): SelectSQL[ROW, C] =
+    def unsafeSelectC[ROW, C[+R] <: Iterable[R]](rowParser: ResultSet => ROW)(implicit factory: Factory[ROW, C[ROW]]): SelectSQL[ROW, C] =
       SelectSQL.unsafeC[ROW, C](sql)(rowParser(_))
   }
 
@@ -54,7 +58,7 @@ package object justsql {
       builder ? param
   }
 
-  implicit class EmbedSqlActionImplicits[+ROW, C[+R] <: Iterable[R]](val sql: TrackedSQL[ROW, C]) extends AnyVal {
+  implicit class EmbedSqlActionImplicits[A](val sql: TrackedSQL[A]) extends AnyVal {
     def embed(implicit builder: Params): String =
       builder embed sql
   }

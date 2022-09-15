@@ -25,13 +25,10 @@ object Params {
     "?"
 }
 
-/**
- * `?` indicates each parameter is comma seperated ?, ?, ?, ?
- * */
 case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]] = ListBuffer.empty) extends AnyVal { self =>
 
   /** Immutable params */
-  def params(): Array[ParamValueWriter[_]] =
+  def parameters(): Array[ParamValueWriter[_]] =
     paramsMut.toArray
 
   @inline def ?[P](param: P)(implicit sqlParam: ParamWriter[P]): String =
@@ -57,7 +54,7 @@ case class Params(private val paramsMut: ListBuffer[ParamValueWriter[_]] = ListB
         apply(param)(sqlParam)
     }
 
-  @inline def embed[ROW, C[+R] <: Iterable[R]](typedSQL: TrackedSQL[ROW, C]): String = {
+  @inline def embed[A](typedSQL: TrackedSQL[A]): String = {
     paramsMut addAll typedSQL.params.paramsMut
     typedSQL.sql
   }

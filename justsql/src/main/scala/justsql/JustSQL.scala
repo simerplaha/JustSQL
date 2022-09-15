@@ -19,7 +19,6 @@ package justsql
 import java.io.Closeable
 import java.sql.{Connection, PreparedStatement, ResultSet}
 import scala.collection.Factory
-import scala.reflect.ClassTag
 import scala.util.{Try, Using}
 
 object JustSQL {
@@ -40,9 +39,9 @@ object JustSQL {
     statement.executeUpdate()
   }
 
-  def select[ROW: ClassTag, C](sql: String, params: Params)(connection: Connection,
-                                                            manager: Using.Manager)(implicit rowReader: RowReader[ROW],
-                                                                                    factory: Factory[ROW, C]): C = {
+  def select[ROW, C](sql: String, params: Params)(connection: Connection,
+                                                  manager: Using.Manager)(implicit rowReader: RowReader[ROW],
+                                                                          factory: Factory[ROW, C]): C = {
     val statement = manager(connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
     setParams(params, statement)
 
@@ -54,21 +53,19 @@ object JustSQL {
 
       resultSet.beforeFirst()
 
-      while (resultSet.next()) {
+      while (resultSet.next())
         builder addOne rowReader(resultSet)
-      }
+
       builder.result()
     } else {
-      val builder = factory.newBuilder
-      builder.sizeHint(0)
-      builder.result()
+      factory.newBuilder.result()
     }
   }
 }
 
 class JustSQL(connector: SQLConnector) extends Closeable {
 
-  def connectAndRun[ROW](f: (Connection, Using.Manager) => ROW): Try[ROW] =
+  def connectAndRun[RESULT](f: (Connection, Using.Manager) => RESULT): Try[RESULT] =
     Using.Manager {
       manager =>
         val connection = manager(connector.getConnection())
