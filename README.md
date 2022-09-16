@@ -77,7 +77,7 @@ import justsql._ //single import
 implicit val db = JustSQL(datasource = JavaSQLConnector()) //create database instance
 ```
 
-# update()
+# `update()`
 
 Queries that mutate like `CREATE, INSERT OR UPDATE` queries are executed via `update()` function.
 
@@ -95,7 +95,7 @@ val insert: Try[Int] =
     |""".stripMargin.update().runSync()
 ```
 
-## Using for-comprehension
+## `for` comprehension
 
 ```scala
 val createAndInsert: Sql[(Int, Int)] =
@@ -151,7 +151,7 @@ val transaction: Try[Int] =
   }.runSync()
 ```
 
-# select()
+# `select()`
 
 First, we need to create a `case class` that represents a table row, which in our case is a `User`
 
@@ -186,7 +186,11 @@ val usersParametric: SelectSQL[String, ArraySeq] =
   }
 ```
 
-# Embed queries
+# `head()`, `headOption()`, `exactlyOne()`
+
+TODO
+
+# Embed queries - `embed`
 
 Embed queries using `embed` function.
 
