@@ -249,7 +249,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
               s"""
                  |SELECT max(int) from TEST_TABLE where bool = ${true.?}
                  |""".stripMargin
-          }
+          }.exactlyOne()
 
         val finalQuery =
           SelectSQL[Int] {
