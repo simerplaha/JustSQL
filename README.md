@@ -2,7 +2,7 @@
 
 Just write SQL as `String` and parse results into types.
 
-JustSQL is a lightweight library that adds type-safety to query results & parameters,
+JustSQL is a lightweight SQL library that adds type-safety to query results & parameters,
 allowing unrestricted plain SQL queries.
 
 Can be used in parallel with other libraries.
