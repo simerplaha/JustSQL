@@ -21,14 +21,82 @@ import org.scalatest.wordspec.AnyWordSpec
 
 class ParamsSpec extends AnyWordSpec {
 
-  "params" should {
-    "dsds" in {
-      implicit val params: Params = Params()
-      params ? 1
-      params ? 2
+  "?" should {
+    "accumulate parameters" when {
+      "single params" in {
+        val params: Params = Params()
 
-      params.parameters().map(_.value) shouldBe Array(1, 2)
+        params ? 1 shouldBe "?"
+        params ? 2 shouldBe "?"
+        params ? "three" shouldBe "?"
+        params ? true shouldBe "?"
 
+        params.parameters().map(_.value) shouldBe Array(1, 2, "three", true)
+      }
+
+      "tuple params" in {
+        val params: Params = Params()
+
+        params ? (1, 2) shouldBe "?, ?"
+        params ? (3, 4, true) shouldBe "?, ?, ?"
+        params ? (5, false, 6, "three") shouldBe "?, ?, ?, ?"
+
+        params.parameters().map(_.value) shouldBe
+          Array(
+            (1, 2),
+            (3, 4, true),
+            (5, false, 6, "three")
+          )
+      }
+
+      "iterable params" in {
+        val params: Params = Params()
+
+        params ? List(1, 2) shouldBe "?, ?"
+        params ? List(3, 4) shouldBe "?, ?"
+
+        params.parameters().map(_.value) shouldBe Array(1, 2, 3, 4)
+      }
+    }
+  }
+
+  "embed" should {
+    "embed query with no parameters" in {
+      val sql1 =
+        SelectSQL[Int] {
+          "SELECT * FROM TABLE"
+        }
+
+      val sql2 =
+        SelectSQL[Int] {
+          implicit param: Params =>
+            s"SELECT * FROM TABLE WHERE column1 = ${1.?} and column2 = (${sql1.embed})"
+        }
+      //parameters are merged for the second query
+      sql2.params.parameters().map(_.value) should contain only 1
+
+      //sql1 params are unchanged
+      sql1.params.parameters().map(_.value) shouldBe empty
+    }
+
+    "merge parameter" in {
+      val sql1 =
+        SelectSQL[Int] {
+          implicit param: Params =>
+            s"SELECT * FROM TABLE WHERE column1 = ${1.?} AND column2 = ${"Wassup!".?}"
+        }
+
+      val sql2 =
+        SelectSQL[Int] {
+          implicit param: Params =>
+            s"SELECT * FROM TABLE WHERE column1 = ${2.?} and column2 = (${sql1.embed})"
+        }
+
+      //parameters are merged for the second query
+      sql2.params.parameters().map(_.value) shouldBe Array(2, 1, "Wassup!")
+
+      //sql1 params are unchanged
+      sql1.params.parameters().map(_.value) shouldBe Array(1, "Wassup!")
     }
   }
 
