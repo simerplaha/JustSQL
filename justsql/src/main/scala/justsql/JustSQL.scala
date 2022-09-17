@@ -17,7 +17,7 @@
 package justsql
 
 import java.io.Closeable
-import java.sql.{Connection, PreparedStatement, ResultSet}
+import java.sql.{PreparedStatement, ResultSet}
 import scala.collection.Factory
 import scala.util.{Try, Using}
 
@@ -32,16 +32,18 @@ object JustSQL {
     params foreach (_.set(positionedStatements))
   }
 
-  @inline def update(sql: String, params: Params)(connection: Connection,
-                                                  manager: Using.Manager): Int = {
+  @inline def update(sql: String, params: Params)(connectionManager: ConnectionManager): Int = {
+    val manager = connectionManager.manager()
+    val connection = connectionManager.connection()
     val statement = manager(connection.prepareStatement(sql))
     setParams(params, statement)
     statement.executeUpdate()
   }
 
-  def select[ROW, C](sql: String, params: Params)(connection: Connection,
-                                                  manager: Using.Manager)(implicit rowReader: RowReader[ROW],
-                                                                          factory: Factory[ROW, C]): C = {
+  def select[ROW, C](sql: String, params: Params)(connectionManager: ConnectionManager)(implicit rowReader: RowReader[ROW],
+                                                                                        factory: Factory[ROW, C]): C = {
+    val manager = connectionManager.manager()
+    val connection = connectionManager.connection()
     val statement = manager(connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
     setParams(params, statement)
 
@@ -65,11 +67,16 @@ object JustSQL {
 
 class JustSQL(connector: SQLConnector) extends Closeable {
 
-  def connectAndRun[RESULT](f: (Connection, Using.Manager) => RESULT): Try[RESULT] =
+  def connectAndRun[RESULT](f: ConnectionManager => RESULT): Try[RESULT] =
     Using.Manager {
       manager =>
-        val connection = manager(connector.getConnection())
-        f(connection, manager)
+        val connectionManager =
+          LazyConnectionManager(
+            manager = manager,
+            connector = connector
+          )
+
+        f(connectionManager)
     }
 
   override def close(): Unit =

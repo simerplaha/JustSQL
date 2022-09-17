@@ -19,7 +19,6 @@ package example
 import justsql._
 
 import scala.collection.immutable.ArraySeq
-import scala.concurrent.Future
 import scala.util.Try
 
 object Example extends App {
