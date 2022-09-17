@@ -125,6 +125,36 @@ sealed trait Sql[+RESULT] { self =>
     }
 }
 
+object Sql {
+  def sequence[R](queries: Iterable[Sql[R]]): Sql[R] =
+    queries reduce {
+      case (left, right) =>
+        left flatMap {
+          _ =>
+            right
+        }
+    }
+
+  def sequence[R](queries: Sql[R]*): Sql[R] =
+    sequence(queries)
+
+  /**
+   * Executing this via `run`
+   * */
+  def success[V](value: V): Sql[V] =
+    new Sql[V] {
+      override protected def runIO(connection: Connection, manager: Using.Manager): V =
+        value
+    }
+
+  def failure[V](throwable: Throwable): Sql[V] =
+    new Sql[V] {
+      override protected def runIO(connection: Connection, manager: Using.Manager): V =
+        throw throwable
+    }
+
+}
+
 sealed trait TrackedSQL[+RESULT] extends Sql[RESULT] { self =>
 
   def sql: String
