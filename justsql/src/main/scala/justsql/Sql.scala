@@ -19,7 +19,7 @@ package justsql
 import justsql.util.CollectionUtil
 
 import java.sql.ResultSet
-import scala.collection.Factory
+import scala.collection.{BuildFrom, Factory}
 import scala.collection.immutable.ArraySeq
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
@@ -111,6 +111,24 @@ sealed trait Sql[+RESULT] { self =>
         catch pf
     }
 
+  def zipWith[RESULT2, FINAL](that: Sql[RESULT2])(f: (RESULT, RESULT2) => FINAL): Sql[FINAL] =
+    this flatMap {
+      thisResult =>
+        that map {
+          thatResult =>
+            f(thisResult, thatResult)
+        }
+    }
+
+  def zip[RESULT2](that: Sql[RESULT2]): Sql[(RESULT, RESULT2)] =
+    this flatMap {
+      thisResult =>
+        that map {
+          thatResult =>
+            (thisResult, thatResult)
+        }
+    }
+
   private[justsql] def toTracked[B >: RESULT](trackedSQL: String, trackedParams: Params): TrackedSQL[B] =
     new TrackedSQL[B] {
       override def sql: String =
@@ -125,16 +143,13 @@ sealed trait Sql[+RESULT] { self =>
 }
 
 object Sql {
-  def sequence[R](queries: Iterable[Sql[R]]): Sql[R] =
-    queries.reduce[Sql[R]] {
-      case (left, right) =>
-        left flatMap {
-          _ =>
-            right
-        }
-    }
+  def sequence[A, C[+X] <: IterableOnce[X], To](queries: C[Sql[A]])(implicit bf: BuildFrom[C[Sql[A]], A, To]): Sql[To] =
+    queries.iterator.foldLeft(Sql.success(bf.newBuilder(queries))) {
+      (builder, query) =>
+        builder.zipWith(query)(_ addOne _)
+    }.map(_.result())
 
-  def sequence[R](queries: Sql[R]*): Sql[R] =
+  def sequence[R](queries: Sql[R]*): Sql[Seq[R]] =
     sequence(queries)
 
   def success[V](value: V): Sql[V] =
@@ -143,13 +158,13 @@ object Sql {
         value
     }
 
-  def failure[V](throwable: Throwable): Sql[V] =
-    new Sql[V] {
-      override protected def runIO(connectionManager: SQLConnectionManager): V =
+  def failure[R](throwable: Throwable): Sql[R] =
+    new Sql[R] {
+      override protected def runIO(connectionManager: SQLConnectionManager): R =
         throw throwable
     }
 
-  def fromTry[A](tried: Try[A]): Sql[A] =
+  def fromTry[R](tried: Try[R]): Sql[R] =
     tried match {
       case Failure(exception) => Sql.failure(exception)
       case Success(value)     => Sql.success(value)
