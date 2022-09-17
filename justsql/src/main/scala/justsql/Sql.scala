@@ -149,6 +149,12 @@ object Sql {
         throw throwable
     }
 
+  def fromTry[A](tried: Try[A]): Sql[A] =
+    tried match {
+      case Failure(exception) => Sql.failure(exception)
+      case Success(value)     => Sql.success(value)
+    }
+
 }
 
 sealed trait TrackedSQL[+RESULT] extends Sql[RESULT] { self =>
