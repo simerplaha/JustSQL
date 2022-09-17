@@ -24,7 +24,7 @@ import scala.util.Try
 object Example extends App {
 
   implicit val db: JustSQL =
-    JustSQL(datasource = JavaSQLConnector())
+    JustSQL(connector = JavaSQLConnector())
 
   /** WRITING */
   val create: Try[Int] = "CREATE TABLE USERS (id INT, name VARCHAR)".update().runSync() //create table
@@ -97,7 +97,7 @@ object Example extends App {
   //Select first row
   val head: Try[Option[Int]] = "SELECT count(*) FROM USERS".select[Int]().headOption().runSync()
   //Select all and then map to names
-  //  val userNamesMap: Try[ArraySeq[String]] = "SELECT * FROM USERS".select[User]().map(_.name).runSync()
+  val userNamesMap: Try[ArraySeq[String]] = "SELECT * FROM USERS".select[User]().map(_.map(_.name)).runSync()
   //Unsafe select
   val unsafeNames: Try[ArraySeq[String]] = "SELECT * FROM USERS".unsafeSelect(_.getString("name")).runSync()
   //Unsafe select head

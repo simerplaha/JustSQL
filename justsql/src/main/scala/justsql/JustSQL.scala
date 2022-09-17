@@ -23,8 +23,8 @@ import scala.util.{Try, Using}
 
 object JustSQL {
 
-  @inline def apply[D <: SQLConnector](datasource: D): JustSQL =
-    new JustSQL(datasource)
+  @inline def apply[C <: SQLConnector](connector: C): JustSQL =
+    new JustSQL(connector)
 
   @inline def setParams(params: Params,
                         statement: PreparedStatement): Unit = {
