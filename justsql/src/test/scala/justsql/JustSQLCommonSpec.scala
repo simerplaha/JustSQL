@@ -286,7 +286,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
       "query fails but has recovery" in {
         withDB(connector()) {
           implicit db =>
-            val query =
+            val sql =
               "CREATE TABLE TEST_TABLE(int invalid_type)" //original query
                 .update()
                 .map {
@@ -307,7 +307,7 @@ trait JustSQLCommonSpec extends AnyWordSpec {
                       |""".stripMargin.update()
                 }
 
-            query.runSync().success.value shouldBe 0
+            sql.runSync().success.value shouldBe 0
 
             //assert data exists.
             "SELECT * FROM TEST_TABLE".stripMargin.select[Int]().runSync().success.value shouldBe ArraySeq(1, 2)
@@ -319,14 +319,14 @@ trait JustSQLCommonSpec extends AnyWordSpec {
       "query fails" in {
         withDB(connector()) {
           implicit db =>
-            val expectFailure =
+            val sql =
               "CREATE TABLE TEST_TABLE(int invalid_type)".update() map {
                 _ =>
                   fail("Should not have touched this code")
               }
 
             //TODO: Might not work for different database, different SQL databases might have different error response message.
-            expectFailure
+            sql
               .runSync()
               .failure
               .exception
@@ -337,13 +337,86 @@ trait JustSQLCommonSpec extends AnyWordSpec {
       "query succeeds but map fails" in {
         withDB(connector()) {
           implicit db =>
-            val expectFailure =
+            val sql =
               "CREATE TABLE TEST_TABLE(int int)".update() map {
                 _ =>
                   throw new Exception("Kaboom!")
               }
 
-            expectFailure.runSync().failure.exception should have message "Kaboom!"
+            sql.runSync().failure.exception should have message "Kaboom!"
+        }
+      }
+    }
+  }
+
+  "flatMap" should {
+    "execute queries in sequence" when {
+      "create and then insert" in {
+        withDB(connector()) {
+          implicit db =>
+            val sql =
+              "CREATE TABLE TEST_TABLE (value varchar)".update() flatMap {
+                result =>
+                  result shouldBe 0
+                  "INSERT INTO TEST_TABLE values ('value1')".update()
+              }
+
+            sql.runSync().success.value shouldBe 1
+        }
+      }
+
+      "insert and then create" in {
+        withDB(connector()) {
+          implicit db =>
+            val sql =
+              "INSERT INTO TEST_TABLE values ('value1')".update() flatMap {
+                _ =>
+                  "CREATE TABLE TEST_TABLE (value varchar)".update()
+              }
+
+            //expect failure
+            sql
+              .runSync()
+              .failure
+              .exception
+              .getMessage.contains("""ERROR: relation "test_table" does not exist""") shouldBe true
+        }
+      }
+    }
+
+    "fail execution" when {
+      "flatMap to query fails" in {
+        withDB(connector()) {
+          implicit db =>
+            val sql =
+              "CREATE TABLE TEST_TABLE (value int)".update() flatMap {
+                result =>
+                  result shouldBe 0
+                  "INSERT INTO TEST_TABLE values ('not an int')".update()
+              }
+
+            sql
+              .runSync()
+              .failure
+              .exception
+              .getMessage.contains("""ERROR: invalid input syntax for type integer: "not an int"""") shouldBe true
+        }
+      }
+
+      "flatMap fails" in {
+        withDB(connector()) {
+          implicit db =>
+            val sql =
+              "CREATE TABLE TEST_TABLE (value int)".update() flatMap {
+                _ =>
+                  throw new Exception("Kaboom!")
+              }
+
+            //expect failure
+            sql
+              .runSync()
+              .failure
+              .exception should have message "Kaboom!"
         }
       }
     }
