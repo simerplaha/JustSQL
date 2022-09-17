@@ -25,8 +25,8 @@ sealed trait SQLConnectionManager {
 }
 
 object LazySQLConnectionManager {
-  def apply(manager: Using.Manager,
-            connector: SQLConnector): LazySQLConnectionManager =
+  @inline def apply(manager: Using.Manager,
+                    connector: SQLConnector): LazySQLConnectionManager =
     new LazySQLConnectionManager(
       manager = manager,
       connector = connector

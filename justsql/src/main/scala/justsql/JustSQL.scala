@@ -33,8 +33,8 @@ object JustSQL {
   }
 
   @inline def update(sql: String, params: Params)(connectionManager: SQLConnectionManager): Int = {
-    val manager = connectionManager.manager()
     val connection = connectionManager.connection()
+    val manager = connectionManager.manager()
     val statement = manager(connection.prepareStatement(sql))
     setParams(params, statement)
     statement.executeUpdate()
