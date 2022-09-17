@@ -54,15 +54,6 @@ sealed trait Sql[+RESULT] { self =>
           .runIO(connectionManager)
     }
 
-  def flatMapTry[B](f: RESULT => Try[B]): Sql[B] =
-    new Sql[B] {
-      override protected def runIO(connectionManager: SQLConnectionManager): B =
-        f(self.runIO(connectionManager)) match {
-          case Success(result)    => result
-          case Failure(exception) => throw exception
-        }
-    }
-
   def foreach[B](f: RESULT => B): Sql[Unit] =
     new Sql[Unit] {
       override protected def runIO(connectionManager: SQLConnectionManager): Unit =
@@ -183,9 +174,6 @@ sealed trait TrackedSQL[+RESULT] extends Sql[RESULT] { self =>
 
   override def foreach[B](f: RESULT => B): TrackedSQL[Unit] =
     super.foreach(f).toTracked(sql, params)
-
-  override def flatMapTry[B](f: RESULT => Try[B]): TrackedSQL[B] =
-    super.flatMapTry(f).toTracked(sql, params)
 
   override def recover[B >: RESULT](pf: PartialFunction[Throwable, B]): TrackedSQL[B] =
     super.recover(pf).toTracked(sql, params)
