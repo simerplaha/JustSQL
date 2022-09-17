@@ -20,8 +20,8 @@ object CollectionUtil {
 
   @inline def exactlyOne[A](result: Iterable[A]): A = {
     val resultSize = result.size
-    if (resultSize != 0)
-      throw new Exception(s"Expect 1 row. Actual $resultSize")
+    if (resultSize != 1)
+      throw new Exception(s"Expect 1 row. Actual $resultSize.")
     else
       result.head
   }

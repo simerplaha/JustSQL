@@ -109,7 +109,6 @@ trait JustSQLCommonSpec extends AnyWordSpec {
     }
   }
 
-
   "return empty select on empty table" in {
     withDB(connector()) {
       implicit db =>
@@ -262,6 +261,91 @@ trait JustSQLCommonSpec extends AnyWordSpec {
 
         finalQuery.runSync().success.value should contain(2)
     }
+  }
 
+  "map" should {
+    "transform query result" when {
+      "query succeeds" in {
+        withDB(connector()) {
+          implicit db =>
+            val created =
+              "CREATE TABLE TEST_TABLE(int int)".update() map {
+                result =>
+                  result == 0
+              }
+
+            created.runSync().success.value shouldBe true
+
+            val content =
+              "SELECT * FROM TEST_TABLE".stripMargin.select[Boolean]()
+
+            content.runSync().success.value shouldBe empty
+        }
+      }
+
+      "query fails but has recovery" in {
+        withDB(connector()) {
+          implicit db =>
+            val query =
+              "CREATE TABLE TEST_TABLE(int invalid_type)" //original query
+                .update()
+                .map {
+                  _ =>
+                    fail("Should not have touched this code") // this code should not be called because of error in query
+                }
+                .recoverWith {
+                  exception =>
+                    //exception contains invalid field
+                    exception.getMessage.contains("""ERROR: type "invalid_type" does not exist""") shouldBe true
+
+                    //this time also insert some data
+                    """
+                      |BEGIN;
+                      |CREATE TABLE TEST_TABLE(int int);
+                      |INSERT INTO TEST_TABLE VALUES (1), (2);
+                      |COMMIT;
+                      |""".stripMargin.update()
+                }
+
+            query.runSync().success.value shouldBe 0
+
+            //assert data exists.
+            "SELECT * FROM TEST_TABLE".stripMargin.select[Int]().runSync().success.value shouldBe ArraySeq(1, 2)
+        }
+      }
+    }
+
+    "not transform query result" when {
+      "query fails" in {
+        withDB(connector()) {
+          implicit db =>
+            val expectFailure =
+              "CREATE TABLE TEST_TABLE(int invalid_type)".update() map {
+                _ =>
+                  fail("Should not have touched this code")
+              }
+
+            //TODO: Might not work for different database, different SQL databases might have different error response message.
+            expectFailure
+              .runSync()
+              .failure
+              .exception
+              .getMessage.contains("""ERROR: type "invalid_type" does not exist""") shouldBe true
+        }
+      }
+
+      "query succeeds but map fails" in {
+        withDB(connector()) {
+          implicit db =>
+            val expectFailure =
+              "CREATE TABLE TEST_TABLE(int int)".update() map {
+                _ =>
+                  throw new Exception("Kaboom!")
+              }
+
+            expectFailure.runSync().failure.exception should have message "Kaboom!"
+        }
+      }
+    }
   }
 }
