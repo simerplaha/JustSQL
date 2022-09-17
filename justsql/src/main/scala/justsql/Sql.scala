@@ -26,7 +26,7 @@ import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
 sealed trait Sql[+RESULT] { self =>
-  protected def runIO(connectionManager: ConnectionManager): RESULT
+  protected def runIO(connectionManager: SQLConnectionManager): RESULT
 
   def runSync()(implicit db: JustSQL): Try[RESULT] =
     db connectAndRun runIO
@@ -37,7 +37,7 @@ sealed trait Sql[+RESULT] { self =>
 
   def map[B](f: RESULT => B): Sql[B] =
     new Sql[B] {
-      override protected def runIO(connectionManager: ConnectionManager): B =
+      override protected def runIO(connectionManager: SQLConnectionManager): B =
         f(self.runIO(connectionManager))
     }
 
@@ -49,14 +49,14 @@ sealed trait Sql[+RESULT] { self =>
 
   def flatMap[B](f: RESULT => Sql[B]): Sql[B] =
     new Sql[B] {
-      override protected def runIO(connectionManager: ConnectionManager): B =
+      override protected def runIO(connectionManager: SQLConnectionManager): B =
         f(self.runIO(connectionManager))
           .runIO(connectionManager)
     }
 
   def flatMapTry[B](f: RESULT => Try[B]): Sql[B] =
     new Sql[B] {
-      override protected def runIO(connectionManager: ConnectionManager): B =
+      override protected def runIO(connectionManager: SQLConnectionManager): B =
         f(self.runIO(connectionManager)) match {
           case Success(result)    => result
           case Failure(exception) => throw exception
@@ -65,19 +65,19 @@ sealed trait Sql[+RESULT] { self =>
 
   def foreach[B](f: RESULT => B): Sql[Unit] =
     new Sql[Unit] {
-      override protected def runIO(connectionManager: ConnectionManager): Unit =
+      override protected def runIO(connectionManager: SQLConnectionManager): Unit =
         f(self.runIO(connectionManager))
     }
 
   def headOption[A]()(implicit evd: RESULT <:< Iterable[A]): Sql[Option[A]] =
     new Sql[Option[A]] {
-      override protected def runIO(connectionManager: ConnectionManager): Option[A] =
+      override protected def runIO(connectionManager: SQLConnectionManager): Option[A] =
         self.runIO(connectionManager).headOption
     }
 
   def head[A]()(implicit evd: RESULT <:< Iterable[A]): Sql[A] =
     new Sql[A] {
-      override protected def runIO(connectionManager: ConnectionManager): A =
+      override protected def runIO(connectionManager: SQLConnectionManager): A =
         self.runIO(connectionManager).head
     }
 
@@ -88,13 +88,13 @@ sealed trait Sql[+RESULT] { self =>
    * */
   def exactlyOne[A]()(implicit evd: RESULT <:< Iterable[A]): Sql[A] =
     new Sql[A] {
-      override protected def runIO(connectionManager: ConnectionManager): A =
+      override protected def runIO(connectionManager: SQLConnectionManager): A =
         CollectionUtil.exactlyOne(self.runIO(connectionManager))
     }
 
   def recoverWith[B >: RESULT](pf: PartialFunction[Throwable, Sql[B]]): Sql[B] =
     new Sql[B] {
-      override protected def runIO(connectionManager: ConnectionManager): B =
+      override protected def runIO(connectionManager: SQLConnectionManager): B =
         try
           self.runIO(connectionManager)
         catch {
@@ -105,7 +105,7 @@ sealed trait Sql[+RESULT] { self =>
 
   def recover[B >: RESULT](pf: PartialFunction[Throwable, B]): Sql[B] =
     new Sql[B] {
-      override protected def runIO(connectionManager: ConnectionManager): B =
+      override protected def runIO(connectionManager: SQLConnectionManager): B =
         try
           self.runIO(connectionManager)
         catch pf
@@ -119,7 +119,7 @@ sealed trait Sql[+RESULT] { self =>
       override def params: Params =
         trackedParams
 
-      override def runIO(connectionManager: ConnectionManager): B =
+      override def runIO(connectionManager: SQLConnectionManager): B =
         self.runIO(connectionManager)
     }
 }
@@ -139,13 +139,13 @@ object Sql {
 
   def success[V](value: V): Sql[V] =
     new Sql[V] {
-      override protected def runIO(connectionManager: ConnectionManager): V =
+      override protected def runIO(connectionManager: SQLConnectionManager): V =
         value
     }
 
   def failure[V](throwable: Throwable): Sql[V] =
     new Sql[V] {
-      override protected def runIO(connectionManager: ConnectionManager): V =
+      override protected def runIO(connectionManager: SQLConnectionManager): V =
         throw throwable
     }
 
@@ -177,7 +177,7 @@ sealed trait TrackedSQL[+RESULT] extends Sql[RESULT] { self =>
       override def params: Params =
         self.params
 
-      override def runIO(connectionManager: ConnectionManager): C[String] =
+      override def runIO(connectionManager: SQLConnectionManager): C[String] =
         JustSQL.select[String, C[String]](sql, params)(connectionManager)
     }
 
@@ -236,7 +236,7 @@ case class SelectSQL[+ROW, C[+R] <: Iterable[R]](sql: String,
   def exactlyOne(): TrackedSQL[ROW] =
     super.exactlyOne().toTracked(sql, params)
 
-  override def runIO(connectionManager: ConnectionManager): C[ROW] =
+  override def runIO(connectionManager: SQLConnectionManager): C[ROW] =
     JustSQL.select[ROW, C[ROW]](sql, params)(connectionManager)
 }
 
@@ -254,6 +254,6 @@ object UpdateSQL {
 }
 
 case class UpdateSQL(sql: String, params: Params) extends TrackedSQL[Int] {
-  override def runIO(connectionManager: ConnectionManager): Int =
+  override def runIO(connectionManager: SQLConnectionManager): Int =
     JustSQL.update(sql, params)(connectionManager)
 }

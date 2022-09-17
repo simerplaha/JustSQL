@@ -19,15 +19,15 @@ package justsql
 import java.sql.Connection
 import scala.util.Using
 
-sealed trait ConnectionManager {
+sealed trait SQLConnectionManager {
   def connection(): Connection
   def manager(): Using.Manager
 }
 
-object LazyConnectionManager {
+object LazySQLConnectionManager {
   def apply(manager: Using.Manager,
-            connector: SQLConnector): LazyConnectionManager =
-    new LazyConnectionManager(
+            connector: SQLConnector): LazySQLConnectionManager =
+    new LazySQLConnectionManager(
       manager = manager,
       connector = connector
     )
@@ -36,12 +36,13 @@ object LazyConnectionManager {
 /**
  * A lazy connection manager. Connection is initialised on when [[connection]] is invoked.
  *
- * @note Connection initialisation is NOT thread-safe because we cannot concurrently
- *       run multiple queries in the same connection (as defined by [[java.sql.Connection]]).
+ * @note Connection initialisation is NOT thread-safe because
+ *       as defined by [[java.sql.Connection]] we cannot concurrently
+ *       run multiple queries in the same connection.
  */
-class LazyConnectionManager private(val manager: Using.Manager,
-                                    connector: SQLConnector,
-                                    private var lazyConnection: Connection = null) extends ConnectionManager {
+class LazySQLConnectionManager private(val manager: Using.Manager,
+                                       connector: SQLConnector,
+                                       private var lazyConnection: Connection = null) extends SQLConnectionManager {
 
   override def connection(): Connection =
     if (lazyConnection == null) {
