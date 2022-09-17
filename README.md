@@ -95,7 +95,7 @@ val insert: Try[Int] =
     |""".stripMargin.update().runSync()
 ```
 
-## `for` comprehension
+## for-comprehension
 
 ```scala
 val createAndInsert: Sql[(Int, Int)] =
