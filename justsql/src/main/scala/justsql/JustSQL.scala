@@ -19,14 +19,7 @@ package justsql
 import java.io.Closeable
 import scala.util.{Try, Using}
 
-object JustSQL {
-
-  @inline def apply[C <: SQLConnector](connector: C): JustSQL =
-    new JustSQL(connector)
-
-}
-
-class JustSQL(connector: SQLConnector) extends Closeable {
+case class JustSQL(private val connector: SQLConnector) extends Closeable {
 
   def connectAndRun[RESULT](f: SQLConnectionManager => RESULT): Try[RESULT] =
     Using.Manager {
