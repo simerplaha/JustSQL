@@ -36,7 +36,7 @@ object Example extends App {
       |""".stripMargin.update().runSync() //insert rows
 
   /** For-comprehension */
-  val createAndInsert: Sql[(Int, Int)] =
+  val createAndInsert: SQL[(Int, Int)] =
     for {
       create <- "CREATE TABLE USERS (id INT, name VARCHAR)".update()
       insert <- "INSERT INTO USERS (id, name) VALUES (1, 'Harry'), (2, 'Ayman')".update()

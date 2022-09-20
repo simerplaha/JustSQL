@@ -33,10 +33,10 @@ package object justsql {
                                             factory: Factory[ROW, C[ROW]]): SelectSQL[ROW, C] =
       SelectSQL[ROW, C](sql, Params())
 
-    def explain[C[+R] <: Iterable[R]]()(implicit factory: Factory[String, C[String]]): Sql[C[String]] =
+    def explain[C[+R] <: Iterable[R]]()(implicit factory: Factory[String, C[String]]): SQL[C[String]] =
       SelectSQL[String, C](sql, Params()).explain()
 
-    def explainAnalyze[C[+R] <: Iterable[R]]()(implicit factory: Factory[String, C[String]]): Sql[C[String]] =
+    def explainAnalyze[C[+R] <: Iterable[R]]()(implicit factory: Factory[String, C[String]]): SQL[C[String]] =
       SelectSQL[String, C](sql, Params()).explainAnalyze()
 
     def unsafeSelect[ROW](rowParser: ResultSet => ROW)(implicit classTag: ClassTag[ROW]): SelectSQL[ROW, ArraySeq] =

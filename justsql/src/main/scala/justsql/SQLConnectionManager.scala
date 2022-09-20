@@ -16,12 +16,54 @@
 
 package justsql
 
-import java.sql.Connection
+import java.sql.{Connection, PreparedStatement, ResultSet}
+import scala.collection.Factory
 import scala.util.Using
 
 sealed trait SQLConnectionManager {
   def connection(): Connection
   def manager(): Using.Manager
+}
+
+object SQLConnectionManager {
+
+  @inline def setParams(params: Params,
+                        statement: PreparedStatement): Unit = {
+    val positionedStatements = PositionedPreparedStatement(statement)
+    params foreach (_.set(positionedStatements))
+  }
+
+  @inline def update(sql: String, params: Params)(connectionManager: SQLConnectionManager): Int = {
+    val connection = connectionManager.connection()
+    val manager = connectionManager.manager()
+    val statement = manager(connection.prepareStatement(sql))
+    setParams(params, statement)
+    statement.executeUpdate()
+  }
+
+  def select[ROW, C](sql: String, params: Params)(connectionManager: SQLConnectionManager)(implicit rowReader: RowReader[ROW],
+                                                                                           factory: Factory[ROW, C]): C = {
+    val connection = connectionManager.connection()
+    val manager = connectionManager.manager()
+    val statement = manager(connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY))
+    setParams(params, statement)
+
+    val resultSet = manager(statement.executeQuery())
+
+    if (resultSet.last()) {
+      val builder = factory.newBuilder
+      builder.sizeHint(resultSet.getRow)
+
+      resultSet.beforeFirst()
+
+      while (resultSet.next())
+        builder addOne rowReader(resultSet)
+
+      builder.result()
+    } else {
+      factory.newBuilder.result()
+    }
+  }
 }
 
 object LazySQLConnectionManager {
