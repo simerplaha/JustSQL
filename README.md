@@ -190,7 +190,23 @@ val usersParametric: SelectSQL[String, ArraySeq] =
 
 # `head()`, `headOption()`, `exactlyOne()`
 
-TODO
+Returns `Some(first element)` from the query result or-else `None` if empty
+
+```scala
+val headOption: Try[Option[User]] = "SELECT * FROM USERS".select[User]().headOption().runSync()
+```
+
+First element from the query result
+
+```scala
+val head: Try[Int] = "SELECT max(id) FROM USERS".select[Int]().head().runSync()
+```  
+
+Expects always one row in the result. If there are more than one, returns a failure.
+
+```scala
+val exactlyOne: Try[Int] = "SELECT count(*) FROM USERS".select[Int]().exactlyOne().runSync()
+```
 
 # Embed queries - `embed`
 
@@ -233,14 +249,14 @@ val sequence: SQL[Seq[Int]] =
 Create a successful SQL
 
 ```scala
-val successFul: SQL[Int] =
+val success: SQL[Int] =
   SQL.success[Int](123)
 ```
 
 Create a failed SQL
 
 ```scala
-val failedSQL: SQL[Int] =
+val failed: SQL[Int] =
   SQL.failure[Int](new Exception("Something went wrong"))
 ```
 

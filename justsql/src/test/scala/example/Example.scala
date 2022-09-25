@@ -134,4 +134,8 @@ object Example extends App {
   val successFul: SQL[Int] =
     SQL.success[Int](123)
 
+  val headOption: Try[Option[User]] = "SELECT * FROM USERS".select[User]().headOption().runSync()
+  val maxId: Try[Int] = "SELECT max(id) FROM USERS".select[Int]().head().runSync()
+  val exactlyOne: Try[Int] = "SELECT count(*) FROM USERS".select[Int]().exactlyOne().runSync()
+
 }
