@@ -60,7 +60,7 @@ val publishSettings = Seq[Setting[_]](
 
 lazy val testDeps =
   Seq(
-    "ch.qos.logback" % "logback-classic" % "1.4.0" % Test,
+    "ch.qos.logback" % "logback-classic" % "1.4.1" % Test,
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5" % Test,
     "org.scalatest" %% "scalatest" % "3.2.12" % Test,
     "org.postgresql" % "postgresql" % "42.5.0" % Test
@@ -100,5 +100,5 @@ lazy val `justsql-slick` =
     .settings(
       commonSettings,
       publishSettings,
-      libraryDependencies ++= testDeps :+ "com.typesafe.slick" %% "slick" % "3.3.3"
+      libraryDependencies ++= testDeps :+ "com.typesafe.slick" %% "slick" % "3.4.1"
     ).dependsOn(justsql % "test->test;compile->compile")
