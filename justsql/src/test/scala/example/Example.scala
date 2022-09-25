@@ -118,4 +118,20 @@ object Example extends App {
            |""".stripMargin
     }.runSync()
 
+  //run multiple queries in a single connection
+  val sequence: SQL[Seq[Int]] =
+    SQL.sequence(
+      "SELECT 1".select[Int](),
+      "SELECT 2".select[Int](),
+      "SELECT 3".select[Int]()
+    ).map(_.flatten)
+
+  //create a failed SQL
+  val failedSQL: SQL[Int] =
+    SQL.failure[Int](new Exception("Something went wrong"))
+
+  //create a successful SQL
+  val successFul: SQL[Int] =
+    SQL.success[Int](123)
+
 }

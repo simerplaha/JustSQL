@@ -97,6 +97,8 @@ val insert: Try[Int] =
 
 ## for-comprehension
 
+Or execute the above queries using `for`-comprehension 
+
 ```scala
 val createAndInsert: Sql[(Int, Int)] =
   for {

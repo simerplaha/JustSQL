@@ -72,6 +72,18 @@ sealed trait SQL[+RESULT] { self =>
         self.runIO(connectionManager).head
     }
 
+  def foldLeft[A, I](initial: I)(f: (I, A) => I)(implicit evd: RESULT <:< Iterable[A]): SQL[I] =
+    new SQL[I] {
+      override protected def runIO(connectionManager: SQLConnectionManager): I =
+        self.runIO(connectionManager).foldLeft(initial)(f)
+    }
+
+  def foldRight[A, I](initial: I)(f: (A, I) => I)(implicit evd: RESULT <:< Iterable[A]): SQL[I] =
+    new SQL[I] {
+      override protected def runIO(connectionManager: SQLConnectionManager): I =
+        self.runIO(connectionManager).foldRight(initial)(f)
+    }
+
   /**
    * For queries that always expect at most one row.
    *
