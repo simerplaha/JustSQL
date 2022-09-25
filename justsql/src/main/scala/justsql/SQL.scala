@@ -128,7 +128,7 @@ sealed trait SQL[+RESULT] { self =>
       override def params: Params =
         trackedParams
 
-      override def runIO(connectionManager: SQLConnectionManager): B =
+      override protected def runIO(connectionManager: SQLConnectionManager): B =
         self.runIO(connectionManager)
     }
 }
@@ -186,7 +186,7 @@ sealed trait TrackedSQL[+RESULT] extends SQL[RESULT] { self =>
       override def params: Params =
         self.params
 
-      override def runIO(connectionManager: SQLConnectionManager): C[String] =
+      override protected def runIO(connectionManager: SQLConnectionManager): C[String] =
         SQLConnectionManager.select[String, C[String]](sql, params)(connectionManager)
     }
 
@@ -245,7 +245,7 @@ case class SelectSQL[+ROW, C[+R] <: Iterable[R]](sql: String,
   def exactlyOne(): TrackedSQL[ROW] =
     super.exactlyOne().toTracked(sql, params)
 
-  override def runIO(connectionManager: SQLConnectionManager): C[ROW] =
+  override protected def runIO(connectionManager: SQLConnectionManager): C[ROW] =
     SQLConnectionManager.select[ROW, C[ROW]](sql, params)(connectionManager)
 }
 
@@ -263,6 +263,6 @@ object UpdateSQL {
 }
 
 case class UpdateSQL(sql: String, params: Params) extends TrackedSQL[Int] {
-  override def runIO(connectionManager: SQLConnectionManager): Int =
+  override protected def runIO(connectionManager: SQLConnectionManager): Int =
     SQLConnectionManager.update(sql, params)(connectionManager)
 }
