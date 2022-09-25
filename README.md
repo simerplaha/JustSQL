@@ -97,7 +97,7 @@ val insert: Try[Int] =
 
 ## for-comprehension
 
-Or execute the above queries using `for`-comprehension 
+Or execute the above queries using `for`-comprehension
 
 ```scala
 val createAndInsert: Sql[(Int, Int)] =
@@ -214,6 +214,35 @@ val query2: Try[ArraySeq[String]] =
 # Compose queries
 
 TODO
+
+# Sequence
+
+Run multiple queries in the same connection
+
+```scala
+val sequence: SQL[Seq[Int]] =
+  SQL.sequence(
+    "SELECT 1".select[Int](),
+    "SELECT 2".select[Int](),
+    "SELECT 3".select[Int]()
+  ).map(_.flatten)
+```
+
+# Failed or Success `SQL[T]`
+
+Create a successful SQL
+
+```scala
+val successFul: SQL[Int] =
+  SQL.success[Int](123)
+```
+
+Create a failed SQL
+
+```scala
+val failedSQL: SQL[Int] =
+  SQL.failure[Int](new Exception("Something went wrong"))
+```
 
 # Custom `ParamWriter`
 
